@@ -1,0 +1,24 @@
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.blogs-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+    height: 100%;
+    width: 100%;
+}
+  
+.blogs-content {
+    background-color: #ffffff;
+    padding: 40px;
+    max-width: 800px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+  

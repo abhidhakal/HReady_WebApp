@@ -1,0 +1,39 @@
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.about-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    background-color: #f9f9f9;
+    height: 100%;
+    width: 100%;
+}
+  
+.about-content {
+    background-color: #ffffff;
+    height: 70%;
+    padding: 40px;
+    max-width: 800px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+    border-radius: 10px;
+}
+  
+  .about-content h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+}
+  
+  .about-content p {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #444;
+    margin-bottom: 20px;
+}
+  
