@@ -74,15 +74,15 @@ p {
   
 
 .contact-us {
-    background-color: #7FDBDA;
-    border: #7FDBDA solid;
+    background-color: #1E637E;
+    border: #1E637E solid;
     display: flex;
     justify-content: center;
     padding: 7px 10px 10px 10px;
     border-radius: 8px;
     height: 40px;
     text-align: center;
-    color: #1a1a1a;
+    color: white;
     font-family: Poppins;
     font-size: 15px;
     font-weight: 700;

@@ -24,7 +24,6 @@ button {
 
 .dashboard-header a {
     text-decoration: none;
-    color: #1a1a1a;
 }
 
 .dashboard-logo {
@@ -63,22 +62,24 @@ button {
     font-weight: 500;
     position: relative;
     border-bottom: 2px solid transparent;
-    transition: font-weight 0.2s ease;
+    transition: border-bottom-color 0.3s ease;
 }
 
 .abt-us-label:hover {
-    font-family: Poppins;
-    font-weight: 600;
+    border-bottom-color: #1a1a1a;
+    cursor: pointer;
   }
 
 .contact-btn {
-    background-color: #7FDBDA;
-    border: #7FDBDA solid;
+    background-color: #1E637E;
+    border: #1E637E solid;
+    display: flex;
+    justify-content: center;
     padding: 10px 10px 10px 10px;
     margin: 0;
     border-radius: 8px;
     text-align: center;
-    color: #1a1a1a;
+    color: white;
     font-family: Poppins;
     font-size: 15px;
     font-weight: 600;
