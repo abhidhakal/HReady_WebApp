@@ -6,6 +6,7 @@ import '/src/pages/css/Dashboard.css';
 
 function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [name, setName] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +20,16 @@ function AdminDashboard() {
       const decoded = jwtDecode(token);
       if (decoded.role !== 'admin') {
         navigate('/login');
+        return;
       }
+
+      fetch(`http://localhost:3000/api/users/${decoded.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.name) setName(data.name);
+          else setName('Admin');
+        })
+        .catch(() => setName('Admin'));
     } catch (error) {
       console.error('Invalid token:', error);
       navigate('/login');
@@ -54,7 +64,7 @@ function AdminDashboard() {
               <div className="profile-picture">
                 <img src="/src/assets/profile.webp" alt="Admin Profile" />
               </div>
-              <h2 className="employee-name">Hello, Admin Jane</h2>
+              <h2 className="employee-name">Hello, {name}</h2>
             </div>
             <div className="banner-middle">
               <p>Your Today’s Attendance: <span className="status-not-done">NOT DONE</span></p>

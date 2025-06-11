@@ -6,6 +6,7 @@ import '/src/pages/css/Dashboard.css';
 
 function EmployeeDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [name, setName] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +20,16 @@ function EmployeeDashboard() {
       const decoded = jwtDecode(token);
       if (decoded.role !== 'employee') {
         navigate('/login');
+        return;
       }
+
+      fetch(`http://localhost:3000/api/users/${decoded.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.user.name) setName(data.user.name);
+          else setName('Employee');
+        })
+        .catch(() => setName('Employee'));
     } catch (error) {
       console.error('Invalid token:', error);
       navigate('/login');
@@ -53,7 +63,7 @@ function EmployeeDashboard() {
               <div className="profile-picture">
                 <img src="/src/assets/profile.webp" alt="Profile Picture" />
               </div>
-              <h2 className="employee-name">Hello, John Doe</h2>
+              <h2 className="employee-name">Hello, {name}</h2>
             </div>
             <div className="banner-middle">
               <p>Your Today’s Attendance: <span className="status-done">DONE</span></p>
