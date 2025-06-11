@@ -1,12 +1,33 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '/src/components/DashboardHeader.jsx';
 import '/src/pages/css/Dashboard.css';
 
 function EmployeeDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      if (decoded.role !== 'employee') {
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Invalid token:', error);
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    setSidebarOpen(prev => !prev);
   };
 
   return (
@@ -15,45 +36,44 @@ function EmployeeDashboard() {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src='src/assets/light_noicon.png'/></li>
-            <li><a className='nav-dashboard' href="/employee">Dashboard</a></li>
+            <li><img src="/src/assets/light_noicon.png" alt="Logo" /></li>
+            <li><a className="nav-dashboard" href="/employee">Dashboard</a></li>
             <li><a href="#attendance">Attendance</a></li>
             <li><a href="#tasks">Tasks</a></li>
             <li><a href="#leave">Leave</a></li>
             <li><a href="#news">News</a></li>
             <li><a href="#settings">Settings</a></li>
-            <li><a className='nav-logout' href="/login">Log Out</a></li>
+            <li><a className="nav-logout" href="/login">Log Out</a></li>
           </ul>
         </nav>
 
-        {/* Main content */}
         <div className="main-content">
           <div className="welcome-banner">
-            <div className='banner-left'>
-                <div className="profile-picture">
-                    <img src='src/assets/profile.webp' alt='Profile Picture'/>
-                </div>
-                <h2 className='employee-name'>Hello, John Doe</h2>
+            <div className="banner-left">
+              <div className="profile-picture">
+                <img src="/src/assets/profile.webp" alt="Profile Picture" />
+              </div>
+              <h2 className="employee-name">Hello, John Doe</h2>
             </div>
-            <div className='banner-middle'>
+            <div className="banner-middle">
               <p>Your Today’s Attendance: <span className="status-done">DONE</span></p>
               <small>click to complete attendance</small>
             </div>
-            <div className='banner-right'>
-                <button className="edit-profile">Edit Your Profile</button>
+            <div className="banner-right">
+              <button className="edit-profile">Edit Your Profile</button>
             </div>
           </div>
 
           <div className="info-cards">
             <div className="info-card">
               <h2>Role</h2>
-              <h1 className='employee-role'>Web Developer</h1>
+              <h1 className="employee-role">Web Developer</h1>
             </div>
             <div className="info-card">
               <h2>Leave Days Left</h2>
-              <div className='info-card-leaves'>
-                <h1 className='employee-leaves-left'>15</h1>
-                <button className='request-leave-btn' >Request Leave</button>
+              <div className="info-card-leaves">
+                <h1 className="employee-leaves-left">15</h1>
+                <button className="request-leave-btn">Request Leave</button>
               </div>
             </div>
           </div>
@@ -74,7 +94,7 @@ function EmployeeDashboard() {
             </div>
 
             <div className="news-section">
-              <h2>News/ Announcements</h2>
+              <h2>News / Announcements</h2>
               <div className="news-box"></div>
               <div className="news-box"></div>
             </div>

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 
 function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate(); // used for redirection
 
@@ -28,9 +28,9 @@ function Login() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
 
-        if (data.role === 'admin') {
+        if (data.user.role === 'admin') {
           navigate('/admin');
-        } else if (data.role === 'employee') {
+        } else if (data.user.role === 'employee') {
           navigate('/employee');
         } else {
           alert('Unknown role. Contact admin.');
@@ -55,11 +55,11 @@ function Login() {
           <div className="form-group">
             <input
               type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your Email"
               required
             />
           </div>
