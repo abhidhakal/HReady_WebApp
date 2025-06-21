@@ -1,0 +1,112 @@
+.manage-announcements {
+  margin: 20px auto;
+  padding: 30px;
+  background-color: #f7f9fb;
+  border-radius: 16px;
+  box-shadow: none;
+  max-width: 1000px;
+  font-family: 'Poppins', sans-serif;
+  border: 1px solid #e2e8f0;
+}
+
+.manage-announcements h2 {
+  color: #042F46;
+  font-size: 1.6rem;
+  margin-bottom: 25px;
+  font-weight: 600;
+  text-align: left;
+  padding-left: 5px;
+}
+
+.manage-announcements form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.manage-announcements form input,
+.manage-announcements form select,
+.manage-announcements form textarea {
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  color: #333;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background-color: #f1f3f6 !important;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.manage-announcements form input:focus,
+.manage-announcements form select:focus,
+.manage-announcements form textarea:focus {
+  border-color: #1E637E;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(30, 99, 126, 0.15);
+}
+
+.manage-announcements form button {
+  grid-column: span 2;
+  background-color: #042F46;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.manage-announcements form button:hover {
+  background-color: #031f2e;
+  transform: translateY(-1px);
+}
+
+.manage-announcements table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.manage-announcements th,
+.manage-announcements td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.manage-announcements th {
+  background-color: #f4f6f8;
+  color: #042F46;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.manage-announcements td {
+  color: #333;
+  font-size: 0.93rem;
+  vertical-align: top;
+}
+
+.manage-announcements td button {
+  margin-right: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #1E637E;
+  color: white;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.manage-announcements td button:hover {
+  background-color: #15596c;
+  transform: translateY(-1px);
+}

@@ -3,10 +3,12 @@ import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '/src/components/DashboardHeader.jsx';
 import '/src/pages/css/Dashboard.css';
+import api from '../api/axios';
 
 function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState('Admin');
+  const [announcements, setAnnouncements] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,19 +24,26 @@ function AdminDashboard() {
         navigate('/login');
         return;
       }
-
-      fetch(`http://localhost:3000/api/users/${decoded.id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.name) setName(data.name);
-          else setName('Admin');
-        })
-        .catch(() => setName('Admin'));
+      setName(decoded.name || 'Admin');
     } catch (error) {
       console.error('Invalid token:', error);
       navigate('/login');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await api.get('/announcements', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setAnnouncements(res.data);
+      } catch (err) {
+        console.error('Error fetching announcements:', err);
+      }
+    };
+    fetchAnnouncements();
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(prev => !prev);
@@ -52,7 +61,7 @@ function AdminDashboard() {
             <li><a href="#attendance">Attendance Logs</a></li>
             <li><a href="#tasks">Manage Tasks</a></li>
             <li><a href="#leave">Leave Requests</a></li>
-            <li><a href="#announcements">Announcements</a></li>
+            <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
             <li><a href="#settings">Settings</a></li>
             <li><a className="nav-logout" href="/login">Log Out</a></li>
           </ul>
@@ -110,13 +119,20 @@ function AdminDashboard() {
               </table>
             </div>
 
-            <div className="news-section">
-              <div className="news-header">
-                <h2>News</h2>
-                <button className="edit-news">Edit News</button>
+            <div className="announcement-section">
+              <div className="announcement-header">
+                <h2>Recent Announcements</h2>
+                <button className="edit-announcement" onClick={() => navigate('/admin/announcements')}>Manage</button>
               </div>
-              <div className="news-box"></div>
-              <div className="news-box"></div>
+              <div className="announcement-box">
+                {announcements.length > 0 ? (
+                  <ul>
+                    {announcements.slice(0, 3).map((ann) => (
+                      <li key={ann._id}><strong>{ann.title}:</strong> {ann.message.length > 60 ? ann.message.substring(0, 60) + '...' : ann.message}</li>
+                    ))}
+                  </ul>
+                ) : <p>No announcements available.</p>}
+              </div>
             </div>
           </div>
         </div>

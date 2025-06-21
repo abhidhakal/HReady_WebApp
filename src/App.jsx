@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import EmployeeDashboard from '../src/pages/EmployeeDashboard.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import ManageEmployees from './pages/ManageEmployees.jsx';
+import ManageAnnouncements from './pages/ManageAnnouncements.jsx';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/employee" element={<EmployeeDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path='/admin/employees' element={<ManageEmployees/>} />
+          <Route path="/admin/announcements" element={<ManageAnnouncements />} />
         </Routes>
       </div>
     </Router>
