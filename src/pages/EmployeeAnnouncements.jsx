@@ -42,15 +42,15 @@ const EmployeeAnnouncements = () => {
             <li><a className="nav-dashboard" onClick={() => navigate('/employee/announcements')}>Announcements</a></li>
             <li><a href="#settings">Settings</a></li>
             <li><a className="nav-logout" onClick={() => {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('role');
-                    navigate('/login');
+              localStorage.removeItem('token');
+              localStorage.removeItem('role');
+              navigate('/login');
             }}>Log Out</a></li>
           </ul>
         </nav>
 
         <div className="main-content">
-          <h2 style={{ color: '#042F46', marginTop:'20px', marginBottom: '20px' }}>All Announcements</h2>
+          <h2 style={{ color: '#042F46', marginTop: '20px', marginBottom: '20px' }}>All Announcements</h2>
           {announcements.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {announcements.map((ann) => (
