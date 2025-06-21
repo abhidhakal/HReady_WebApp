@@ -3,10 +3,13 @@ import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '/src/components/DashboardHeader.jsx';
 import '/src/pages/css/Dashboard.css';
+import api from '../api/axios';
 
 function EmployeeDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState('Employee');
+  const [position, setPosition] = useState('');
+  const [announcements, setAnnouncements] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,18 +26,37 @@ function EmployeeDashboard() {
         return;
       }
 
-      fetch(`http://localhost:3000/api/users/${decoded.id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.user.name) setName(data.user.name);
-          else setName('Employee');
+      // ✅ fetch employee details from API
+      api.get(`/employees/${decoded.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => {
+          setName(res.data.name || 'Employee');
+          setPosition(res.data.position || 'Employee');
         })
-        .catch(() => setName('Employee'));
+        .catch(() => {
+          setName('Employee');
+          setPosition('Employee');
+        });
     } catch (error) {
       console.error('Invalid token:', error);
       navigate('/login');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await api.get('/announcements', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setAnnouncements(res.data);
+      } catch (err) {
+        console.error('Error fetching announcements:', err);
+      }
+    };
+    fetchAnnouncements();
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(prev => !prev);
@@ -51,7 +73,7 @@ function EmployeeDashboard() {
             <li><a href="#attendance">Attendance</a></li>
             <li><a href="#tasks">Tasks</a></li>
             <li><a href="#leave">Leave</a></li>
-            <li><a href="#news">News</a></li>
+            <li><a href="#news">Announcements</a></li>
             <li><a href="#settings">Settings</a></li>
             <li><a className="nav-logout" href="/login">Log Out</a></li>
           </ul>
@@ -77,7 +99,7 @@ function EmployeeDashboard() {
           <div className="info-cards">
             <div className="info-card">
               <h2>Role</h2>
-              <h1 className="employee-role">Web Developer</h1>
+              <h1 className="employee-role">{position}</h1>
             </div>
             <div className="info-card">
               <h2>Leave Days Left</h2>
@@ -103,10 +125,24 @@ function EmployeeDashboard() {
               </table>
             </div>
 
-            <div className="news-section">
-              <h2>News / Announcements</h2>
-              <div className="news-box"></div>
-              <div className="news-box"></div>
+            <div className="announcement-section">
+              <div className="announcement-header">
+                <h2>Recent Announcements</h2>
+              </div>
+              <div className="announcement-box">
+                {announcements.length > 0 ? (
+                  <ul>
+                    {announcements.slice(0, 3).map((ann) => (
+                      <li key={ann._id}>
+                        <strong>{ann.title}:</strong>{' '}
+                        {ann.message.length > 60 ? ann.message.substring(0, 60) + '...' : ann.message}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No announcements available.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -24,7 +24,17 @@ function AdminDashboard() {
         navigate('/login');
         return;
       }
-      setName(decoded.name || 'Admin');
+
+      api.get(`/admins/${decoded.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => {
+          setName(res.data.name || 'Admin');
+        })
+        .catch(err => {
+          console.error('Error fetching admin:', err);
+          setName('Admin');
+        });
     } catch (error) {
       console.error('Invalid token:', error);
       navigate('/login');
