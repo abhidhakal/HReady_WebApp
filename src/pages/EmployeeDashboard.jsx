@@ -26,7 +26,6 @@ function EmployeeDashboard() {
         return;
       }
 
-      // ✅ fetch employee details from API
       api.get(`/employees/${decoded.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
