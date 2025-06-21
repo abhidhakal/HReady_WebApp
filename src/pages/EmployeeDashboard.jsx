@@ -61,13 +61,13 @@ function EmployeeDashboard() {
           <div className="welcome-banner">
             <div className="banner-left">
               <div className="profile-picture">
-                <img src="/src/assets/profile.webp" alt="Profile Picture" />
+                <img src="/src/assets/profile.svg" alt="Profile Picture" />
               </div>
               <h2 className="employee-name">Hello, {name}</h2>
             </div>
             <div className="banner-middle">
               <p>Your Today’s Attendance: <span className="status-done">DONE</span></p>
-              <small>click to complete attendance</small>
+              <small className='go-attendance-label'>click to complete attendance</small>
             </div>
             <div className="banner-right">
               <button className="edit-profile">Edit Your Profile</button>

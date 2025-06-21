@@ -48,7 +48,7 @@ function AdminDashboard() {
           <ul>
             <li><img src="/src/assets/light_noicon.png" alt="Logo" /></li>
             <li><a className="nav-dashboard" href="/admin">Dashboard</a></li>
-            <li><a href="#employees">Manage Employees</a></li>
+            <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
             <li><a href="#attendance">Attendance Logs</a></li>
             <li><a href="#tasks">Manage Tasks</a></li>
             <li><a href="#leave">Leave Requests</a></li>
@@ -62,13 +62,13 @@ function AdminDashboard() {
           <div className="welcome-banner">
             <div className="banner-left">
               <div className="profile-picture">
-                <img src="/src/assets/profile.webp" alt="Admin Profile" />
+                <img src="/src/assets/profile.svg" alt="Admin Profile" />
               </div>
               <h2 className="employee-name">Hello, {name}</h2>
             </div>
             <div className="banner-middle">
               <p>Your Today’s Attendance: <span className="status-not-done">NOT DONE</span></p>
-              <small>click to complete attendance</small>
+              <small className='go-attendance-label'>click to complete attendance</small>
             </div>
             <div className="banner-right">
               <button className="edit-profile">Edit Admin Profile</button>
