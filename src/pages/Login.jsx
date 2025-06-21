@@ -11,22 +11,28 @@ function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
+      // First try admin login
+      let res = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
 
-      const data = await res.json();
+      let data = await res.json();
+
+      // If admin login fails, try employee login
+      if (!res.ok && data.message === 'Invalid credentials') {
+        res = await fetch('http://localhost:3000/api/auth/employee-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        data = await res.json();
+      }
 
       if (res.ok) {
         localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.role);
+        localStorage.setItem('role', data.user.role);
 
         if (data.user.role === 'admin') {
           navigate('/admin');
