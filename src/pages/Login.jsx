@@ -1,17 +1,20 @@
 import './css/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // used for redirection
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      // First try admin login
       let res = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -20,7 +23,6 @@ function Login() {
 
       let data = await res.json();
 
-      // If admin login fails, try employee login
       if (!res.ok && data.message === 'Invalid credentials') {
         res = await fetch('http://localhost:3000/api/auth/employee-login', {
           method: 'POST',
@@ -34,24 +36,26 @@ function Login() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.user.role);
 
-        if (data.user.role === 'admin') {
-          navigate('/admin');
-        } else if (data.user.role === 'employee') {
-          navigate('/employee');
-        } else {
-          alert('Unknown role. Contact admin.');
-        }
+        toast.success('Login successful! Redirecting...');
+
+        setTimeout(() => {
+          if (data.user.role === 'admin') navigate('/admin');
+          else if (data.user.role === 'employee') navigate('/employee');
+        }, 1500);
       } else {
-        alert(data.message || 'Login failed');
+        toast.error(data.message || 'Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('An error occurred during login');
+      toast.error('Something went wrong. Please try again.');
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="full-screen">
+      <ToastContainer position="top-center" autoClose={2000} />
       <div className="login">
         <img className="logo" src="../src/assets/transparent.png" alt="HReady" />
         <h1>Login to HReady</h1>
@@ -82,7 +86,9 @@ function Login() {
             />
           </div>
 
-          <button type="submit" className="login-btn">Login</button>
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
 
         <Link to="/">
