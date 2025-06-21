@@ -89,7 +89,11 @@ const ManageAnnouncements = () => {
             <li><a href="#">Leave Requests</a></li>
             <li><a href="#">Attendance</a></li>
             <li><a href="#">Settings</a></li>
-            <li><a className="nav-logout" onClick={() => navigate('/login')}>Log Out</a></li>
+            <li><a className="nav-logout" onClick={() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('role');
+                    navigate('/login');
+            }}>Log Out</a></li>
           </ul>
         </nav>
 

@@ -73,7 +73,11 @@ function AdminDashboard() {
             <li><a href="#leave">Leave Requests</a></li>
             <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
             <li><a href="#settings">Settings</a></li>
-            <li><a className="nav-logout" href="/login">Log Out</a></li>
+            <li><a className="nav-logout" onClick={() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('role');
+                    navigate('/login');
+            }}>Log Out</a></li>
           </ul>
         </nav>
 

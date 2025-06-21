@@ -72,9 +72,13 @@ function EmployeeDashboard() {
             <li><a href="#attendance">Attendance</a></li>
             <li><a href="#tasks">Tasks</a></li>
             <li><a href="#leave">Leave</a></li>
-            <li><a href="#news">Announcements</a></li>
+            <li><a onClick={() => navigate('/employee/announcements')}>Announcements</a></li>
             <li><a href="#settings">Settings</a></li>
-            <li><a className="nav-logout" href="/login">Log Out</a></li>
+            <li><a className="nav-logout" onClick={() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('role');
+                    navigate('/login');
+            }}>Log Out</a></li>
           </ul>
         </nav>
 
