@@ -56,7 +56,7 @@ function Login() {
         onClose={() => setToast({ message: '', type: '' })}
       />
       <div className="login">
-        <img className="logo" src="../src/assets/transparent.png" alt="HReady" />
+        <img className="logo" src="/src/assets/primary_icon.webp" alt="HReady" />
         <h1>Login to HReady</h1>
         <p>Enter your credentials to access the dashboard.</p>
 
