@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
-import '../pages/css/ManageAnnouncements.css';
+import '/src/pages/admin/styles/ManageAnnouncements.css';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import lightLogo from '/src/assets/light_noicon.png';
+import logo from '/src/assets/primary.webp';
 
 const ManageAnnouncements = () => {
   const id = localStorage.getItem('userId');
@@ -83,7 +83,7 @@ const ManageAnnouncements = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={lightLogo} alt="Logo" /></li>
+            <li><img src={logo} alt="Logo" /></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
             <li><a href="#">Attendance Logs</a></li>

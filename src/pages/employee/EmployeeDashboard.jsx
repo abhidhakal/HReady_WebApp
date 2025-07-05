@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import '/src/pages/css/Dashboard.css';
+import '/src/pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
 
 function EmployeeDashboard() {

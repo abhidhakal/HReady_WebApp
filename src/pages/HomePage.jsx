@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '/src/components/common/Header.jsx';
-import './css/HomePage.css';
+import '/src/pages/styles/HomePage.css';
 
 function HomePage() {
   return (
@@ -11,7 +11,7 @@ function HomePage() {
         <div className="left-side">
           <img 
             className="welcomepage-img" 
-            src="/welcome_img.png" 
+            src="/src/assets/welcome_img.webp" 
             alt="Welcome to HReady - Smart HR Management Solution" 
           />
         </div>

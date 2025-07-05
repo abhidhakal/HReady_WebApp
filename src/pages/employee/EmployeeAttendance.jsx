@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import api from '../../api/axios';
-import '/src/pages/css/EmployeeAttendance.css';
+import '/src/pages/employee/styles/EmployeeAttendance.css';
 
 const EmployeeAttendance = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

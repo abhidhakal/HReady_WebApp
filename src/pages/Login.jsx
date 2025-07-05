@@ -1,4 +1,4 @@
-import './css/Login.css';
+import '/src/pages/styles/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import Toast from '../components/common/Toast';

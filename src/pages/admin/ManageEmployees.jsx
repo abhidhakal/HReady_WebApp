@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
-import '../pages/css/ManageEmployees.css';
+import '/src/pages/admin/styles/ManageEmployees.css';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import lightLogo from '/src/assets/light_noicon.png';
+import logo from '/src/assets/primary.webp';
 
 const ManageEmployees = () => {
   const [employees, setEmployees] = useState([]);
@@ -109,7 +109,7 @@ const ManageEmployees = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={lightLogo} alt="Logo" /></li>
+            <li><img src={logo} alt="Logo" /></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
             <li><a href="#">Attendance Logs</a></li>
