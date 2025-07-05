@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardHeader from '/src/components/DashboardHeader.jsx';
+import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/css/Dashboard.css';
-import api from '../api/axios';
+import api from '../../api/axios';
+import Toast from '../../components/common/Toast';
 
 function AdminDashboard() {
   const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Admin');
   const [announcements, setAnnouncements] = useState([]);
+  const [toast, setToast] = useState({ message: '', type: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,8 +62,23 @@ function AdminDashboard() {
     setSidebarOpen(prev => !prev);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    setToast({ message: 'Logged out successfully', type: 'success' });
+    setTimeout(() => {
+      navigate('/login');
+    }, 1000);
+  };
+
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: '', type: '' })}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -74,11 +91,9 @@ function AdminDashboard() {
             <li><a href="#leave">Leave Requests</a></li>
             <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
             <li><a href="#settings">Settings</a></li>
-            <li><a className="nav-logout" onClick={() => {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('role');
-                    navigate('/login');
-            }}>Log Out</a></li>
+            <li>
+              <a className="nav-logout" onClick={handleLogout}>Log Out</a>
+            </li>
           </ul>
         </nav>
 

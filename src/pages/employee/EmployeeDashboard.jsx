@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardHeader from '/src/components/DashboardHeader.jsx';
+import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/css/Dashboard.css';
-import api from '../api/axios';
+import api from '../../api/axios';
 
 function EmployeeDashboard() {
   const { id } = useParams();

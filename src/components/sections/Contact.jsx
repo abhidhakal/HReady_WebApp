@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './css/Contact.css'
-import Header from './Header';
+import '../styles/Contact.css'
+import Header from '../common/Header';
 
 function Contact() {
     return(

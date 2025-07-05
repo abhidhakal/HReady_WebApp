@@ -1,13 +1,13 @@
 import './css/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import Toast from '../components/common/Toast';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: '' });
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -25,16 +25,16 @@ function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.message || 'Login failed');
+        setToast({ message: data.message || 'Login failed', type: 'error' });
         setLoading(false);
         return;
       }
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', data.role);
-      localStorage.setItem('userId', data._id); // saves current userId to local storage
+      localStorage.setItem('userId', data._id);
 
-      toast.success('Login successful! Redirecting...');
+      setToast({ message: 'Login successful! Redirecting...', type: 'success' });
 
       setTimeout(() => {
         if (data.role === 'admin') navigate(`/admin/${data._id}`);
@@ -42,7 +42,7 @@ function Login() {
       }, 1500);
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Something went wrong. Please try again.');
+      setToast({ message: 'Something went wrong. Please try again.', type: 'error' });
     }
 
     setLoading(false);
@@ -50,7 +50,11 @@ function Login() {
 
   return (
     <div className="full-screen">
-      <ToastContainer position="top-center" autoClose={2000} />
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: '', type: '' })}
+      />
       <div className="login">
         <img className="logo" src="../src/assets/transparent.png" alt="HReady" />
         <h1>Login to HReady</h1>

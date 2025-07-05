@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
-import DashboardHeader from '/src/components/DashboardHeader.jsx';
+import api from '../../api/axios';
+import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/css/Dashboard.css';
 import logo from '/src/assets/light_noicon.png';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Header from '/src/components/Header.jsx';
+import Header from '/src/components/common/Header.jsx';
 import './css/HomePage.css';
 
 function HomePage() {

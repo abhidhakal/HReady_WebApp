@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './css/Blogs.css'
-import Header from './Header';
+import '../styles/Blogs.css'
+import Header from '../common/Header';
 
 function Blogs() {
     return(

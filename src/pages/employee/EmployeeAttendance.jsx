@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
-import DashboardHeader from '/src/components/DashboardHeader.jsx';
-import api from '../api/axios';
+import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
+import api from '../../api/axios';
 import '/src/pages/css/EmployeeAttendance.css';
 
 const EmployeeAttendance = () => {

@@ -1,14 +1,13 @@
 import React from 'react';
 import './App.css';
-import Header from './components/Header';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 // Import components for different pages
 import HomePage from '../src/pages/HomePage.jsx';
-import AboutUs from './components/AboutUs';
-import Blogs from './components/Blogs';
-import Contact from './components/Contact';
-import Services from './components/Services';
+import AboutUs from './components/sections/AboutUs';
+import Blogs from './components/sections/Blogs';
+import Contact from './components/sections/Contact';
+import Services from './components/sections/Services';
 import Login from './pages/Login';
 import EmployeeDashboard from '../src/pages/EmployeeDashboard.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';

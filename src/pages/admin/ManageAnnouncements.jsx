@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../api/axios';
+import api from '../../api/axios';
 import '../pages/css/ManageAnnouncements.css';
-import DashboardHeader from '/src/components/DashboardHeader.jsx';
+import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import lightLogo from '/src/assets/light_noicon.png';
 
 const ManageAnnouncements = () => {

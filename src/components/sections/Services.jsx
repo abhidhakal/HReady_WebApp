@@ -1,6 +1,6 @@
 import React from 'react';
-import './css/Services.css';
-import Header from './Header';
+import '../styles/Services.css';
+import Header from '../common/Header';
 
 function Services() {
     return (
