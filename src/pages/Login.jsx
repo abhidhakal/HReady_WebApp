@@ -12,39 +12,34 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!email || !password) return;
     setLoading(true);
 
     try {
-      let res = await fetch('http://localhost:3000/api/auth/login', {
+      const res = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
 
-      let data = await res.json();
+      const data = await res.json();
 
-      if (!res.ok && data.message === 'Invalid credentials') {
-        res = await fetch('http://localhost:3000/api/auth/employee-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        data = await res.json();
-      }
-
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.user.role);
-
-        toast.success('Login successful! Redirecting...');
-
-        setTimeout(() => {
-          if (data.user.role === 'admin') navigate('/admin');
-          else if (data.user.role === 'employee') navigate('/employee');
-        }, 1500);
-      } else {
+      if (!res.ok) {
         toast.error(data.message || 'Login failed');
+        setLoading(false);
+        return;
       }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('userId', data._id); // saves current userId to local storage
+
+      toast.success('Login successful! Redirecting...');
+
+      setTimeout(() => {
+        if (data.role === 'admin') navigate(`/admin/${data._id}`);
+        else if (data.role === 'employee') navigate(`/employee/${data._id}`);
+      }, 1500);
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Something went wrong. Please try again.');

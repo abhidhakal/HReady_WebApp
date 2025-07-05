@@ -4,7 +4,6 @@ import api from '../api/axios';
 import '../pages/css/ManageEmployees.css';
 import DashboardHeader from '/src/components/DashboardHeader.jsx';
 import lightLogo from '/src/assets/light_noicon.png';
-import profileImage from '/src/assets/profile.svg';
 
 const ManageEmployees = () => {
   const [employees, setEmployees] = useState([]);
@@ -23,6 +22,7 @@ const ManageEmployees = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const token = localStorage.getItem('token');
+  const id = localStorage.getItem('userId');
   const navigate = useNavigate();
 
   const fetchEmployees = async () => {
@@ -37,7 +37,6 @@ const ManageEmployees = () => {
   };
 
   useEffect(() => {
-    console.log('JWT Token:', localStorage.getItem('token'));
     fetchEmployees();
   }, []);
 
@@ -57,7 +56,17 @@ const ManageEmployees = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
-      setFormData({ name: '', email: '', password: '', profilePicture: '', contactNo: '', role: 'employee', department: '', position: '', status: 'active' });
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        profilePicture: '',
+        contactNo: '',
+        role: 'employee',
+        department: '',
+        position: '',
+        status: 'active'
+      });
       setEditingId(null);
       fetchEmployees();
     } catch (err) {
@@ -69,7 +78,16 @@ const ManageEmployees = () => {
   };
 
   const handleEdit = (employee) => {
-    setFormData(employee);
+    setFormData({
+      name: employee.userId?.name || '',
+      email: employee.userId?.email || '',
+      password: '',
+      profilePicture: employee.profilePicture,
+      contactNo: employee.contactNo,
+      department: employee.department,
+      position: employee.position,
+      status: employee.status
+    });
     setEditingId(employee._id);
   };
 
@@ -92,18 +110,21 @@ const ManageEmployees = () => {
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src={lightLogo} alt="Logo" /></li>
-            <li><a onClick={() => navigate('/admin')}>Dashboard</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
             <li><a href="#">Attendance Logs</a></li>
             <li><a href="#">Manage Tasks</a></li>
             <li><a href="#">Leave Requests</a></li>
-            <li><a href="#">Announcements</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
             <li><a href="#">Settings</a></li>
-            <li><a className="nav-logout" onClick={() => {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('role');
-                    navigate('/login');
-            }}>Log Out</a></li>
+            <li>
+              <a className="nav-logout" onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                localStorage.removeItem('userId');
+                navigate('/login');
+              }}>Log Out</a>
+            </li>
           </ul>
         </nav>
 
@@ -135,6 +156,7 @@ const ManageEmployees = () => {
                   <th>Email</th>
                   <th>Department</th>
                   <th>Position</th>
+                  <th>Date Joined</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -142,10 +164,11 @@ const ManageEmployees = () => {
               <tbody>
                 {employees.map((emp) => (
                   <tr key={emp._id}>
-                    <td>{emp.name}</td>
-                    <td>{emp.email}</td>
+                    <td>{emp.userId?.name}</td>
+                    <td>{emp.userId?.email}</td>
                     <td>{emp.department}</td>
                     <td>{emp.position}</td>
+                    <td>{new Date(emp.date_of_joining).toLocaleDateString()}</td>
                     <td>{emp.status}</td>
                     <td>
                       <button onClick={() => handleEdit(emp)}>Edit</button>

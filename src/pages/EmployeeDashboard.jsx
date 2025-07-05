@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/DashboardHeader.jsx';
 import '/src/pages/css/Dashboard.css';
 import api from '../api/axios';
 
 function EmployeeDashboard() {
+  const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Employee');
   const [position, setPosition] = useState('');
   const [announcements, setAnnouncements] = useState([]);
+  const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,28 +21,47 @@ function EmployeeDashboard() {
       return;
     }
 
-    try {
-      const decoded = jwtDecode(token);
-      if (decoded.role !== 'employee') {
-        navigate('/login');
-        return;
-      }
-
-      api.get(`/employees/${decoded.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+    // Fetch employee details
+    api.get(`/employees/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => {
+        setName(res.data.name || 'Employee');
+        setPosition(res.data.position || 'Employee');
       })
-        .then(res => {
-          setName(res.data.name || 'Employee');
-          setPosition(res.data.position || 'Employee');
-        })
-        .catch(() => {
-          setName('Employee');
-          setPosition('Employee');
+      .catch(() => {
+        setName('Employee');
+        setPosition('Employee');
+      });
+
+    // Fetch today's attendance (this is the fix!)
+    const fetchAttendance = async () => {
+      try {
+        const res = await api.get('/attendance/me', {
+          headers: { Authorization: `Bearer ${token}` }
         });
-    } catch (error) {
-      console.error('Invalid token:', error);
-      navigate('/login');
-    }
+        if (res.data) {
+          if (res.data.check_out_time) {
+            setAttendanceStatus('Checked Out');
+          } else if (res.data.check_in_time) {
+            setAttendanceStatus('Checked In');
+          } else {
+            setAttendanceStatus('Not Done');
+          }
+        } else {
+          setAttendanceStatus('Not Done');
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          // No record for today
+          setAttendanceStatus('Not Done');
+        } else {
+          console.error('Error fetching attendance:', err);
+        }
+      }
+    };
+
+    fetchAttendance();
   }, [navigate]);
 
   useEffect(() => {
@@ -68,17 +89,21 @@ function EmployeeDashboard() {
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src="/src/assets/light_noicon.png" alt="Logo" /></li>
-            <li><a className="nav-dashboard" href="/employee">Dashboard</a></li>
-            <li><a href="#attendance">Attendance</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate('/employee/attendance')}>Attendance</a></li>
             <li><a href="#tasks">Tasks</a></li>
             <li><a href="#leave">Leave</a></li>
             <li><a onClick={() => navigate('/employee/announcements')}>Announcements</a></li>
             <li><a href="#settings">Settings</a></li>
-            <li><a className="nav-logout" onClick={() => {
-              localStorage.removeItem('token');
-              localStorage.removeItem('role');
-              navigate('/login');
-            }}>Log Out</a></li>
+            <li><a
+              className="nav-logout"
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                navigate('/login');
+              }}>
+              Log Out
+            </a></li>
           </ul>
         </nav>
 
@@ -86,13 +111,27 @@ function EmployeeDashboard() {
           <div className="welcome-banner">
             <div className="banner-left">
               <div className="profile-picture">
-                <img src="/src/assets/profile.svg" alt="Profile Picture" />
+                <img src="/src/assets/profile.svg" alt="Profile" />
               </div>
               <h2 className="employee-name">Hello, {name}</h2>
             </div>
             <div className="banner-middle">
-              <p>Your Today’s Attendance: <span className="status-done">DONE</span></p>
-              <small className='go-attendance-label'>click to complete attendance</small>
+              <p>
+                Your Today’s Attendance:{" "}
+                <span className={
+                  attendanceStatus === 'Checked In' || attendanceStatus === 'Checked Out'
+                    ? 'status-done'
+                    : 'status-not-done'
+                }>
+                  {attendanceStatus}
+                </span>
+              </p>
+              <small
+                className="go-attendance-label"
+                onClick={() => navigate('/employee/attendance')}
+              >
+                Click to complete attendance
+              </small>
             </div>
             <div className="banner-right">
               <button className="edit-profile">Edit Your Profile</button>
@@ -121,9 +160,9 @@ function EmployeeDashboard() {
               </div>
               <table className="task-table">
                 <tbody>
-                  <tr><td>Task Name</td><td className="doing">Doing</td><td><a href="#">Click to Edit</a></td></tr>
-                  <tr><td>Task Name</td><td className="completed">Completed</td><td><a href="#">Click to Edit</a></td></tr>
-                  <tr><td>Task Name</td><td className="pending">Pending</td><td><a href="#">Click to Edit</a></td></tr>
+                  <tr><td>Task Name</td><td className="doing">Doing</td><td><a href="#">Edit</a></td></tr>
+                  <tr><td>Task Name</td><td className="completed">Completed</td><td><a href="#">Edit</a></td></tr>
+                  <tr><td>Task Name</td><td className="pending">Pending</td><td><a href="#">Edit</a></td></tr>
                 </tbody>
               </table>
             </div>
@@ -135,10 +174,10 @@ function EmployeeDashboard() {
               <div className="announcement-box">
                 {announcements.length > 0 ? (
                   <ul>
-                    {announcements.slice(0, 3).map((ann) => (
+                    {announcements.slice(0, 3).map(ann => (
                       <li key={ann._id}>
-                        <strong>{ann.title}:</strong>{' '}
-                        {ann.message.length > 60 ? ann.message.substring(0, 60) + '...' : ann.message}
+                        <strong>{ann.title}:</strong>{" "}
+                        {ann.message.length > 60 ? ann.message.substring(0, 60) + "..." : ann.message}
                       </li>
                     ))}
                   </ul>

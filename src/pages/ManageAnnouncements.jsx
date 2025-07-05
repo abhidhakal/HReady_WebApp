@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 import '../pages/css/ManageAnnouncements.css';
 import DashboardHeader from '/src/components/DashboardHeader.jsx';
 import lightLogo from '/src/assets/light_noicon.png';
 
 const ManageAnnouncements = () => {
+  const id = localStorage.getItem('userId');
   const [announcements, setAnnouncements] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -83,11 +84,11 @@ const ManageAnnouncements = () => {
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src={lightLogo} alt="Logo" /></li>
-            <li><a onClick={() => navigate('/admin')}>Dashboard</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
-            <li><a className="nav-dashboard" onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
+            <li><a href="#">Attendance Logs</a></li>
             <li><a href="#">Leave Requests</a></li>
-            <li><a href="#">Attendance</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
             <li><a href="#">Settings</a></li>
             <li><a className="nav-logout" onClick={() => {
                     localStorage.removeItem('token');

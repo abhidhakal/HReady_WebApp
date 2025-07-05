@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/DashboardHeader.jsx';
 import '/src/pages/css/Dashboard.css';
 import api from '../api/axios';
 
 function AdminDashboard() {
+  const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Admin');
   const [announcements, setAnnouncements] = useState([]);
@@ -25,7 +26,7 @@ function AdminDashboard() {
         return;
       }
 
-      api.get(`/admins/${decoded.id}`, {
+      api.get(`/admins/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(res => {
@@ -66,7 +67,7 @@ function AdminDashboard() {
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src="/src/assets/light_noicon.png" alt="Logo" /></li>
-            <li><a className="nav-dashboard" href="/admin">Dashboard</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
             <li><a href="#attendance">Attendance Logs</a></li>
             <li><a href="#tasks">Manage Tasks</a></li>
