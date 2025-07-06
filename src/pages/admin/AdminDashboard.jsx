@@ -5,7 +5,7 @@ import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
 import Toast from '../../components/common/Toast';
-import logo from '/src/assets/primary.webp';
+import logo from '/src/assets/primary_icon.webp';
 
 function AdminDashboard() {
   const { id } = useParams();

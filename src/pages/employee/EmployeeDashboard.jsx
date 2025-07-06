@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
+import logo from '/src/assets/primary_icon.webp';
 
 function EmployeeDashboard() {
   const { id } = useParams();
@@ -21,20 +22,21 @@ function EmployeeDashboard() {
       return;
     }
 
-    api.get(`/employees/${id}`, {
+    // Fetch employee info
+    api.get('/employees/me', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
+        console.log('PROFILE PICTURE VALUE:', res.data.profilePicture);
         setName(res.data.name || 'Employee');
         setPosition(res.data.position || 'Employee');
         setProfilePicture(res.data.profilePicture || '');
       })
-      .catch(() => {
-        setName('Employee');
-        setPosition('Employee');
-        setProfilePicture('');
+      .catch(err => {
+        console.error('Error fetching employee:', err);
       });
 
+    // Fetch attendance
     const fetchAttendance = async () => {
       try {
         const res = await api.get('/attendance/me', {
@@ -87,22 +89,24 @@ function EmployeeDashboard() {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src="/src/assets/light_noicon.png" alt="Logo" /></li>
+            <li><img src={logo} alt="Logo" /></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
-            <li><a onClick={() => navigate('/employee/attendance')}>Attendance</a></li>
-            <li><a href="#tasks">Tasks</a></li>
-            <li><a href="#leave">Leave</a></li>
-            <li><a onClick={() => navigate('/employee/announcements')}>Announcements</a></li>
-            <li><a href="#settings">Settings</a></li>
-            <li><a
-              className="nav-logout"
-              onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('role');
-                navigate('/login');
-              }}>
-              Log Out
-            </a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
+            <li>
+              <a
+                className="nav-logout"
+                onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </a>
+            </li>
           </ul>
         </nav>
 
@@ -113,7 +117,7 @@ function EmployeeDashboard() {
                 <img
                   src={
                     profilePicture
-                      ? `data:image/svg+xml;base64,${profilePicture}`
+                      ? profilePicture
                       : '/src/assets/profile.svg'
                   }
                   alt="Profile"
@@ -134,7 +138,7 @@ function EmployeeDashboard() {
               </p>
               <small
                 className="go-attendance-label"
-                onClick={() => navigate('/employee/attendance')}
+                onClick={() => navigate(`/employee/${id}/attendance`)}
               >
                 Click to complete attendance
               </small>

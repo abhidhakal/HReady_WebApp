@@ -30,15 +30,19 @@ function App() {
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/services" element={<Services />} />
+
+          {/* EMPLOYEE */}
           <Route path="/employee/:id" element={<EmployeeDashboard />} />
-          <Route path="/employee/announcements" element={<EmployeeAnnouncements />} />
-          <Route path="/employee/attendance" element={<EmployeeAttendance />} />
-          < Route path="/employee/:id/profile" element={<EmployeeProfile />} />
+          <Route path="/employee/:id/announcements" element={<EmployeeAnnouncements />} />
+          <Route path="/employee/:id/attendance" element={<EmployeeAttendance />} />
+          <Route path="/employee/:id/profile" element={<EmployeeProfile />} />
+
+          {/* ADMIN */}
           <Route path="/admin/:id" element={<AdminDashboard />} />
-          <Route path='/admin/employees' element={<ManageEmployees/>} />
+          <Route path="/admin/employees" element={<ManageEmployees />} />
           <Route path="/admin/announcements" element={<ManageAnnouncements />} />
           <Route path="/admin/attendance" element={<AdminAttendance />} />
-          < Route path="/admin/:id/profile" element={<AdminProfile />} />
+          <Route path="/admin/:id/profile" element={<AdminProfile />} />
         </Routes>
       </div>
     </Router>

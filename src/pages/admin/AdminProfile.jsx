@@ -4,7 +4,7 @@ import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/AdminProfile.css';
 import Toast from '/src/components/common/Toast.jsx';
-import logo from '/src/assets/primary.webp';
+import logo from '/src/assets/primary_icon.webp';
 
 const AdminProfile = () => {
   const { id } = useParams();

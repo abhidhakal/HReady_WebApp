@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import api from '../../api/axios';
 import '/src/pages/employee/styles/EmployeeAttendance.css';
+import logo from '/src/assets/primary_icon.webp';
 
 const EmployeeAttendance = () => {
+  const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [attendanceRecord, setAttendanceRecord] = useState(null);
   const [todayStatus, setTodayStatus] = useState('Not Checked In');
@@ -74,20 +76,27 @@ const EmployeeAttendance = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src="/src/assets/light_noicon.png" alt="Logo" /></li>
-            <li><a onClick={() => navigate('/employee')}>Dashboard</a></li>
-            <li><a className="nav-dashboard" onClick={() => navigate('/employee/attendance')}>Attendance</a></li>
-            <li><a href="#tasks">Tasks</a></li>
-            <li><a href="#leave">Leave</a></li>
-            <li><a onClick={() => navigate('/employee/announcements')}>Announcements</a></li>
-            <li><a href="#settings">Settings</a></li>
-            <li><a className="nav-logout" onClick={() => {
-              localStorage.removeItem('token');
-              localStorage.removeItem('role');
-              navigate('/login');
-            }}>Log Out</a></li>
+            <li><img src={logo} alt="Logo" /></li>
+            <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/employee//${id}attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate('/employee/tasks')}>Tasks</a></li>
+            <li><a onClick={() => navigate('/employee/leave')}>Leave</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
+            <li>
+              <a
+                className="nav-logout"
+                onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </a>
+            </li>
           </ul>
         </nav>
+
 
         <div className="main-content attendance-page">
           <h2>My Attendance</h2>

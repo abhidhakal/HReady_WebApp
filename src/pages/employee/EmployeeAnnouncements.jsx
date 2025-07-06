@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
-import logo from '/src/assets/primary.webp';
+import logo from '/src/assets/primary_icon.webp';
 
 const EmployeeAnnouncements = () => {
+  const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const navigate = useNavigate();
@@ -35,17 +36,23 @@ const EmployeeAnnouncements = () => {
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src={logo} alt="Logo" /></li>
-            <li><a onClick={() => navigate('/employee')}>Dashboard</a></li>
-            <li><a href="#attendance">Attendance</a></li>
-            <li><a href="#tasks">Tasks</a></li>
-            <li><a href="#leave">Leave</a></li>
-            <li><a className="nav-dashboard" onClick={() => navigate('/employee/announcements')}>Announcements</a></li>
-            <li><a href="#settings">Settings</a></li>
-            <li><a className="nav-logout" onClick={() => {
-              localStorage.removeItem('token');
-              localStorage.removeItem('role');
-              navigate('/login');
-            }}>Log Out</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate(`/employee//${id}attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate('/employee/tasks')}>Tasks</a></li>
+            <li><a onClick={() => navigate('/employee/leave')}>Leave</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
+            <li>
+              <a
+                className="nav-logout"
+                onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </a>
+            </li>
           </ul>
         </nav>
 

@@ -4,7 +4,7 @@ import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/AdminProfile.css';
 import Toast from '/src/components/common/Toast.jsx';
-import logo from '/src/assets/primary.webp';
+import logo from '/src/assets/primary_icon.webp';
 
 const EmployeeProfile = () => {
   const { id } = useParams();
@@ -65,27 +65,30 @@ const EmployeeProfile = () => {
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-        setUploading(true);
-        const reader = new FileReader();
-        reader.onloadend = async () => {
+      setUploading(true);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
         try {
-            await api.put('/employees/upload-profile-picture',
-            { profilePicture: reader.result },
-            { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setToast({ message: 'Profile picture updated.', type: 'success' });
-            fetchProfile();
+          // Remove the prefix "data:image/...;base64,"
+          const base64Data = reader.result.split(',')[1];
+          await api.put('/employees/upload-profile-picture',
+            { profilePicture: base64Data },
+            {
+              headers: { Authorization: `Bearer ${token}` }
+            }
+          );
+          setToast({ message: 'Profile picture updated.', type: 'success' });
+          fetchProfile();
         } catch (err) {
-            console.error('Error uploading profile picture:', err);
-            setToast({ message: 'Failed to upload picture.', type: 'error' });
+          console.error('Error uploading profile picture:', err);
+          setToast({ message: 'Failed to upload picture.', type: 'error' });
         } finally {
-            setUploading(false);
+          setUploading(false);
         }
-        };
-        reader.readAsDataURL(file);
+      };
+      reader.readAsDataURL(file);
     }
-    };
-
+  };
 
   const handleSaveProfile = async () => {
     try {
@@ -167,26 +170,26 @@ const EmployeeProfile = () => {
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <ul>
-            <li><img src={logo} alt="Logo" /></li>
-            <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
-            <li><a onClick={() => navigate('/employee/attendance')}>Attendance</a></li>
-            <li><a href="#tasks">Tasks</a></li>
-            <li><a href="#leave">Leave</a></li>
-            <li><a onClick={() => navigate('/employee/announcements')}>Announcements</a></li>
-            <li><a href="#settings">Settings</a></li>
-            <li>
-              <a
-                className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
-              >
-                Log Out
-              </a>
-            </li>
-          </ul>
+					<ul>
+							<li><img src={logo} alt="Logo" /></li>
+							<li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate(`/employee//${id}attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate('/employee/tasks')}>Tasks</a></li>
+            <li><a onClick={() => navigate('/employee/leave')}>Leave</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
+							<li>
+							<a
+									className="nav-logout"
+									onClick={() => {
+									localStorage.clear();
+									navigate('/login');
+									}}
+							>
+									Log Out
+							</a>
+							</li>
+            </ul>
         </nav>
 
         <div className="main-content profile-page">
