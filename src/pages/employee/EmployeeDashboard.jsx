@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
@@ -10,6 +9,7 @@ function EmployeeDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Employee');
   const [position, setPosition] = useState('');
+  const [profilePicture, setProfilePicture] = useState('');
   const [announcements, setAnnouncements] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const navigate = useNavigate();
@@ -21,20 +21,20 @@ function EmployeeDashboard() {
       return;
     }
 
-    // Fetch employee details
     api.get(`/employees/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
         setName(res.data.name || 'Employee');
         setPosition(res.data.position || 'Employee');
+        setProfilePicture(res.data.profilePicture || '');
       })
       .catch(() => {
         setName('Employee');
         setPosition('Employee');
+        setProfilePicture('');
       });
 
-    // Fetch today's attendance (this is the fix!)
     const fetchAttendance = async () => {
       try {
         const res = await api.get('/attendance/me', {
@@ -53,7 +53,6 @@ function EmployeeDashboard() {
         }
       } catch (err) {
         if (err.response && err.response.status === 404) {
-          // No record for today
           setAttendanceStatus('Not Done');
         } else {
           console.error('Error fetching attendance:', err);
@@ -62,7 +61,7 @@ function EmployeeDashboard() {
     };
 
     fetchAttendance();
-  }, [navigate]);
+  }, [navigate, id]);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -111,7 +110,14 @@ function EmployeeDashboard() {
           <div className="welcome-banner">
             <div className="banner-left">
               <div className="profile-picture">
-                <img src="/src/assets/profile.svg" alt="Profile" />
+                <img
+                  src={
+                    profilePicture
+                      ? `data:image/svg+xml;base64,${profilePicture}`
+                      : '/src/assets/profile.svg'
+                  }
+                  alt="Profile"
+                />
               </div>
               <h2 className="employee-name">Hello, {name}</h2>
             </div>
@@ -134,7 +140,12 @@ function EmployeeDashboard() {
               </small>
             </div>
             <div className="banner-right">
-              <button className="edit-profile">Edit Your Profile</button>
+              <button
+                className="edit-profile"
+                onClick={() => navigate(`/employee/${id}/profile`)}
+              >
+                Edit Your Profile
+              </button>
             </div>
           </div>
 

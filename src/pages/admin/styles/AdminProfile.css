@@ -10,16 +10,46 @@
   padding: 20px 30px;
   border-radius: 12px;
   margin-bottom: 30px;
-  background-color: #f5f5f5;
 }
 
-/* Profile picture in banner */
+.profile-banner-left {
+  position: relative;
+  display: inline-block;
+}
+
 .profile-banner-picture {
-  width: 75px;
-  height: 75px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #ddd;
+  display: block;
+}
+
+.profile-picture-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #042F46;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+
+.profile-banner-left:hover .profile-picture-overlay {
+  opacity: 0.9;
+}
+
+
+.edit-icon-image {
+  width: 24px;
+  height: 24px;
 }
 
 /* Text next to profile picture */
