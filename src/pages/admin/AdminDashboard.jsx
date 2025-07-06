@@ -157,7 +157,9 @@ function AdminDashboard() {
               </small>
             </div>
             <div className="banner-right">
-              <button className="edit-profile">Edit Admin Profile</button>
+              <button className="edit-profile" onClick={() => navigate(`/admin/${id}/profile`)}>
+                Edit Admin Profile
+              </button>
             </div>
           </div>
 
