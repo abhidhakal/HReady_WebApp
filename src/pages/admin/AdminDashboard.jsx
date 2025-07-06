@@ -11,6 +11,7 @@ function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Admin');
   const [announcements, setAnnouncements] = useState([]);
+  const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const [toast, setToast] = useState({ message: '', type: '' });
   const navigate = useNavigate();
 
@@ -43,6 +44,38 @@ function AdminDashboard() {
       navigate('/login');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await api.get('/attendance/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data) {
+          if (res.data.check_out_time) {
+            setAttendanceStatus('Checked Out');
+          } else if (res.data.check_in_time) {
+            setAttendanceStatus('Checked In');
+          } else {
+            setAttendanceStatus('Not Done');
+          }
+        } else {
+          setAttendanceStatus('Not Done');
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          setAttendanceStatus('Not Done');
+        } else {
+          console.error('Error fetching attendance:', err);
+        }
+      }
+    };
+
+    fetchAttendance();
+  }, []);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -106,8 +139,22 @@ function AdminDashboard() {
               <h2 className="employee-name">Hello, {name}</h2>
             </div>
             <div className="banner-middle">
-              <p>Your Today’s Attendance: <span className="status-not-done">NOT DONE</span></p>
-              <small className='go-attendance-label'>click to complete attendance</small>
+              <p>
+                Your Today’s Attendance:{" "}
+                <span className={
+                  attendanceStatus === 'Checked In' || attendanceStatus === 'Checked Out'
+                    ? 'status-done'
+                    : 'status-not-done'
+                }>
+                  {attendanceStatus}
+                </span>
+              </p>
+              <small
+                className="go-attendance-label"
+                onClick={() => navigate('/admin/attendance')}
+              >
+                Click to complete attendance
+              </small>
             </div>
             <div className="banner-right">
               <button className="edit-profile">Edit Admin Profile</button>
@@ -158,7 +205,12 @@ function AdminDashboard() {
                 {announcements.length > 0 ? (
                   <ul>
                     {announcements.slice(0, 3).map((ann) => (
-                      <li key={ann._id}><strong>{ann.title}:</strong> {ann.message.length > 60 ? ann.message.substring(0, 60) + '...' : ann.message}</li>
+                      <li key={ann._id}>
+                        <strong>{ann.title}:</strong>{" "}
+                        {ann.message.length > 60
+                          ? ann.message.substring(0, 60) + "..."
+                          : ann.message}
+                      </li>
                     ))}
                   </ul>
                 ) : <p>No announcements available.</p>}

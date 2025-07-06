@@ -79,16 +79,15 @@ const ManageEmployees = () => {
 
   const handleEdit = (employee) => {
     setFormData({
-      name: employee.userId?.name || '',
-      email: employee.userId?.email || '',
+      name: employee.name || '',
+      email: employee.email || '',
       password: '',
-      profilePicture: employee.profilePicture,
-      contactNo: employee.contactNo,
-      department: employee.department,
-      position: employee.position,
-      status: employee.status
+      profilePicture: employee.profilePicture || '',
+      contactNo: employee.contactNo || '',
+      department: employee.department || '',
+      position: employee.position || '',
+      status: employee.status || 'active'
     });
-    setEditingId(employee._id);
   };
 
   const handleDelete = async (id) => {
@@ -164,8 +163,8 @@ const ManageEmployees = () => {
               <tbody>
                 {employees.map((emp) => (
                   <tr key={emp._id}>
-                    <td>{emp.userId?.name}</td>
-                    <td>{emp.userId?.email}</td>
+                    <td>{emp.name}</td>
+                    <td>{emp.email}</td>
                     <td>{emp.department}</td>
                     <td>{emp.position}</td>
                     <td>{new Date(emp.date_of_joining).toLocaleDateString()}</td>
