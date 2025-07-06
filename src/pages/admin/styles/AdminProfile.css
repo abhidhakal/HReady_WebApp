@@ -141,15 +141,28 @@
   transform: translateY(-1px);
 }
 
+/* Role permissions list */
+.role-permissions {
+  margin-top: 12px;
+  padding-left: 18px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.role-permissions li {
+  margin-bottom: 6px;
+}
+
 /* Full width card */
 .full-width-card {
   width: 100%;
   margin-top: 20px;
 }
 
-/* Change Password / Security Card */
+/* Security Card */
 .change-password-card {
   display: flex;
+  width: 97.5%;
   flex-direction: column;
   border: 1px solid #ddd;
   border-radius: 12px;
@@ -170,13 +183,22 @@
   margin: 0 0 12px 0;
 }
 
-/* Change Password Button */
 .card-actions {
+  display: flex;
+
+  flex-direction: column;
+  gap: 30px;
   margin-top: 10px;
+  align-items: flex-start;
 }
 
-.change-password-btn {
+
+/* Change Password Button */
+.change-password-btn,
+.deactivate-account-btn {
   padding: 10px 20px;
+  width: auto;
+  min-width: 180px;
   background-color: #042F46;
   color: white;
   border: none;
@@ -188,7 +210,8 @@
   box-shadow: 0 4px 12px rgba(4,47,70,0.2);
 }
 
-.change-password-btn:hover {
+.change-password-btn:hover,
+.deactivate-account-btn:hover {
   background-color: #031f2e;
   transform: translateY(-2px);
 }

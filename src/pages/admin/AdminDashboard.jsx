@@ -8,6 +8,7 @@ import Toast from '../../components/common/Toast';
 
 function AdminDashboard() {
   const { id } = useParams();
+  const [employeeCount, setEmployeeCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Admin');
   const [profilePicture, setProfilePicture] = useState('');
@@ -92,6 +93,21 @@ function AdminDashboard() {
       }
     };
     fetchAnnouncements();
+  }, []);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await api.get('/employees', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        setEmployeeCount(res.data.length);
+      } catch (err) {
+        console.error('Error fetching employees:', err);
+      }
+    };
+
+    fetchEmployees();
   }, []);
 
   const toggleSidebar = () => {
@@ -182,7 +198,7 @@ function AdminDashboard() {
             </div>
             <div className="info-card">
               <h2>Total Employees</h2>
-              <h1 className="employee-role">58</h1>
+              <h1 className="employee-role">{employeeCount}</h1>
             </div>
             <div className="info-card">
               <h2>Pending Leave Requests</h2>

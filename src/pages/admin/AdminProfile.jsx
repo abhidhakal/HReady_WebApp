@@ -15,6 +15,7 @@ const AdminProfile = () => {
     email: '',
     contactNo: '',
     profilePicture: '',
+    role: 'admin',
   });
   const [passwords, setPasswords] = useState({
     current: '',
@@ -42,6 +43,7 @@ const AdminProfile = () => {
         email: res.data.email,
         contactNo: res.data.contactNo || '',
         profilePicture: res.data.profilePicture || '',
+        role: res.data.role || 'Admin',
       });
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -137,6 +139,20 @@ const AdminProfile = () => {
       setToast({ message: 'Failed to change password.', type: 'error' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (!window.confirm('Are you sure you want to deactivate your account?')) return;
+    try {
+      await api.delete('/admins/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      localStorage.clear();
+      navigate('/login');
+    } catch (err) {
+      console.error('Error deactivating account:', err);
+      setToast({ message: 'Failed to deactivate account.', type: 'error' });
     }
   };
 
@@ -244,7 +260,12 @@ const AdminProfile = () => {
 
             <div className="profile-card">
               <h3>Role</h3>
-              <p>Admin</p>
+              <p>{profile.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Admin'}</p>
+              <ul className="role-permissions">
+                <li>Manage Employees</li>
+                <li>View Attendance</li>
+                <li>Manage Announcements</li>
+              </ul>
             </div>
           </div>
 
@@ -256,6 +277,12 @@ const AdminProfile = () => {
                 onClick={() => setShowPasswordModal(true)}
               >
                 Change Password
+              </button>
+              <button
+                className="deactivate-account-btn"
+                onClick={handleDeactivate}
+              >
+                Deactivate Account
               </button>
             </div>
           </div>
