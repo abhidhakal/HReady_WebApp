@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import '/src/pages/admin/styles/Dashboard.css'
+import '/src/components/styles/DashboardHeader.css'
 
 function DashboardHeader({ username = 'John Doe', onToggleSidebar }) {
   return (
