@@ -2,14 +2,22 @@
   padding: 20px;
 }
 
+/* Banner */
 .profile-banner {
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
   background-color: #f5f5f5;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 20px 30px;
+  border-radius: 12px;
   margin-bottom: 30px;
+}
+
+.profile-banner h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #042F46;
+  margin: 0;
 }
 
 .profile-picture-large {
@@ -37,12 +45,14 @@
   background-color: #031f2e;
 }
 
+/* Horizontal cards */
 .profile-cards-horizontal {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
 }
 
+/* Card styling */
 .profile-card {
   flex: 1;
   background-color: #ffffff;
@@ -55,26 +65,35 @@
 }
 
 .profile-card h3 {
-  margin-bottom: 10px;
-  font-size: 18px;
+  margin-bottom: 12px;
+  font-size: 24px;
   color: #1a1a1a;
 }
 
 .profile-field {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
 }
 
 .profile-field label {
   font-weight: 500;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .profile-field input {
-  padding: 8px;
+  padding: 12px 14px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background-color: #f1f3f6;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-field input:focus {
+  border-color: #1E637E;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(30,99,126,0.15);
 }
 
 .profile-field span {
@@ -83,22 +102,27 @@
 }
 
 .save-btn {
-  padding: 10px 20px;
+  padding: 12px;
   background-color: #042F46;
   color: white;
   border: none;
   border-radius: 12px;
   font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(4, 47, 70, 0.2);
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
   font-family: Poppins;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 .save-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(4, 47, 70, 0.3);
   background-color: #031f2e;
+  transform: translateY(-1px);
+}
+
+/* Full width change password card */
+.full-width-card {
+  width: 100%;
+  margin-top: 20px;
 }
 
 /* Modal */
@@ -117,29 +141,67 @@
 
 .modal {
   background: white;
-  padding: 20px;
-  border-radius: 12px;
-  width: 300px;
-  max-width: 90%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  padding: 40px;
+  border-radius: 16px;
+  width: 500px;
+  max-width: 95%;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
 }
 
 .modal h3 {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  color: #042F46;
 }
 
-.modal input {
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 8px;
-  border-radius: 6px;
+/* Row with input and toggle */
+.modal-field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.modal-field-row input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 10px;
   border: 1px solid #ccc;
+  background-color: #f1f3f6;
+  color: #1a1a1a;
+  font-size: 0.95rem;
 }
 
+.modal-field-row input:focus {
+  border-color: #1E637E;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(30,99,126,0.15);
+}
+
+/* Separate toggle button styling */
+.toggle-visibility-btn {
+  background-color: #f1f3f6;
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-visibility-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+/* Modal buttons */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  margin-top: 10px;
 }
 
 .modal-actions button {
@@ -160,7 +222,7 @@
 
 .modal-actions button:first-child:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(4, 47, 70, 0.3);
+  box-shadow: 0 6px 16px rgba(4,47,70,0.3);
   background-color: #031f2e;
 }
 
