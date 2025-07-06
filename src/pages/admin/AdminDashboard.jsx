@@ -5,6 +5,7 @@ import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
 import Toast from '../../components/common/Toast';
+import logo from '/src/assets/primary.webp';
 
 function AdminDashboard() {
   const { id } = useParams();
@@ -135,16 +136,24 @@ function AdminDashboard() {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src="/src/assets/primary_icon.webp" alt="Logo" /></li>
+            <li><img src={logo} alt="Logo" /></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
             <li><a onClick={() => navigate('/admin/attendance')}>Admin Attendance</a></li>
-            <li><a href="#tasks">Manage Tasks</a></li>
-            <li><a href="#leave">Leave Requests</a></li>
+            <li><a href="#">Manage Tasks</a></li>
+            <li><a href="#">Leave Requests</a></li>
             <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
-            <li><a href="#settings">Settings</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
             <li>
-              <a className="nav-logout" onClick={handleLogout}>Log Out</a>
+              <a
+                className="nav-logout"
+                onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </a>
             </li>
           </ul>
         </nav>

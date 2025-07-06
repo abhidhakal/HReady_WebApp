@@ -84,17 +84,24 @@ const ManageAnnouncements = () => {
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src={logo} alt="Logo" /></li>
-            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
-            <li><a href="#">Attendance Logs</a></li>
+            <li><a onClick={() => navigate('/admin/attendance')}>Admin Attendance</a></li>
+            <li><a href="#">Manage Tasks</a></li>
             <li><a href="#">Leave Requests</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
-            <li><a href="#">Settings</a></li>
-            <li><a className="nav-logout" onClick={() => {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('role');
-                    navigate('/login');
-            }}>Log Out</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
+            <li>
+              <a
+                className="nav-logout"
+                onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </a>
+            </li>
           </ul>
         </nav>
 

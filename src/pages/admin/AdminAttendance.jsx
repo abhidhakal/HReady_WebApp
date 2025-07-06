@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import '/src/pages/admin/styles/AdminAttendance.css';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
+import logo from '/src/assets/primary.webp';
 
 const AdminAttendance = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -85,20 +86,24 @@ const AdminAttendance = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src="/src/assets/primary_icon.webp" alt="Logo" /></li>
-            <li><a onClick={() => navigate('/admin/' + localStorage.getItem('userId'))}>Dashboard</a></li>
+            <li><img src={logo} alt="Logo" /></li>
+            <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
-            <li><a className="nav-dashboard" onClick={() => navigate('/admin/attendance')}>Attendance Logs</a></li>
-            <li><a href="#leave">Leave Requests</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate('/admin/attendance')}>Admin Attendance</a></li>
+            <li><a href="#">Manage Tasks</a></li>
+            <li><a href="#">Leave Requests</a></li>
             <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
-            <li><a href="#settings">Settings</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
             <li>
-              <a className="nav-logout" onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('role');
-                localStorage.removeItem('userId');
-                navigate('/login');
-              }}>Log Out</a>
+              <a
+                className="nav-logout"
+                onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </a>
             </li>
           </ul>
         </nav>
