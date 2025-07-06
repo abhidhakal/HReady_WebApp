@@ -25,6 +25,11 @@
   background-color: #c62828;
 }
 
+.custom-toast.info,
+.custom-toast.default {
+  background-color: #042F46;
+}
+
 .custom-toast .close-btn {
   background: none;
   border: none;

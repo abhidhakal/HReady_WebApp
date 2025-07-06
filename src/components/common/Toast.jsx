@@ -1,7 +1,17 @@
-import React from 'react';
-import '../styles/Toast.css'
+import React, { useEffect } from 'react';
+import '../styles/Toast.css';
 
 const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000); // 3 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [message, onClose]);
+
   if (!message) return null;
 
   return (

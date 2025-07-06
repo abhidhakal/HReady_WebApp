@@ -4,6 +4,7 @@ import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/AdminProfile.css';
 import Toast from '/src/components/common/Toast.jsx';
+import logo from '/src/assets/primary.webp';
 
 const AdminProfile = () => {
   const { id } = useParams();
@@ -26,6 +27,7 @@ const AdminProfile = () => {
   const [editing, setEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
@@ -58,6 +60,22 @@ const AdminProfile = () => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfile((prev) => ({
+          ...prev,
+          profilePicture: reader.result,
+        }));
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handlePasswordChange = (e) => {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
   };
@@ -73,7 +91,14 @@ const AdminProfile = () => {
       fetchProfile();
     } catch (err) {
       console.error('Error updating profile:', err);
-      setToast({ message: 'Failed to update profile.', type: 'error' });
+      if (err.response && err.response.status === 413) {
+        setToast({
+          message: 'Image too large. Please use a smaller profile picture.',
+          type: 'error',
+        });
+      } else {
+        setToast({ message: 'Failed to update profile. Please try again.', type: 'error' });
+      }
     } finally {
       setLoading(false);
     }
@@ -122,16 +147,54 @@ const AdminProfile = () => {
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-          {/* Sidebar unchanged */}
+          <ul>
+            <li><img src={logo} alt="Logo" /></li>
+            <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
+            <li><a onClick={() => navigate('/admin/attendance')}>Admin Attendance</a></li>
+            <li><a href="#">Manage Tasks</a></li>
+            <li><a href="#">Leave Requests</a></li>
+            <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
+            <li>
+              <a
+                className="nav-logout"
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('role');
+                  localStorage.removeItem('userId');
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </a>
+            </li>
+          </ul>
         </nav>
 
         <div className="main-content profile-page">
           <div className="profile-banner">
-            <img
-              src={profile.profilePicture || '/src/assets/profile.svg'}
-              alt="Profile"
-              className="profile-picture-large"
-            />
+            <div className="profile-picture-wrapper">
+              <img
+                src={profile.profilePicture || '/src/assets/profile.svg'}
+                alt="Profile"
+                className="profile-picture-large"
+              />
+              {editing && (
+                <>
+                  <label htmlFor="profilePicUpload" className="profile-picture-overlay">
+                    <img src="/assets/icons/image_icon.svg" alt="Edit" className="edit-icon-image" />
+                  </label>
+                  <input
+                    id="profilePicUpload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                </>
+              )}
+            </div>
             <h2>Hello, {profile.name}</h2>
             <button
               className="edit-profile-btn"
@@ -174,23 +237,11 @@ const AdminProfile = () => {
                   <span>{profile.contactNo || '-'}</span>
                 )}
               </div>
-              <div className="profile-field">
-                <label>Profile Picture URL:</label>
-                {editing ? (
-                  <input
-                    name="profilePicture"
-                    value={profile.profilePicture}
-                    onChange={handleChange}
-                  />
-                ) : (
-                  <span>{profile.profilePicture || '-'}</span>
-                )}
-              </div>
               {editing && (
                 <button
                   className="save-btn"
                   onClick={handleSaveProfile}
-                  disabled={loading}
+                  disabled={loading || uploading}
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -273,7 +324,8 @@ const AdminProfile = () => {
                         showNew: false,
                         showConfirm: false,
                       });
-                    }} >
+                    }}
+                  >
                     Cancel
                   </button>
                 </div>
