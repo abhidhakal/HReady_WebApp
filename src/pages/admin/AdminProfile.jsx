@@ -60,19 +60,27 @@ const AdminProfile = () => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfile((prev) => ({
-          ...prev,
-          profilePicture: reader.result,
-        }));
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      try {
+        await api.put('/admins/upload-profile-picture', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        setToast({ message: 'Profile picture updated.', type: 'success' });
+        fetchProfile();
+      } catch (err) {
+        console.error('Error uploading profile picture:', err);
+        setToast({ message: 'Failed to upload picture.', type: 'error' });
+      } finally {
         setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -83,7 +91,11 @@ const AdminProfile = () => {
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
-      await api.put('/admins/me', profile, {
+      await api.put('/admins/me', {
+        name: profile.name,
+        email: profile.email,
+        contactNo: profile.contactNo,
+      }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEditing(false);
@@ -91,14 +103,7 @@ const AdminProfile = () => {
       fetchProfile();
     } catch (err) {
       console.error('Error updating profile:', err);
-      if (err.response && err.response.status === 413) {
-        setToast({
-          message: 'Image too large. Please use a smaller profile picture.',
-          type: 'error',
-        });
-      } else {
-        setToast({ message: 'Failed to update profile. Please try again.', type: 'error' });
-      }
+      setToast({ message: 'Failed to update profile. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -111,14 +116,12 @@ const AdminProfile = () => {
     }
     try {
       setLoading(true);
-      await api.put(
-        '/admins/change-password',
-        {
-          currentPassword: passwords.current,
-          newPassword: passwords.new,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put('/admins/change-password', {
+        currentPassword: passwords.current,
+        newPassword: passwords.new,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setPasswords({
         current: '',
         new: '',
@@ -160,9 +163,7 @@ const AdminProfile = () => {
               <a
                 className="nav-logout"
                 onClick={() => {
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('role');
-                  localStorage.removeItem('userId');
+                  localStorage.clear();
                   navigate('/login');
                 }}
               >
@@ -174,28 +175,21 @@ const AdminProfile = () => {
 
         <div className="main-content profile-page">
           <div className="profile-banner">
-            <div className="profile-picture-wrapper">
+            <div className="profile-banner-left">
               <img
-                src={profile.profilePicture || '/src/assets/profile.svg'}
+                src={
+                  profile.profilePicture
+                    ? `data:image/svg+xml;base64,${profile.profilePicture}`
+                    : '/src/assets/profile.svg'
+                }
                 alt="Profile"
-                className="profile-picture-large"
+                className="profile-banner-picture"
               />
-              {editing && (
-                <>
-                  <label htmlFor="profilePicUpload" className="profile-picture-overlay">
-                    <img src="/assets/icons/image_icon.svg" alt="Edit" className="edit-icon-image" />
-                  </label>
-                  <input
-                    id="profilePicUpload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    style={{ display: 'none' }}
-                  />
-                </>
-              )}
             </div>
-            <h2>Hello, {profile.name}</h2>
+            <div className="profile-banner-text">
+              <h2>Hello,</h2>
+              <p>{profile.name}</p>
+            </div>
             <button
               className="edit-profile-btn"
               onClick={() => {
@@ -254,14 +248,16 @@ const AdminProfile = () => {
             </div>
           </div>
 
-          <div className="profile-card full-width-card">
-            <h3>Security</h3>
-            <button
-              className="save-btn"
-              onClick={() => setShowPasswordModal(true)}
-            >
-              Change Password
-            </button>
+          <div className="profile-card full-width-card change-password-card">
+            <h3 className="clickable-title">Security</h3>
+            <div className="card-actions">
+              <button
+                className="change-password-btn"
+                onClick={() => setShowPasswordModal(true)}
+              >
+                Change Password
+              </button>
+            </div>
           </div>
 
           {showPasswordModal && (

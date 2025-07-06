@@ -10,6 +10,7 @@ function AdminDashboard() {
   const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Admin');
+  const [profilePicture, setProfilePicture] = useState('');
   const [announcements, setAnnouncements] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const [toast, setToast] = useState({ message: '', type: '' });
@@ -34,16 +35,18 @@ function AdminDashboard() {
       })
         .then(res => {
           setName(res.data.name || 'Admin');
+          setProfilePicture(res.data.profilePicture || '');
         })
         .catch(err => {
           console.error('Error fetching admin:', err);
           setName('Admin');
+          setProfilePicture('');
         });
     } catch (error) {
       console.error('Invalid token:', error);
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, id]);
 
   useEffect(() => {
     const fetchAttendance = async () => {
@@ -134,7 +137,14 @@ function AdminDashboard() {
           <div className="welcome-banner">
             <div className="banner-left">
               <div className="profile-picture">
-                <img src="/src/assets/profile.svg" alt="Admin Profile" />
+                <img
+                  src={
+                    profilePicture
+                      ? `data:image/svg+xml;base64,${profilePicture}`
+                      : '/src/assets/profile.svg'
+                  }
+                  alt="Admin Profile"
+                />
               </div>
               <h2 className="employee-name">Hello, {name}</h2>
             </div>

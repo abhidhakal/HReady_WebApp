@@ -85,7 +85,7 @@ const AdminAttendance = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src="/primary_noicon.png" alt="Logo" /></li>
+            <li><img src="/src/assets/primary_icon.webp" alt="Logo" /></li>
             <li><a onClick={() => navigate('/admin/' + localStorage.getItem('userId'))}>Dashboard</a></li>
             <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate('/admin/attendance')}>Attendance Logs</a></li>
