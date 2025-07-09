@@ -44,7 +44,9 @@ const AdminProfile = () => {
         contactNo: res.data.contactNo || '',
         profilePicture: res.data.profilePicture || '',
         role: res.data.role || 'Admin',
+        
       });
+      console.log('Profile picture value:', res.data.profilePicture);
     } catch (err) {
       console.error('Error fetching profile:', err);
     }
@@ -65,6 +67,13 @@ const AdminProfile = () => {
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // ✅ 2MB limit
+      const maxSize = 2 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setToast({ message: 'File is too large. Maximum size is 2 MB.', type: 'error' });
+        return;
+      }
+
       setUploading(true);
       const formData = new FormData();
       formData.append('profilePicture', file);
@@ -86,6 +95,7 @@ const AdminProfile = () => {
     }
   };
 
+
   const handlePasswordChange = (e) => {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
   };
@@ -93,13 +103,17 @@ const AdminProfile = () => {
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
-      await api.put('/admins/me', {
-        name: profile.name,
-        email: profile.email,
-        contactNo: profile.contactNo,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put(
+        '/admins/me',
+        {
+          name: profile.name,
+          email: profile.email,
+          contactNo: profile.contactNo,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setEditing(false);
       setToast({ message: 'Profile updated successfully.', type: 'success' });
       fetchProfile();
@@ -118,12 +132,16 @@ const AdminProfile = () => {
     }
     try {
       setLoading(true);
-      await api.put('/admins/change-password', {
-        currentPassword: passwords.current,
-        newPassword: passwords.new,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put(
+        '/admins/change-password',
+        {
+          currentPassword: passwords.current,
+          newPassword: passwords.new,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setPasswords({
         current: '',
         new: '',
@@ -195,13 +213,38 @@ const AdminProfile = () => {
               <img
                 src={
                   profile.profilePicture
-                    ? `data:image/svg+xml;base64,${profile.profilePicture}`
+                    ? profile.profilePicture.startsWith('PHN2Zy')
+                      ? `data:image/svg+xml;base64,${profile.profilePicture}`
+                      : profile.profilePicture.startsWith('/')
+                        ? `${import.meta.env.VITE_API_BASE_URL}${profile.profilePicture}`
+                        : profile.profilePicture.startsWith('http')
+                          ? profile.profilePicture
+                          : `data:image/png;base64,${profile.profilePicture}`
                     : '/src/assets/profile.svg'
                 }
                 alt="Profile"
                 className="profile-banner-picture"
               />
+              {editing && (
+                <>
+                  <label htmlFor="profilePicUpload" className="profile-picture-overlay">
+                    <img
+                      src="/assets/icons/edit_icon.svg"
+                      alt="Edit"
+                      className="edit-icon-image"
+                    />
+                  </label>
+                  <input
+                    id="profilePicUpload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                </>
+              )}
             </div>
+
             <div className="profile-banner-text">
               <h2>Hello,</h2>
               <p>{profile.name}</p>
@@ -260,7 +303,11 @@ const AdminProfile = () => {
 
             <div className="profile-card">
               <h3>Role</h3>
-              <p>{profile.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Admin'}</p>
+              <p>
+                {profile.role
+                  ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+                  : 'Admin'}
+              </p>
               <ul className="role-permissions">
                 <li>Manage Employees</li>
                 <li>View Attendance</li>

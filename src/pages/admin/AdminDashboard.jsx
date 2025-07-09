@@ -140,7 +140,7 @@ function AdminDashboard() {
             <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
             <li><a onClick={() => navigate('/admin/attendance')}>Admin Attendance</a></li>
-            <li><a href="#">Manage Tasks</a></li>
+            <li><a onClick={() => navigate('/admin/tasks')}>Manage Tasks</a></li>
             <li><a href="#">Leave Requests</a></li>
             <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
@@ -165,7 +165,13 @@ function AdminDashboard() {
                 <img
                   src={
                     profilePicture
-                      ? `data:image/svg+xml;base64,${profilePicture}`
+                      ? profilePicture.startsWith('PHN2Zy')
+                        ? `data:image/svg+xml;base64,${profilePicture}`
+                        : profilePicture.startsWith('/')
+                          ? `${import.meta.env.VITE_API_BASE_URL}${profilePicture}`
+                          : profilePicture.startsWith('http')
+                            ? profilePicture
+                            : `data:image/png;base64,${profilePicture}`
                       : '/src/assets/profile.svg'
                   }
                   alt="Admin Profile"

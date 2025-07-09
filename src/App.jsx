@@ -18,6 +18,7 @@ import ManageAnnouncements from './pages/admin/ManageAnnouncements.jsx';
 import AdminAttendance from './pages/admin/AdminAttendance.jsx';
 import AdminProfile from './pages/admin/AdminProfile.jsx';
 import EmployeeProfile from './pages/employee/EmployeeProfile.jsx';
+import ManageTasks from './pages/admin/ManageTasks.jsx';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
           <Route path="/admin/announcements" element={<ManageAnnouncements />} />
           <Route path="/admin/attendance" element={<AdminAttendance />} />
           <Route path="/admin/:id/profile" element={<AdminProfile />} />
+          <Route path="/admin/tasks" element={<ManageTasks/>}/>
         </Routes>
       </div>
     </Router>
