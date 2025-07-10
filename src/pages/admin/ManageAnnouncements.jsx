@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import logo from '/src/assets/primary_icon.webp';
+import '/src/pages/admin/styles/ManageAnnouncements.css'
 
 const ManageAnnouncements = () => {
   const id = localStorage.getItem('userId');

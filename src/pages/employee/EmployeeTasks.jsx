@@ -12,17 +12,13 @@ const EmployeeTasks = () => {
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
-  const userId = localStorage.getItem('userId');
 
   const fetchTasks = async () => {
     try {
-      const res = await api.get('/tasks', {
+      const res = await api.get('/tasks/my', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const employeeTasks = res.data.filter(
-        (task) => task.assignedTo && task.assignedTo._id === userId
-      );
-      setTasks(employeeTasks);
+      setTasks(res.data);
     } catch (err) {
       console.error('Error fetching tasks:', err);
     }
@@ -31,6 +27,26 @@ const EmployeeTasks = () => {
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  const handleStatusChange = async (taskId, newStatus) => {
+    try {
+      await api.put(
+        `/tasks/my/${taskId}/status`,
+        { status: newStatus },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setTasks((prevTasks) =>
+        prevTasks.map((t) =>
+          t._id === taskId ? { ...t, status: newStatus } : t
+        )
+      );
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Failed to update status');
+    }
+  };
 
   return (
     <div className="full-screen">
@@ -84,9 +100,16 @@ const EmployeeTasks = () => {
                           : '-'}
                       </td>
                       <td>
-                        <span className={`status-label ${task.status.replace(/\s/g, '-')}`}>
-                          {task.status}
-                        </span>
+                        <select
+                          value={task.status}
+                          onChange={(e) =>
+                            handleStatusChange(task._id, e.target.value)
+                          }
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                        </select>
                       </td>
                     </tr>
                   ))}

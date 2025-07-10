@@ -12,6 +12,7 @@ function EmployeeDashboard() {
   const [position, setPosition] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [announcements, setAnnouncements] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const navigate = useNavigate();
 
@@ -86,6 +87,20 @@ function EmployeeDashboard() {
     fetchAnnouncements();
   }, []);
 
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await api.get('/tasks/my', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setTasks(res.data);
+      } catch (err) {
+        console.error('Error fetching tasks:', err);
+      }
+    };
+    fetchTasks();
+  }, []);
+
   const toggleSidebar = () => {
     setSidebarOpen(prev => !prev);
   };
@@ -143,7 +158,7 @@ function EmployeeDashboard() {
                 className="go-attendance-label"
                 onClick={() => navigate(`/employee/${id}/attendance`)}
               >
-                Click to complete attendance
+                click here to complete attendance
               </small>
             </div>
             <div className="banner-right">
@@ -151,7 +166,7 @@ function EmployeeDashboard() {
                 className="edit-profile"
                 onClick={() => navigate(`/employee/${id}/profile`)}
               >
-                Edit Your Profile
+                Edit Employee Profile
               </button>
             </div>
           </div>
@@ -183,27 +198,59 @@ function EmployeeDashboard() {
               </div>
               <table className="task-table">
                 <tbody>
-                  <tr><td>Task Name</td><td className="doing">Doing</td><td><a href="#">Details</a></td></tr>
-                  <tr><td>Task Name</td><td className="completed">Completed</td><td><a href="#">Details</a></td></tr>
-                  <tr><td>Task Name</td><td className="pending">Pending</td><td><a href="#">Details</a></td></tr>
+                  {tasks.length > 0 ? (
+                    tasks.slice(0, 3).map((task) => (
+                      <tr key={task._id}>
+                        <td><strong>Task Name :  </strong>{task.title}</td>
+                        <td>
+                          <span className={
+                            `status-label ${
+                              task.status === 'Pending'
+                                ? 'pending'
+                                : task.status === 'In Progress'
+                                ? 'doing'
+                                : 'completed'
+                            }`
+                          }>
+                            {task.status}
+                          </span>
+                        </td>
+                        <td>
+                          <a onClick={() => navigate(`/employee/${id}/tasks`)}>Details</a>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3">No tasks assigned to you.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
-
             <div className="announcement-section">
               <div className="announcement-header">
                 <h2>Recent Announcements</h2>
+                <button
+                  className="edit-announcement"
+                  onClick={() => navigate(`/employee/${id}/announcements`)}
+                >
+                  View All
+                </button>
               </div>
-              <div className="announcement-box">
+              <div className="announcement-box-cards scrollable-announcements">
                 {announcements.length > 0 ? (
-                  <ul>
-                    {announcements.slice(0, 3).map(ann => (
-                      <li key={ann._id}>
-                        <strong>{ann.title}:</strong>{" "}
-                        {ann.message.length > 60 ? ann.message.substring(0, 60) + "..." : ann.message}
-                      </li>
-                    ))}
-                  </ul>
+                  announcements.map((ann) => (
+                    <div className="announcement-card" key={ann._id}>
+                      <h3>{ann.title}</h3>
+                      <p>
+                        {ann.message.length > 100
+                          ? ann.message.substring(0, 100) + "..."
+                          : ann.message}
+                      </p>
+                      <small>{new Date(ann.createdAt).toLocaleDateString()}</small>
+                    </div>
+                  ))
                 ) : (
                   <p>No announcements available.</p>
                 )}

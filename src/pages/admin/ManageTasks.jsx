@@ -15,13 +15,14 @@ const ManageTasks = () => {
   const [employees, setEmployees] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
+  const [editingTaskId, setEditingTaskId] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     dueDate: '',
     assignedTo: '',
     assignedDepartment: '',
-    status: 'pending',
+    status: 'Pending',
   });
 
   const token = localStorage.getItem('token');
@@ -80,26 +81,63 @@ const ManageTasks = () => {
     }
 
     try {
-      await api.post('/tasks', cleanedData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setToast({ message: 'Task created successfully.', type: 'success' });
+      if (editingTaskId) {
+        // UPDATE
+        await api.put(`/tasks/${editingTaskId}`, cleanedData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setToast({ message: 'Task updated successfully.', type: 'success' });
+      } else {
+        // CREATE
+        await api.post('/tasks', cleanedData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setToast({ message: 'Task created successfully.', type: 'success' });
+      }
+
       setFormData({
         title: '',
         description: '',
         dueDate: '',
         assignedTo: '',
         assignedDepartment: '',
-        status: 'pending',
+        status: 'Pending',
       });
+      setEditingTaskId(null);
       fetchTasks();
     } catch (err) {
-      console.error('Error creating task:', err);
+      console.error('Error saving task:', err);
       if (err.response) {
         setToast({ message: err.response.data.message, type: 'error' });
       } else {
-        setToast({ message: 'Failed to create task. Please try again.', type: 'error' });
+        setToast({ message: 'Failed to save task. Please try again.', type: 'error' });
       }
+    }
+  };
+
+  const handleEdit = (task) => {
+    setEditingTaskId(task._id);
+    setFormData({
+      title: task.title || '',
+      description: task.description || '',
+      dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
+      assignedTo: task.assignedTo ? task.assignedTo._id : '',
+      assignedDepartment: task.assignedDepartment || '',
+      status: task.status,
+    });
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    try {
+      await api.delete(`/tasks/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setToast({ message: 'Task deleted.', type: 'success' });
+      fetchTasks();
+    } catch (err) {
+      console.error('Error deleting task:', err);
+      setToast({ message: 'Failed to delete task.', type: 'error' });
     }
   };
 
@@ -139,7 +177,7 @@ const ManageTasks = () => {
 
         <div className="main-content">
           <div className="manage-tasks">
-            <h2>Manage Tasks</h2>
+            <h2>{editingTaskId ? 'Edit Task' : 'Add Task'}</h2>
 
             <form onSubmit={handleSubmit}>
               <input
@@ -199,7 +237,17 @@ const ManageTasks = () => {
                 onChange={handleChange}
               />
 
-              <button type="submit">Add Task</button>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+
+              <button type="submit">{editingTaskId ? 'Update Task' : 'Add Task'}</button>
             </form>
 
             <table>
@@ -210,6 +258,7 @@ const ManageTasks = () => {
                   <th>Department</th>
                   <th>Due Date</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -228,6 +277,10 @@ const ManageTasks = () => {
                         : '-'}
                     </td>
                     <td>{task.status}</td>
+                    <td>
+                      <button onClick={() => handleEdit(task)}>Edit</button>
+                      <button onClick={() => handleDelete(task._id)}>Delete</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
