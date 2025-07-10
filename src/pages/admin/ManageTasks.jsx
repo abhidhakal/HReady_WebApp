@@ -28,7 +28,7 @@ const ManageTasks = () => {
   const id = localStorage.getItem('userId');
   const navigate = useNavigate();
 
-  // Fetch users with role: employee
+  // Fetch employees
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
@@ -59,12 +59,10 @@ const ManageTasks = () => {
     fetchTasks();
   }, [token]);
 
-  // Handle form field changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Submit new task
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -80,8 +78,6 @@ const ManageTasks = () => {
     if (cleanedData.assignedTo && cleanedData.assignedDepartment) {
       cleanedData.assignedDepartment = null;
     }
-
-    console.log('Submitting data:', cleanedData);
 
     try {
       await api.post('/tasks', cleanedData, {
@@ -100,7 +96,6 @@ const ManageTasks = () => {
     } catch (err) {
       console.error('Error creating task:', err);
       if (err.response) {
-        console.error('Server response:', err.response.data);
         setToast({ message: err.response.data.message, type: 'error' });
       } else {
         setToast({ message: 'Failed to create task. Please try again.', type: 'error' });
@@ -191,7 +186,7 @@ const ManageTasks = () => {
                 <option value="">Assign to Employee</option>
                 {employees.map((emp) => (
                   <option key={emp._id} value={emp._id}>
-                    {emp.userId?.name || 'Unknown'} ({emp.userId?.department || 'N/A'})
+                    {emp.name} ({emp.department || 'N/A'})
                   </option>
                 ))}
               </select>
@@ -203,16 +198,6 @@ const ManageTasks = () => {
                 value={formData.assignedDepartment}
                 onChange={handleChange}
               />
-
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="pending">Pending</option>
-                <option value="in progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
 
               <button type="submit">Add Task</button>
             </form>
