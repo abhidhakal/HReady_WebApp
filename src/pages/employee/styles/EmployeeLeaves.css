@@ -1,0 +1,107 @@
+.employee-leaves {
+  margin: 20px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  max-width: 1000px;
+  font-family: 'Poppins', sans-serif;
+  border: 1px solid #e2e8f0;
+}
+
+.employee-leaves h2 {
+  color: #042F46;
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.employee-leaves form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.employee-leaves form input,
+.employee-leaves form select {
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  color: #333;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.employee-leaves form input:focus,
+.employee-leaves form select:focus {
+  border-color: #1E637E;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(30, 99, 126, 0.15);
+}
+
+.employee-leaves form label.half-day-checkbox {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  gap: 8px;
+}
+
+.employee-leaves form button {
+  grid-column: span 2;
+  background-color: #042F46;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.employee-leaves form button:hover {
+  background-color: #031f2e;
+  transform: translateY(-1px);
+}
+
+.employee-leaves table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  font-size: 0.95rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.employee-leaves th,
+.employee-leaves td {
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.employee-leaves th {
+  background-color: #f4f6f8;
+  color: #042F46;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.employee-leaves td {
+  background-color: #f9f9f9;
+  color: #333;
+  font-size: 0.93rem;
+}
+
+.employee-leaves tr:hover td {
+  background-color: #eef4f8;
+}
+
+.half-day-checkbox {
+  color: #333;
+}

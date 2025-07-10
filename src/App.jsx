@@ -20,6 +20,7 @@ import AdminProfile from './pages/admin/AdminProfile.jsx';
 import EmployeeProfile from './pages/employee/EmployeeProfile.jsx';
 import ManageTasks from './pages/admin/ManageTasks.jsx';
 import EmployeeTasks from './pages/employee/EmployeeTasks.jsx';
+import EmployeeLeaves from './pages/employee/EmployeeLEaves.jsx';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/employee/:id/attendance" element={<EmployeeAttendance />} />
           <Route path="/employee/:id/profile" element={<EmployeeProfile />} />
           <Route path="/employee/:id/tasks" element={<EmployeeTasks />} />
+          <Route path="/employee/:id/leave" element={<EmployeeLeaves />} />
 
           {/* ADMIN */}
           <Route path="/admin/:id" element={<AdminDashboard />} />
