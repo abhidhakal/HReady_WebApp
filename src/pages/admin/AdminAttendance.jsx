@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import '/src/pages/admin/styles/AdminAttendance.css';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import logo from '/src/assets/primary_icon.webp';
 
 const AdminAttendance = () => {
+  const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [myRecord, setMyRecord] = useState(null);

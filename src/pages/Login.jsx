@@ -1,6 +1,7 @@
 import '/src/pages/styles/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import Toast from '../components/common/Toast';
 
 function Login() {
@@ -31,14 +32,17 @@ function Login() {
       }
 
       localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
-      localStorage.setItem('userId', data._id);
+
+      // Decode token to get user id and role
+      const decoded = jwtDecode(data.token);
+      localStorage.setItem('userId', decoded.id);
+      localStorage.setItem('role', decoded.role);
 
       setToast({ message: 'Login successful! Redirecting...', type: 'success' });
 
       setTimeout(() => {
-        if (data.role === 'admin') navigate(`/admin/${data._id}`);
-        else if (data.role === 'employee') navigate(`/employee/${data._id}`);
+        if (decoded.role === 'admin') navigate(`/admin/${decoded.id}`);
+        else if (decoded.role === 'employee') navigate(`/employee/${decoded.id}`);
       }, 1500);
     } catch (error) {
       console.error('Login error:', error);
