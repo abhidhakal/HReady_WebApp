@@ -2,13 +2,14 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  min-width: 250px;
-  padding: 16px 20px;
+  min-width: 280px;
+  max-width: 400px;
+  padding: 14px 18px;
   border-radius: 8px;
   color: white;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   z-index: 9999;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   animation: slideIn 0.3s ease;
@@ -30,6 +31,20 @@
   background-color: #042F46;
 }
 
+/* Container for icon and text */
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Icon image sizing */
+.toast-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Close button */
 .custom-toast .close-btn {
   background: none;
   border: none;

@@ -1,0 +1,23 @@
+.status-label {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+.status-label.pending {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.status-label.in-progress {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+.status-label.completed {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}

@@ -6,7 +6,7 @@ const Toast = ({ message, type, onClose }) => {
     if (message) {
       const timer = setTimeout(() => {
         onClose();
-      }, 3000); // 3 seconds
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
@@ -14,9 +14,27 @@ const Toast = ({ message, type, onClose }) => {
 
   if (!message) return null;
 
+  const getIconSrc = () => {
+    switch (type) {
+      case 'success':
+        return '/assets/icons/check.svg';
+      case 'error':
+        return '/assets/icons/cross.svg';
+      default:
+        return '/assets/icons/dash.svg';
+    }
+  };
+
   return (
     <div className={`custom-toast ${type}`}>
-      <span>{message}</span>
+      <div className="toast-content">
+        <img
+          src={getIconSrc()}
+          alt={`${type} icon`}
+          className="toast-icon"
+        />
+        <span>{message}</span>
+      </div>
       <button className="close-btn" onClick={onClose}>✕</button>
     </div>
   );

@@ -38,7 +38,9 @@ const EmployeeProfile = () => {
     if (picture.startsWith('PHN2Zy')) return `data:image/svg+xml;base64,${picture}`;
     if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
     if (picture.startsWith('http')) return picture;
-    return `data:image/png;base64,${picture}`;
+    if (/^[A-Za-z0-9+/=]+$/.test(picture)) return `data:image/png;base64,${picture}`;
+    // fallback in case nothing matched
+    return '/src/assets/profile.svg';
   };
 
   const fetchProfile = async () => {
@@ -71,27 +73,31 @@ const EmployeeProfile = () => {
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      const maxSize = 2 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setToast({ message: 'File is too large. Maximum size is 2 MB.', type: 'error' });
+        return;
+      }
+
       setUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const base64Data = reader.result.split(',')[1];
-          await api.put('/employees/upload-profile-picture',
-            { profilePicture: base64Data },
-            {
-              headers: { Authorization: `Bearer ${token}` }
-            }
-          );
-          setToast({ message: 'Profile picture updated.', type: 'success' });
-          fetchProfile();
-        } catch (err) {
-          console.error('Error uploading profile picture:', err);
-          setToast({ message: 'Failed to upload picture.', type: 'error' });
-        } finally {
-          setUploading(false);
-        }
-      };
-      reader.readAsDataURL(file);
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
+      try {
+        await api.put('/employees/upload-profile-picture', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        setToast({ message: 'Profile picture updated.', type: 'success' });
+        fetchProfile();
+      } catch (err) {
+        console.error('Error uploading profile picture:', err);
+        setToast({ message: 'Failed to upload picture.', type: 'error' });
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -206,6 +212,7 @@ const EmployeeProfile = () => {
                 </>
               )}
             </div>
+
             <div className="profile-banner-text">
               <h2>Hello,</h2>
               <p>{profile.name}</p>
