@@ -7,7 +7,7 @@ import Toast from '/src/components/common/Toast.jsx';
 import logo from '/src/assets/primary_icon.webp';
 
 const AdminProfile = () => {
-  const { id } = useParams();
+  const id = localStorage.getItem('userId');
   const [toast, setToast] = useState({ message: '', type: '' });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState({
@@ -60,10 +60,9 @@ const AdminProfile = () => {
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/src/assets/profile.svg';
-    if (picture.startsWith('PHN2Zy')) return `data:image/svg+xml;base64,${picture}`;
     if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
     if (picture.startsWith('http')) return picture;
-    return `data:image/png;base64,${picture}`;
+    return '/src/assets/profile.svg';
   };
 
   const handleChange = (e) => {

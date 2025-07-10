@@ -78,3 +78,120 @@
   transform: translateY(-1px);
 }
 
+/* Toggle button */
+.admin-leave-toggle {
+  background-color: #042F46;
+  color: white;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.admin-leave-toggle:hover {
+  background-color: #031f2e;
+  transform: translateY(-1px);
+}
+
+/* Form wrapper */
+.admin-leave-form {
+  margin-bottom: 40px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Grid layout */
+.admin-leave-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  align-items: end;
+}
+
+/* Field wrapper */
+.admin-leave-form .form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+.admin-leave-form .form-field label {
+  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+
+/* Checkbox row */
+.admin-leave-form .form-field.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Improve the native select styling */
+.admin-leave-form select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  color: #333;
+  background-color: #f9f9f9;
+  appearance: none; /* Remove default arrow */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10'%3E%3Cpath fill='%23333' d='M7 10L0 0h14z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-leave-form select:focus {
+  border-color: #1E637E;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(30, 99, 126, 0.15);
+}
+
+
+/* File input styling */
+.admin-leave-form input[type="file"] {
+  font-size: 0.9rem;
+}
+
+/* Full width button */
+.admin-leave-form .form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Submit button */
+.admin-leave-form button {
+  background-color: #042F46;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.admin-leave-form button:hover {
+  background-color: #031f2e;
+  transform: translateY(-1px);
+}
+
+.form-field {
+  color: #333;
+  font-size: 1rem;
+}
+
+

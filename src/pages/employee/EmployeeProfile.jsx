@@ -35,11 +35,8 @@ const EmployeeProfile = () => {
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/src/assets/profile.svg';
-    if (picture.startsWith('PHN2Zy')) return `data:image/svg+xml;base64,${picture}`;
     if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
     if (picture.startsWith('http')) return picture;
-    if (/^[A-Za-z0-9+/=]+$/.test(picture)) return `data:image/png;base64,${picture}`;
-    // fallback in case nothing matched
     return '/src/assets/profile.svg';
   };
 
