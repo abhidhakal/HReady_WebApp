@@ -15,6 +15,14 @@ function EmployeeDashboard() {
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const navigate = useNavigate();
 
+  const resolveProfilePicture = (picture) => {
+    if (!picture) return '/src/assets/profile.svg';
+    if (picture.startsWith('PHN2Zy')) return `data:image/svg+xml;base64,${picture}`;
+    if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
+    if (picture.startsWith('http')) return picture;
+    return `data:image/png;base64,${picture}`;
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -22,21 +30,19 @@ function EmployeeDashboard() {
       return;
     }
 
-    // Fetch employee info
-    api.get('/employees/me', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => {
-        console.log('PROFILE PICTURE VALUE:', res.data.profilePicture);
+    const fetchEmployee = async () => {
+      try {
+        const res = await api.get('/employees/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setName(res.data.name || 'Employee');
         setPosition(res.data.position || 'Employee');
         setProfilePicture(res.data.profilePicture || '');
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Error fetching employee:', err);
-      });
+      }
+    };
 
-    // Fetch attendance
     const fetchAttendance = async () => {
       try {
         const res = await api.get('/attendance/me', {
@@ -62,8 +68,9 @@ function EmployeeDashboard() {
       }
     };
 
+    fetchEmployee();
     fetchAttendance();
-  }, [navigate, id]);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -115,11 +122,7 @@ function EmployeeDashboard() {
             <div className="banner-left">
               <div className="profile-picture">
                 <img
-                  src={
-                    profilePicture
-                      ? profilePicture
-                      : '/src/assets/profile.svg'
-                  }
+                  src={resolveProfilePicture(profilePicture)}
                   alt="Profile"
                 />
               </div>
@@ -171,13 +174,18 @@ function EmployeeDashboard() {
             <div className="task-section">
               <div className="task-header">
                 <h2>Task List</h2>
-                <button className="edit-task">Edit Tasks</button>
+                <button
+                  className="edit-task"
+                  onClick={() => navigate(`/employee/${id}/tasks`)}
+                >
+                  View Tasks
+                </button>
               </div>
               <table className="task-table">
                 <tbody>
-                  <tr><td>Task Name</td><td className="doing">Doing</td><td><a href="#">Edit</a></td></tr>
-                  <tr><td>Task Name</td><td className="completed">Completed</td><td><a href="#">Edit</a></td></tr>
-                  <tr><td>Task Name</td><td className="pending">Pending</td><td><a href="#">Edit</a></td></tr>
+                  <tr><td>Task Name</td><td className="doing">Doing</td><td><a href="#">Details</a></td></tr>
+                  <tr><td>Task Name</td><td className="completed">Completed</td><td><a href="#">Details</a></td></tr>
+                  <tr><td>Task Name</td><td className="pending">Pending</td><td><a href="#">Details</a></td></tr>
                 </tbody>
               </table>
             </div>

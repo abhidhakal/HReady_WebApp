@@ -33,6 +33,14 @@ const EmployeeProfile = () => {
 
   const token = localStorage.getItem('token');
 
+  const resolveProfilePicture = (picture) => {
+    if (!picture) return '/src/assets/profile.svg';
+    if (picture.startsWith('PHN2Zy')) return `data:image/svg+xml;base64,${picture}`;
+    if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
+    if (picture.startsWith('http')) return picture;
+    return `data:image/png;base64,${picture}`;
+  };
+
   const fetchProfile = async () => {
     try {
       const res = await api.get('/employees/me', {
@@ -43,7 +51,7 @@ const EmployeeProfile = () => {
         email: res.data.email,
         contactNo: res.data.contactNo || '',
         profilePicture: res.data.profilePicture || '',
-        role: res.data.role || 'Employee',
+        role: res.data.role || 'employee',
       });
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -54,9 +62,7 @@ const EmployeeProfile = () => {
     fetchProfile();
   }, []);
 
-  const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev);
-  };
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -69,7 +75,6 @@ const EmployeeProfile = () => {
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          // Remove the prefix "data:image/...;base64,"
           const base64Data = reader.result.split(',')[1];
           await api.put('/employees/upload-profile-picture',
             { profilePicture: base64Data },
@@ -146,20 +151,6 @@ const EmployeeProfile = () => {
     }
   };
 
-  const handleDeactivate = async () => {
-    if (!window.confirm('Are you sure you want to deactivate your account?')) return;
-    try {
-      await api.delete('/employees/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      localStorage.clear();
-      navigate('/login');
-    } catch (err) {
-      console.error('Error deactivating account:', err);
-      setToast({ message: 'Failed to deactivate account.', type: 'error' });
-    }
-  };
-
   return (
     <div className="full-screen">
       <Toast
@@ -170,40 +161,36 @@ const EmployeeProfile = () => {
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-					<ul>
-							<li><img src={logo} alt="Logo" /></li>
-							<li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
-            <li><a onClick={() => navigate(`/employee//${id}attendance`)}>Attendance</a></li>
-            <li><a onClick={() => navigate('/employee/tasks')}>Tasks</a></li>
-            <li><a onClick={() => navigate('/employee/leave')}>Leave</a></li>
+          <ul>
+            <li><img src={logo} alt="Logo" /></li>
+            <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
-							<li>
-							<a
-									className="nav-logout"
-									onClick={() => {
-									localStorage.clear();
-									navigate('/login');
-									}}
-							>
-									Log Out
-							</a>
-							</li>
-            </ul>
+            <li>
+              <a
+                className="nav-logout"
+                onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </a>
+            </li>
+          </ul>
         </nav>
 
         <div className="main-content profile-page">
           <div className="profile-banner">
             <div className="profile-banner-left">
               <img
-                src={
-                    profile.profilePicture
-                    ? profile.profilePicture
-                    : '/src/assets/profile.svg'
-                }
+                src={resolveProfilePicture(profile.profilePicture)}
                 alt="Profile"
                 className="profile-banner-picture"
-                />
+              />
               {editing && (
                 <>
                   <label htmlFor="profilePicUpload" className="profile-picture-overlay">
@@ -277,7 +264,7 @@ const EmployeeProfile = () => {
 
             <div className="profile-card">
               <h3>Role</h3>
-              <p>{profile.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : 'Employee'}</p>
+              <p>{profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}</p>
               <ul className="role-permissions">
                 <li>View Attendance</li>
                 <li>Request Leave</li>
@@ -294,12 +281,6 @@ const EmployeeProfile = () => {
                 onClick={() => setShowPasswordModal(true)}
               >
                 Change Password
-              </button>
-              <button
-                className="deactivate-account-btn"
-                onClick={handleDeactivate}
-              >
-                Deactivate Account
               </button>
             </div>
           </div>

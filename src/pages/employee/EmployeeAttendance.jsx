@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import api from '../../api/axios';
+import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/employee/styles/EmployeeAttendance.css';
 import logo from '/src/assets/primary_icon.webp';
 
@@ -29,7 +28,6 @@ const EmployeeAttendance = () => {
         });
         setAttendanceRecord(res.data);
 
-        // Set today's status
         if (res.data.check_in_time && !res.data.check_out_time) {
           setTodayStatus('Checked In');
         } else if (res.data.check_in_time && res.data.check_out_time) {
@@ -78,9 +76,9 @@ const EmployeeAttendance = () => {
           <ul>
             <li><img src={logo} alt="Logo" /></li>
             <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
-            <li><a className="nav-dashboard" onClick={() => navigate(`/employee//${id}attendance`)}>Attendance</a></li>
-            <li><a onClick={() => navigate('/employee/tasks')}>Tasks</a></li>
-            <li><a onClick={() => navigate('/employee/leave')}>Leave</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
             <li>
@@ -96,7 +94,6 @@ const EmployeeAttendance = () => {
             </li>
           </ul>
         </nav>
-
 
         <div className="main-content attendance-page">
           <h2>My Attendance</h2>

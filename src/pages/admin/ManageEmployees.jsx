@@ -88,6 +88,7 @@ const ManageEmployees = () => {
       position: employee.position || '',
       status: employee.status || 'active'
     });
+    setEditingId(employee._id);
   };
 
   const handleDelete = async (id) => {

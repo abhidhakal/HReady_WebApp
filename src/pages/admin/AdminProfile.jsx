@@ -44,9 +44,7 @@ const AdminProfile = () => {
         contactNo: res.data.contactNo || '',
         profilePicture: res.data.profilePicture || '',
         role: res.data.role || 'Admin',
-        
       });
-      console.log('Profile picture value:', res.data.profilePicture);
     } catch (err) {
       console.error('Error fetching profile:', err);
     }
@@ -60,6 +58,14 @@ const AdminProfile = () => {
     setSidebarOpen((prev) => !prev);
   };
 
+  const resolveProfilePicture = (picture) => {
+    if (!picture) return '/src/assets/profile.svg';
+    if (picture.startsWith('PHN2Zy')) return `data:image/svg+xml;base64,${picture}`;
+    if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
+    if (picture.startsWith('http')) return picture;
+    return `data:image/png;base64,${picture}`;
+  };
+
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
@@ -67,7 +73,6 @@ const AdminProfile = () => {
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      // ✅ 2MB limit
       const maxSize = 2 * 1024 * 1024;
       if (file.size > maxSize) {
         setToast({ message: 'File is too large. Maximum size is 2 MB.', type: 'error' });
@@ -94,7 +99,6 @@ const AdminProfile = () => {
       }
     }
   };
-
 
   const handlePasswordChange = (e) => {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
@@ -211,17 +215,7 @@ const AdminProfile = () => {
           <div className="profile-banner">
             <div className="profile-banner-left">
               <img
-                src={
-                  profile.profilePicture
-                    ? profile.profilePicture.startsWith('PHN2Zy')
-                      ? `data:image/svg+xml;base64,${profile.profilePicture}`
-                      : profile.profilePicture.startsWith('/')
-                        ? `${import.meta.env.VITE_API_BASE_URL}${profile.profilePicture}`
-                        : profile.profilePicture.startsWith('http')
-                          ? profile.profilePicture
-                          : `data:image/png;base64,${profile.profilePicture}`
-                    : '/src/assets/profile.svg'
-                }
+                src={resolveProfilePicture(profile.profilePicture)}
                 alt="Profile"
                 className="profile-banner-picture"
               />
@@ -303,11 +297,7 @@ const AdminProfile = () => {
 
             <div className="profile-card">
               <h3>Role</h3>
-              <p>
-                {profile.role
-                  ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
-                  : 'Admin'}
-              </p>
+              <p>{profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}</p>
               <ul className="role-permissions">
                 <li>Manage Employees</li>
                 <li>View Attendance</li>

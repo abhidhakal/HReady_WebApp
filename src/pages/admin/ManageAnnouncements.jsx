@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
-import '/src/pages/admin/styles/ManageAnnouncements.css';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import logo from '/src/assets/primary_icon.webp';
 
@@ -11,15 +10,13 @@ const ManageAnnouncements = () => {
   const [formData, setFormData] = useState({
     title: '',
     message: '',
-    audience: 'all',
-    postedBy: ''
+    audience: 'all'
   });
   const [editingId, setEditingId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
 
   const fetchAnnouncements = async () => {
     try {
@@ -43,17 +40,16 @@ const ManageAnnouncements = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const body = { ...formData, postedBy: role };
       if (editingId) {
-        await api.put(`/announcements/${editingId}`, body, {
+        await api.put(`/announcements/${editingId}`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        await api.post('/announcements', body, {
+        await api.post('/announcements', formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
-      setFormData({ title: '', message: '', audience: 'all', postedBy: '' });
+      setFormData({ title: '', message: '', audience: 'all' });
       setEditingId(null);
       fetchAnnouncements();
     } catch (err) {
@@ -62,7 +58,11 @@ const ManageAnnouncements = () => {
   };
 
   const handleEdit = (announcement) => {
-    setFormData(announcement);
+    setFormData({
+      title: announcement.title || '',
+      message: announcement.message || '',
+      audience: announcement.audience || 'all'
+    });
     setEditingId(announcement._id);
   };
 
@@ -109,8 +109,28 @@ const ManageAnnouncements = () => {
           <div className="manage-announcements">
             <h2>Manage Announcements</h2>
             <form onSubmit={handleSubmit}>
-              <input type="text" name="title" placeholder="Title" value={formData.title} onChange={handleChange} required />
-              <textarea name="message" placeholder="Message" value={formData.message} onChange={handleChange} required style={{ gridColumn: 'span 2', height: '100px', padding: '10px', fontFamily: 'inherit', fontSize: '0.95rem' }} />
+              <input
+                type="text"
+                name="title"
+                placeholder="Title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+              />
+              <textarea
+                name="message"
+                placeholder="Message"
+                value={formData.message}
+                onChange={handleChange}
+                required
+                style={{
+                  gridColumn: 'span 2',
+                  height: '100px',
+                  padding: '10px',
+                  fontFamily: 'inherit',
+                  fontSize: '0.95rem'
+                }}
+              />
               <select name="audience" value={formData.audience} onChange={handleChange}>
                 <option value="all">All</option>
                 <option value="employees">Employees</option>

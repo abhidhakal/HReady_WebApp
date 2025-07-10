@@ -63,7 +63,7 @@ const AdminAttendance = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setTodayStatus('Checked In');
-      window.location.reload();
+      fetchData();
     } catch (err) {
       console.error('Error during check-in:', err);
     }
@@ -75,7 +75,7 @@ const AdminAttendance = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setTodayStatus('Checked Out');
-      window.location.reload();
+      fetchData();
     } catch (err) {
       console.error('Error during check-out:', err);
     }
@@ -160,8 +160,8 @@ const AdminAttendance = () => {
               <tbody>
                 {attendanceRecords.map(record => (
                   <tr key={record._id}>
-                    <td>{record.employeeId?.userId?.name || 'N/A'}</td>
-                    <td>{record.employeeId?.userId?.email || '-'}</td>
+                    <td>{record.user?.name || 'N/A'}</td>
+                    <td>{record.user?.email || '-'}</td>
                     <td>{new Date(record.date).toLocaleDateString()}</td>
                     <td>{record.check_in_time ? new Date(record.check_in_time).toLocaleTimeString() : '-'}</td>
                     <td>{record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString() : '-'}</td>

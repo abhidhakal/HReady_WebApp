@@ -27,7 +27,7 @@ const EmployeeAnnouncements = () => {
     fetchAnnouncements();
   }, []);
 
-  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   return (
     <div className="full-screen">
@@ -37,9 +37,9 @@ const EmployeeAnnouncements = () => {
           <ul>
             <li><img src={logo} alt="Logo" /></li>
             <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
-            <li><a onClick={() => navigate(`/employee//${id}attendance`)}>Attendance</a></li>
-            <li><a onClick={() => navigate('/employee/tasks')}>Tasks</a></li>
-            <li><a onClick={() => navigate('/employee/leave')}>Leave</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
             <li>
@@ -71,7 +71,7 @@ const EmployeeAnnouncements = () => {
                   <h3 style={{ color:"#333", margin: 0 }}>{ann.title}</h3>
                   <p style={{ marginTop: '10px' }}>{ann.message}</p>
                   <small style={{ color: '#555' }}>
-                    Posted by: <strong>{ann.postedBy}</strong> | {new Date(ann.createdAt).toLocaleString()}
+                    Posted by: <strong>{ann.postedBy || 'Admin'}</strong> | {new Date(ann.createdAt).toLocaleString()}
                   </small>
                 </div>
               ))}
