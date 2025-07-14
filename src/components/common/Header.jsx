@@ -16,10 +16,13 @@ function Header() {
           <p className="header-p">Blogs</p>
         </Link>
         <Link to="/about-us">
-          <p className="header-p">About Us</p>
+          <p className="header-p">About HReady</p>
         </Link>
         <Link to="/contact">
-          <button className="contact-us">Contact Us</button>
+          <p className="header-p">Contact Us</p>
+        </Link>
+        <Link to="/login">
+          <button className="login-btn-header">Login</button>
         </Link>
       </div>
     </header>

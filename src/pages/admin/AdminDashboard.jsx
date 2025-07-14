@@ -106,7 +106,7 @@ function AdminDashboard() {
             <li><a onClick={() => navigate('/admin/tasks')}>Manage Tasks</a></li>
             <li><a onClick={() => navigate('/admin/leaves')}>Leaves</a></li>
             <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
-            <li><a onClick={() => navigate('/admin/profile')}>Profile</a></li>
+            <li><a onClick={() => navigate('/admin/:id/profile')}>Profile</a></li>
             <li>
               <a
                 className="nav-logout"

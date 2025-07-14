@@ -1,32 +1,33 @@
-.full-screen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  width: 100%;
-  background-color: #f9f9f9;
-}
-
+/* Logo at the top */
 .logo {
   height: 250px;
 }
 
+/* Page wrapper centers everything */
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f9fafb;
+  width: 100%;
+}
+
+/* Login card */
 .login {
   background-color: white;
-  border: none;
   border-radius: 10px;
   padding: 40px;
   box-sizing: border-box;
-  height: auto;
-  width: 100%;
   max-width: 500px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
 }
 
+/* Title and description */
 .login h1 {
   font-size: 1.6rem;
   margin-bottom: 10px;
@@ -41,43 +42,57 @@
   color: #444;
 }
 
+/* Form layout */
 form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
 }
 
+/* Input groups */
 .form-group {
   width: 80%;
   margin-bottom: 15px;
 }
 
-.form-group label {
-  font-size: 1rem;
-  font-weight: bold;
-  margin-bottom: 5px;
-  display: block;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 14px;
-  font-size: 1rem;
-  background-color: #f1f3f6;
-  color: black;
+.form-group .input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #f1f3f6;
   border: 1px solid #ccc;
   border-radius: 6px;
-  transition: border 0.3s ease, box-shadow 0.2s ease;
+  padding: 0 10px;
+  width: 100%;
 }
 
-.form-group input:focus {
+.input-wrapper input {
+  flex: 1;
+  border: none;
+  padding: 12px 8px;
+  font-size: 1rem;
+  background: transparent;
+  color: black;
+}
+
+.input-wrapper input:focus {
   outline: none;
-  border: 1.5px solid #042F46;
-  box-shadow: 0 0 5px rgba(4, 47, 70, 0.2);
 }
 
+.toggle-visibility-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.toggle-visibility-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+
+/* Login button */
 button.login-btn {
   background-color: #042F46;
   border: none;
@@ -89,7 +104,6 @@ button.login-btn {
   cursor: pointer;
   width: 50%;
   transition: background-color 0.3s ease, transform 0.2s ease;
-  max-width: 100%;
 }
 
 button.login-btn:disabled {
@@ -102,6 +116,7 @@ button.login-btn:hover:enabled {
   transform: translateY(-1px);
 }
 
+/* Return link */
 .return-label {
   color: rgb(103, 103, 103);
   font-size: 0.8rem;
