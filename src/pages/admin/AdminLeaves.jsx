@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
@@ -12,6 +12,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TextField from '@mui/material/TextField';
 
 function AdminLeaves() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [leaves, setLeaves] = useState([]);
@@ -27,7 +28,6 @@ function AdminLeaves() {
   });
 
   const token = localStorage.getItem('token');
-  const id = localStorage.getItem('userId');
 
   const fetchLeaves = async () => {
     try {
@@ -121,11 +121,11 @@ function AdminLeaves() {
           <ul>
             <li><img src={logo} alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
-            <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
-            <li><a onClick={() => navigate('/admin/attendance')}>Admin Attendance</a></li>
-            <li><a onClick={() => navigate('/admin/tasks')}>Manage Tasks</a></li>
-            <li><a className="nav-dashboard" onClick={() => navigate('/admin/leaves')}>Manage Leaves</a></li>
-            <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/attendance`)}>Admin Attendance</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/tasks`)}>Manage Tasks</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}/leaves`)}>Manage Leaves</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/announcements`)}>Manage Announcements</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
             <li>
               <a

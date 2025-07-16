@@ -1,3 +1,5 @@
+@import '../../../variables.css';
+
 .status-label {
   padding: 6px 12px;
   border-radius: 20px;
@@ -14,8 +16,8 @@
   border-radius: 8px;
   font-size: 0.95rem;
   font-family: Poppins, sans-serif;
-  background-color: #042F46;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   appearance: none;
@@ -30,6 +32,6 @@
 
 .manage-employees select:focus {
   outline: none;
-  border-color: #042F46;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(4, 47, 70, 0.2);
 }

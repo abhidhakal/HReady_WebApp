@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
@@ -7,6 +7,7 @@ import Toast from '../../components/common/Toast';
 import logo from '/src/assets/primary_icon.webp';
 
 function AdminDashboard() {
+  const { id } = useParams();
   const [employeeCount, setEmployeeCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Admin');
@@ -100,13 +101,13 @@ function AdminDashboard() {
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src={logo} alt="Logo" /></li>
-            <li><a className="nav-dashboard" onClick={() => navigate('/admin')}>Dashboard</a></li>
-            <li><a onClick={() => navigate('/admin/employees')}>Manage Employees</a></li>
-            <li><a onClick={() => navigate('/admin/attendance')}>Admin Attendance</a></li>
-            <li><a onClick={() => navigate('/admin/tasks')}>Manage Tasks</a></li>
-            <li><a onClick={() => navigate('/admin/leaves')}>Leaves</a></li>
-            <li><a onClick={() => navigate('/admin/announcements')}>Manage Announcements</a></li>
-            <li><a onClick={() => navigate('/admin/:id/profile')}>Profile</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/attendance`)}>Admin Attendance</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/tasks`)}>Manage Tasks</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/leaves`)}>Leaves</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/announcements`)}>Manage Announcements</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
             <li>
               <a
                 className="nav-logout"
@@ -145,7 +146,7 @@ function AdminDashboard() {
               </p>
               <small
                 className="go-attendance-label"
-                onClick={() => navigate('/admin/attendance')}
+                onClick={() => navigate(`/admin/${id}/attendance`)}
               >
                 click here to complete attendance
               </small>
@@ -153,7 +154,7 @@ function AdminDashboard() {
             <div className="banner-right">
               <button
                 className="edit-profile"
-                onClick={() => navigate('/admin/profile')}
+                onClick={() => navigate(`/admin/${id}/profile`)}
               >
                 Edit Admin Profile
               </button>
@@ -186,7 +187,7 @@ function AdminDashboard() {
                 <h2>Recent Tasks</h2>
                 <button
                   className="edit-task"
-                  onClick={() => navigate('/admin/tasks')}
+                  onClick={() => navigate(`/admin/${id}/tasks`)}
                 >
                   View All
                 </button>
@@ -211,7 +212,7 @@ function AdminDashboard() {
                           </span>
                         </td>
                         <td>
-                          <a onClick={() => navigate('/admin/tasks')}>Details</a>
+                          <a onClick={() => navigate(`/admin/${id}/tasks`)}>Details</a>
                         </td>
                       </tr>
                     ))
@@ -229,7 +230,7 @@ function AdminDashboard() {
                 <h2>Recent Announcements</h2>
                 <button
                   className="edit-announcement"
-                  onClick={() => navigate('/admin/announcements')}
+                  onClick={() => navigate(`/admin/${id}/announcements`)}
                 >
                   View All
                 </button>

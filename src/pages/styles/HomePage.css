@@ -78,8 +78,8 @@ body {
 .features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 80px;
-  padding: 60px 60px;
+  gap: 60px;
+  padding: 60px 100px;
   justify-content: center;
 }
 

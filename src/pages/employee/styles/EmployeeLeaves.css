@@ -1,7 +1,9 @@
+@import '../../../variables.css';
+
 .employee-leaves {
   margin: 20px auto;
   padding: 30px;
-  background-color: #ffffff;
+  background-color: var(--color-primary-contrast);
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
   max-width: 1000px;
@@ -10,7 +12,7 @@
 }
 
 .employee-leaves h2 {
-  color: #042F46;
+  color: var(--color-primary);
   font-size: 1.6rem;
   margin-bottom: 20px;
   font-weight: 600;
@@ -28,11 +30,11 @@
 .employee-leaves form select {
   padding: 12px 14px;
   border: 1px solid #ccc;
-  color: #333;
+  color: var(--color-text);
   border-radius: 10px;
   font-size: 0.95rem;
   font-family: inherit;
-  background-color: #f9f9f9;
+  background-color: var(--color-bg);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -52,8 +54,8 @@
 
 .employee-leaves form button {
   grid-column: span 2;
-  background-color: #042F46;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
   padding: 12px;
   border: none;
   border-radius: 12px;
@@ -86,15 +88,15 @@
 
 .employee-leaves th {
   background-color: #f4f6f8;
-  color: #042F46;
+  color: var(--color-primary);
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.85rem;
 }
 
 .employee-leaves td {
-  background-color: #f9f9f9;
-  color: #333;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-size: 0.93rem;
 }
 
@@ -103,5 +105,5 @@
 }
 
 .half-day-checkbox {
-  color: #333;
+  color: var(--color-text);
 }

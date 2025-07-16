@@ -45,12 +45,12 @@ function App() {
 
           {/* ADMIN */}
           <Route path="/admin/:id" element={<AdminDashboard />} />
-          <Route path="/admin/employees" element={<ManageEmployees />} />
-          <Route path="/admin/announcements" element={<ManageAnnouncements />} />
-          <Route path="/admin/attendance" element={<AdminAttendance />} />
+          <Route path="/admin/:id/employees" element={<ManageEmployees />} />
+          <Route path="/admin/:id/announcements" element={<ManageAnnouncements />} />
+          <Route path="/admin/:id/attendance" element={<AdminAttendance />} />
           <Route path="/admin/:id/profile" element={<AdminProfile />} />
-          <Route path="/admin/tasks" element={<ManageTasks/>}/>
-          <Route path="/admin/leaves" element={<AdminLeaves />} />
+          <Route path="/admin/:id/tasks" element={<ManageTasks/>}/>
+          <Route path="/admin/:id/leaves" element={<AdminLeaves />} />
         </Routes>
       </div>
     </Router>

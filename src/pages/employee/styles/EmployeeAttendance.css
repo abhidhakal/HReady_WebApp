@@ -1,16 +1,18 @@
+@import '../../../variables.css';
+
 .attendance-page {
   margin-top: 20px;
 }
 
 .attendance-page h2 {
-  color: #042F46;
+  color: var(--color-primary);
   margin-bottom: 15px;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
 .attendance-page h3 {
-  color: #042F46;
+  color: var(--color-primary);
   margin-top: 30px;
   margin-bottom: 10px;
   font-size: 1.2rem;
@@ -19,7 +21,7 @@
 
 .attendance-page p {
   font-size: 1rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .attendance-page .attendance-buttons {
@@ -30,8 +32,8 @@
 
 .attendance-page .attendance-buttons button {
   padding: 10px 20px;
-  background-color: #042F46;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
   border: none;
   border-radius: 10px;
   font-weight: 500;
@@ -66,12 +68,12 @@
   text-align: left;
   border-bottom: 1px solid #edf2f7;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .attendance-table th {
   background-color: #f4f6f8;
-  color: #042F46;
+  color: var(--color-primary);
   font-weight: 600;
   text-transform: uppercase;
 }
