@@ -1,83 +1,126 @@
 @import '../../../variables.css';
 
 .attendance-page {
-  margin-top: 20px;
+  margin-top: 48px;
 }
 
-.attendance-page h2 {
-  color: var(--color-primary);
-  margin-bottom: 15px;
-  font-size: 1.5rem;
-  font-weight: 600;
+.main-content.attendance-page {
+  max-width: 600px;
+  margin: 48px auto 0 auto;
 }
 
-.attendance-page h3 {
-  color: var(--color-primary);
-  margin-top: 30px;
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-  font-weight: 600;
+.attendance-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 24px;
+  margin-bottom: 32px;
 }
 
-.attendance-page p {
-  font-size: 1rem;
-  color: var(--color-text);
-}
-
-.attendance-page .attendance-buttons {
+.attendance-header {
   display: flex;
-  gap: 15px;
-  margin: 20px 0;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.attendance-header-title {
+  font-size: 20px;
+  font-weight: 600;
 }
 
-.attendance-page .attendance-buttons button {
-  padding: 10px 20px;
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border: none;
-  border-radius: 10px;
+.attendance-status-chip {
+  display: inline-block;
+  color: white;
+  border-radius: 16px;
+  padding: 2px 12px;
+  font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(4, 47, 70, 0.2);
+  margin-left: 8px;
+}
+.attendance-status-chip.present,
+.attendance-status-chip.checked-in { background: #4caf50; }
+.attendance-status-chip.absent,
+.attendance-status-chip.not-checked-in { background: #f44336; }
+.attendance-status-chip.checked-out { background: #2196f3; }
+.attendance-status-chip.default { background: #9e9e9e; }
+
+.attendance-details {
+  margin-bottom: 16px;
+}
+.attendance-date,
+.attendance-check-in,
+.attendance-check-out,
+.attendance-total-hours {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.attendance-date-icon,
+.attendance-check-in-icon,
+.attendance-check-out-icon,
+.attendance-total-hours-icon {
+  margin-right: 8px;
+  color: #607d8b;
+}
+.attendance-check-in-icon { color: #43a047; }
+.attendance-check-out-icon { color: #e53935; }
+.attendance-total-hours-icon { color: #fb8c00; }
+.attendance-date-text,
+.attendance-check-in-label,
+.attendance-check-out-label,
+.attendance-total-hours-label {
+  font-weight: 600;
+}
+.attendance-check-in-time,
+.attendance-check-out-time,
+.attendance-total-hours-value {
+  font-weight: 400;
 }
 
-.attendance-page .attendance-buttons button:disabled {
-  background-color: #ccc;
+.attendance-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.attendance-btn {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 0;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+  transition: box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+}
+.attendance-btn:disabled {
+  background: #bdbdbd;
   cursor: not-allowed;
 }
-
-.attendance-page .attendance-buttons button:hover:not(:disabled) {
-  background-color: #031f2e;
-  transform: translateY(-2px);
+.attendance-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.13);
 }
 
-.attendance-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 20px;
+.attendance-empty-state {
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
 }
 
-.attendance-table th,
-.attendance-table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid #edf2f7;
-  font-size: 0.95rem;
-  color: var(--color-text);
-}
-
-.attendance-table th {
-  background-color: #f4f6f8;
-  color: var(--color-primary);
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.attendance-table tr:hover {
-  background-color: #f9fafb;
+.attendance-card h3,
+.attendance-card h2 {
+  margin-bottom: 18px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1976d2;
+  text-align: center;
 }
