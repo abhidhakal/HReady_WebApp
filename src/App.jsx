@@ -22,6 +22,7 @@ import ManageTasks from './pages/admin/ManageTasks.jsx';
 import EmployeeTasks from './pages/employee/EmployeeTasks.jsx';
 import EmployeeLeaves from './pages/employee/EmployeeLEaves.jsx';
 import AdminLeaves from './pages/admin/AdminLeaves.jsx';
+import EmployeeRequest from './pages/employee/EmployeeRequest.jsx';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
           <Route path="/employee/:id/profile" element={<EmployeeProfile />} />
           <Route path="/employee/:id/tasks" element={<EmployeeTasks />} />
           <Route path="/employee/:id/leave" element={<EmployeeLeaves />} />
+          <Route path="/employee/:id/requests" element={<EmployeeRequest />} />
 
           {/* ADMIN */}
           <Route path="/admin/:id" element={<AdminDashboard />} />

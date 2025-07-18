@@ -61,6 +61,7 @@ const EmployeeTasks = () => {
             <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/requests`)}>Requests</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
             <li>
               <a
