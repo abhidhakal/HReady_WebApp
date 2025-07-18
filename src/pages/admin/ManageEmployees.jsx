@@ -80,6 +80,7 @@ const ManageEmployees = () => {
             <li><a onClick={() => navigate(`/admin/${id}/tasks`)}>Manage Tasks</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/leaves`)}>Manage Leaves</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/announcements`)}>Manage Announcements</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/requests`)}>Requests</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
             <li>
               <a
