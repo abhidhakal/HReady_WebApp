@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 // Import components for different pages
 import HomePage from '../src/pages/HomePage.jsx';
+import GetStarted from '../src/pages/GetStarted.jsx';
 import Login from './pages/Login.jsx';
 import AboutUs from './components/sections/AboutUs';
 import Blogs from './components/sections/Blogs';
@@ -31,6 +32,7 @@ function App() {
       <div className="full-screen">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/get-started" element={<GetStarted />} />
           <Route path="/login" element={<Login />} />
           <Route path="/about-us" element={<AboutUs />} />
           <Route path="/blogs" element={<Blogs />} />
