@@ -1,8 +1,9 @@
 import '/src/pages/styles/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import Toast from '../components/common/Toast';
+import api from '../api/axios';
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,47 +11,157 @@ function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
+  const [attempts, setAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutTime, setLockoutTime] = useState(null);
   const navigate = useNavigate();
 
+  // Check for existing session on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+        
+        if (decoded.exp > currentTime) {
+          // Token is still valid, redirect to appropriate dashboard
+          if (decoded.role === 'admin') {
+            navigate(`/admin/${decoded.id}`);
+          } else if (decoded.role === 'employee') {
+            navigate(`/employee/${decoded.id}`);
+          }
+        } else {
+          // Token expired, clear it
+          localStorage.clear();
+        }
+      } catch (error) {
+        // Invalid token, clear it
+        localStorage.clear();
+      }
+    }
+  }, [navigate]);
+
+  // Validate email format
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Validate password strength
+  const validatePassword = (password) => {
+    return password.length >= 8;
+  };
+
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) return;
+    
+    // Basic client-side validation
+    if (!email || !password) {
+      setToast({ message: 'Please fill in all fields', type: 'error' });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setToast({ message: 'Please enter a valid email address', type: 'error' });
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setToast({ message: 'Password must be at least 8 characters long', type: 'error' });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      const res = await api.post('/auth/login', {
+        email: email.trim().toLowerCase(),
+        password
       });
 
-      const data = await res.json();
+      const data = res.data;
 
-      if (!res.ok) {
-        setToast({ message: data.message || 'Login failed', type: 'error' });
-        setLoading(false);
-        return;
-      }
+      // Clear any previous error states
+      setAttempts(0);
+      setIsLocked(false);
+      setLockoutTime(null);
 
+      // Store authentication data
       localStorage.setItem('token', data.token);
-
-      // Decode token to get user id and role
-      const decoded = jwtDecode(data.token);
-      localStorage.setItem('userId', decoded.id);
-      localStorage.setItem('role', decoded.role);
+      localStorage.setItem('userId', data._id);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('userName', data.name);
 
       setToast({ message: 'Login successful! Redirecting...', type: 'success' });
 
+      // Redirect after a short delay
       setTimeout(() => {
-        if (decoded.role === 'admin') navigate(`/admin/${decoded.id}`);
-        else if (decoded.role === 'employee') navigate(`/employee/${decoded.id}`);
+        if (data.role === 'admin') {
+          navigate(`/admin/${data._id}`);
+        } else if (data.role === 'employee') {
+          navigate(`/employee/${data._id}`);
+        }
       }, 1500);
+
     } catch (error) {
       console.error('Login error:', error);
-      setToast({ message: 'Something went wrong. Please try again.', type: 'error' });
+      
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      const statusCode = error.response?.status;
+
+      // Handle different error scenarios
+      if (statusCode === 423) {
+        // Account locked
+        setIsLocked(true);
+        const retryAfter = error.response?.data?.retryAfter || 900; // 15 minutes default
+        setLockoutTime(new Date(Date.now() + retryAfter * 1000));
+        setToast({ 
+          message: 'Account temporarily locked due to too many failed attempts. Please try again later.', 
+          type: 'error' 
+        });
+      } else if (statusCode === 429) {
+        // Rate limited
+        const retryAfter = error.response?.data?.retryAfter || 900;
+        setLockoutTime(new Date(Date.now() + retryAfter * 1000));
+        setToast({ 
+          message: 'Too many login attempts. Please wait before trying again.', 
+          type: 'error' 
+        });
+      } else if (statusCode === 401) {
+        // Invalid credentials
+        setAttempts(prev => prev + 1);
+        setToast({ message: errorMessage, type: 'error' });
+      } else if (statusCode === 403) {
+        // Access denied (suspicious request)
+        setToast({ 
+          message: 'Access denied. Please check your request and try again.', 
+          type: 'error' 
+        });
+      } else {
+        // Other errors
+        setToast({ message: errorMessage, type: 'error' });
+      }
     }
 
     setLoading(false);
+  };
+
+  // Check if form should be disabled
+  const isFormDisabled = () => {
+    return loading || isLocked || (lockoutTime && new Date() < lockoutTime);
+  };
+
+  // Get remaining lockout time
+  const getRemainingTime = () => {
+    if (!lockoutTime) return null;
+    
+    const remaining = Math.max(0, lockoutTime.getTime() - Date.now());
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -69,6 +180,22 @@ function Login() {
             <p>Sign in to your HReady account to continue managing your workforce efficiently.</p>
           </div>
 
+          {isLocked && (
+            <div className="lockout-warning">
+              <i className="fas fa-lock"></i>
+              <p>Account temporarily locked</p>
+              <small>Too many failed attempts. Please try again later.</small>
+            </div>
+          )}
+
+          {lockoutTime && new Date() < lockoutTime && (
+            <div className="rate-limit-warning">
+              <i className="fas fa-clock"></i>
+              <p>Please wait before trying again</p>
+              <small>Time remaining: {getRemainingTime()}</small>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="login-form">
             <div className="form-group">
               <label htmlFor="email" className="form-label">Email Address</label>
@@ -82,6 +209,8 @@ function Login() {
                   placeholder="Enter your email address"
                   required
                   className="form-input"
+                  disabled={isFormDisabled()}
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -98,12 +227,15 @@ function Login() {
                   placeholder="Enter your password"
                   required
                   className="form-input"
+                  disabled={isFormDisabled()}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
                   className="toggle-visibility-btn"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  disabled={isFormDisabled()}
                 >
                   <img
                     src={
@@ -117,7 +249,18 @@ function Login() {
               </div>
             </div>
 
-            <button type="submit" className="login-btn" disabled={loading}>
+            {attempts > 0 && (
+              <div className="attempts-warning">
+                <i className="fas fa-exclamation-triangle"></i>
+                <span>Failed attempts: {attempts}/5</span>
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className="login-btn" 
+              disabled={isFormDisabled()}
+            >
               {loading ? (
                 <>
                   <span>Signing In...</span>

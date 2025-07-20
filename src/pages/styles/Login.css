@@ -90,6 +90,81 @@
   margin-bottom: 2rem;
 }
 
+/* Security warnings */
+.lockout-warning,
+.rate-limit-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+.lockout-warning {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border-color: #dc3545;
+}
+
+.lockout-warning i,
+.rate-limit-warning i {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.lockout-warning i {
+  color: #dc3545;
+}
+
+.rate-limit-warning i {
+  color: #ffc107;
+}
+
+.lockout-warning p,
+.rate-limit-warning p {
+  margin: 0 0 4px 0;
+  font-weight: 600;
+  color: #333;
+  font-family: 'Poppins', sans-serif;
+}
+
+.lockout-warning small,
+.rate-limit-warning small {
+  color: #666;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.attempts-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #856404;
+  font-family: 'Poppins', sans-serif;
+}
+
+.attempts-warning i {
+  color: #f39c12;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -110,7 +185,7 @@
   background: #f9fafb;
   border: 2px solid #e5e7eb;
   border-radius: 10px;
-  padding: 0 1rem;
+  padding: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   outline: none;
@@ -153,59 +228,75 @@
   box-shadow: none;
 }
 
-/* Password field row - matching AdminProfile style */
+/* Password field row - consistent with email field */
 .password-field-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  outline: none;
+}
+
+.password-field-row:focus-within {
+  border-color: #042F46;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(4, 47, 70, 0.1);
+  outline: none;
 }
 
 .password-field-row .form-input {
   flex: 1;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  background-color: #f1f3f6;
-  color: #1a1a1a;
-  font-size: 0.95rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  font-size: 1rem;
+  background: transparent;
+  color: #1f2937;
+  font-weight: 500;
   outline: none;
+  box-shadow: none;
 }
 
 .password-field-row .form-input:focus {
-  border-color: #042F46;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(30,99,126,0.15);
+  border: none;
+  box-shadow: none;
 }
 
 .password-field-row .toggle-visibility-btn {
-  background-color: #f1f3f6;
-  border: 1px solid #ccc;
-  padding: 1rem;
-  border-radius: 10px;
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  height: auto;
-  min-height: 48px;
+  height: 40px;
+  width: 40px;
   outline: none;
+  margin-left: 0.5rem;
 }
 
 .password-field-row .toggle-visibility-btn:hover {
-  background-color: #e5e7eb;
+  background-color: rgba(4, 47, 70, 0.1);
 }
 
 .password-field-row .toggle-visibility-btn:focus {
   outline: none;
-  background-color: #e5e7eb;
+  background-color: rgba(4, 47, 70, 0.15);
 }
 
 .password-field-row .toggle-visibility-btn img {
-  width: 20px;
-  height: 20px;
-  opacity: 0.8;
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  filter: brightness(0.7);
 }
 
 .toggle-visibility-btn {
@@ -225,10 +316,11 @@
 }
 
 .toggle-visibility-btn img {
-  width: 20px;
-  height: 20px;
-  opacity: 0.7;
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
   transition: opacity 0.2s ease;
+  filter: brightness(0.7);
 }
 
 .toggle-visibility-btn:hover img {
@@ -393,9 +485,9 @@
 }
 
 .password-field-row .form-input:focus {
-  border-color: #1E637E;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(30,99,126,0.15);
+  border: none;
+  box-shadow: none;
 }
 
 .toggle-visibility-btn:focus {

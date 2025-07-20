@@ -4,7 +4,9 @@ import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
 import Toast from '../../components/common/Toast';
+import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
 import logo from '/src/assets/primary_icon.webp';
+import { secureLogout } from '../../utils/authUtils';
 
 function AdminDashboard() {
   const { id } = useParams();
@@ -22,6 +24,7 @@ function AdminDashboard() {
     onLeave: 0,
     absent: 0
   });
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
   const resolveProfilePicture = (picture) => {
@@ -29,6 +32,23 @@ function AdminDashboard() {
     if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
     if (picture.startsWith('http')) return picture;
     return '/src/assets/profile.svg';
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await secureLogout(
+      navigate,
+      () => setToast({ message: 'Logged out successfully', type: 'success' }),
+      (error) => setToast({ message: 'Logout completed with warnings', type: 'warning' })
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   useEffect(() => {
@@ -159,10 +179,7 @@ function AdminDashboard() {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -210,24 +227,50 @@ function AdminDashboard() {
           </div>
 
           <div className="info-cards">
-            <div className="info-card">
+            <div className="info-card overview-card">
               <h2>Today's Overview</h2>
-              <p><strong>Active:</strong> {todayOverview.active}</p>
-              <p><strong>On Leave:</strong> {todayOverview.onLeave}</p>
-              <p><strong>Absent:</strong> {todayOverview.absent}</p>
+              <div className="overview-content">
+                <div className="overview-item">
+                  <i className="fas fa-user-check"></i>
+                  <span className="overview-label">Active:</span>
+                  <span className="overview-value">{todayOverview.active}</span>
+                </div>
+                <div className="overview-item">
+                  <i className="fas fa-umbrella-beach"></i>
+                  <span className="overview-label">On Leave:</span>
+                  <span className="overview-value">{todayOverview.onLeave}</span>
+                </div>
+                <div className="overview-item">
+                  <i className="fas fa-user-times"></i>
+                  <span className="overview-label">Absent:</span>
+                  <span className="overview-value">{todayOverview.absent}</span>
+                </div>
+              </div>
             </div>
-            <div className="info-card">
+            <div className="info-card employees-card">
               <h2>Total Employees</h2>
-              <h1 className="employee-role">{employeeCount}</h1>
-            </div>
-            <div className="info-card">
-              <div className="info-card-leaves">
-                <div>
-                  <h2>Pending Leave Requests</h2>
-                  <h1 className="employee-leaves-left">{pendingLeaveRequests}</h1>
+              <div className="employees-content">
+                <div className="employees-header">
+                  <i className="fas fa-users"></i>
+                  <span className="employees-count">{employeeCount}</span>
                 </div>
                 <button 
-                  className="request-leave-btn"
+                  className="view-employees-btn"
+                  onClick={() => navigate(`/admin/${id}/employees`)}
+                >
+                  Manage
+                </button>
+              </div>
+            </div>
+            <div className="info-card leave-requests-card">
+              <h2>Pending Leave Requests</h2>
+              <div className="leave-requests-content">
+                <div className="leave-requests-header">
+                  <i className="fas fa-clock"></i>
+                  <span className="leave-requests-count">{pendingLeaveRequests}</span>
+                </div>
+                <button 
+                  className="review-leave-btn"
                   onClick={() => navigate(`/admin/${id}/leaves`)}
                 >
                   Review
@@ -307,6 +350,12 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 }

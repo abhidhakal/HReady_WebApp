@@ -12,6 +12,7 @@ button {
   width: 100%;
   min-height: calc(100vh - 75px);
   margin-top: 75px;
+  padding: 0px 40px;
   background-color: #F5F5F5;
   transition: padding-left 0.3s ease;
 }
@@ -147,6 +148,309 @@ button {
 /* For employee dashboard with only 2 cards */
 .info-cards:has(.info-card:nth-child(2):last-child) {
   grid-template-columns: repeat(2, 1fr);
+}
+
+/* For employee dashboard with 3 cards */
+.info-cards:has(.info-card:nth-child(3):last-child) {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Info Card Variations */
+/* Overview Card */
+.overview-card {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 4px solid #2196f3;
+}
+
+.overview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.overview-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overview-item i {
+  color: #2196f3;
+  font-size: 16px;
+  width: 16px;
+}
+
+.overview-label {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  flex: 1;
+}
+
+.overview-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1976d2;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Employees Card */
+.employees-card {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-left: 4px solid #4caf50;
+}
+
+.employees-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.employees-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.employees-header i {
+  color: #4caf50;
+  font-size: 20px;
+}
+
+.employees-count {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2e7d32;
+  font-family: 'Poppins', sans-serif;
+}
+
+.view-employees-btn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.view-employees-btn:hover {
+  background-color: #388e3c;
+  transform: translateY(-1px);
+}
+
+/* Leave Requests Card */
+.leave-requests-card {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left: 4px solid #ff9800;
+}
+
+.leave-requests-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.leave-requests-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.leave-requests-header i {
+  color: #ff9800;
+  font-size: 20px;
+}
+
+.leave-requests-count {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e65100;
+  font-family: 'Poppins', sans-serif;
+}
+
+.review-leave-btn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.review-leave-btn:hover {
+  background-color: #f57c00;
+  transform: translateY(-1px);
+}
+
+/* Position Card */
+.position-card {
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  border-left: 4px solid #9c27b0;
+}
+
+.position-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+}
+
+.position-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.position-header i {
+  color: #9c27b0;
+  font-size: 20px;
+}
+
+.position-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #7b1fa2;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Leaves Card */
+.leaves-card {
+  background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+  border-left: 4px solid #009688;
+}
+
+.leaves-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.leaves-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.leaves-header i {
+  color: #009688;
+  font-size: 20px;
+}
+
+.leaves-count {
+  font-size: 28px;
+  font-weight: 700;
+  color: #00695c;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Pending Tasks Card */
+.pending-tasks-card {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left: 4px solid #ff9800;
+}
+
+.pending-tasks-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.pending-tasks-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pending-tasks-header i {
+  color: #ff9800;
+  font-size: 20px;
+}
+
+.pending-count {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e65100;
+  font-family: 'Poppins', sans-serif;
+}
+
+.progress-container {
+  flex: 1;
+  margin-left: 12px;
+}
+
+.progress-bar {
+  width: 60px;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #4caf50;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.next-task-info {
+  margin-bottom: 12px;
+}
+
+.next-task-title {
+  font-size: 14px;
+  color: #333;
+  margin: 0 0 4px 0;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.next-task-due {
+  font-size: 12px;
+  color: #d32f2f;
+  margin: 0;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+}
+
+.view-tasks-btn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.view-tasks-btn:hover {
+  background-color: #f57c00;
+  transform: translateY(-1px);
 }
 
 .info-card {
@@ -316,7 +620,7 @@ button {
   padding: 12px;
   color: #333;
   border: none;
-  font-size: 13px;
+  font-size: 16px;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -342,7 +646,7 @@ button {
   padding: 4px 10px;
   border-radius: 12px;
   font-weight: 600;
-  font-size: 11px;
+  font-size: 14px;
   text-align: center;
   font-family: 'Poppins', sans-serif;
 }
@@ -594,6 +898,53 @@ button {
   .request-leave-btn {
     padding: 8px 14px;
     font-size: 13px;
+  }
+  
+  .overview-item {
+    gap: 6px;
+  }
+  
+  .overview-item i {
+    font-size: 14px;
+    width: 14px;
+  }
+  
+  .overview-label {
+    font-size: 12px;
+  }
+  
+  .overview-value {
+    font-size: 14px;
+  }
+  
+  .employees-header, .leave-requests-header, .position-header, .leaves-header, .pending-tasks-header {
+    gap: 8px;
+  }
+  
+  .employees-count, .leave-requests-count, .leaves-count, .pending-count {
+    font-size: 24px;
+  }
+  
+  .position-value {
+    font-size: 20px;
+  }
+  
+  .progress-bar {
+    width: 50px;
+    height: 6px;
+  }
+  
+  .next-task-title {
+    font-size: 12px;
+  }
+  
+  .next-task-due {
+    font-size: 11px;
+  }
+  
+  .view-employees-btn, .review-leave-btn, .view-tasks-btn {
+    padding: 6px 12px;
+    font-size: 11px;
   }
   
   .other-section {

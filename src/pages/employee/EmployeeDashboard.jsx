@@ -4,6 +4,8 @@ import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
 import logo from '/src/assets/primary_icon.webp';
+import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
+import { secureLogout } from '../../utils/authUtils';
 
 function EmployeeDashboard() {
   const { id } = useParams();
@@ -14,6 +16,7 @@ function EmployeeDashboard() {
   const [announcements, setAnnouncements] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
   const resolveProfilePicture = (picture) => {
@@ -21,6 +24,19 @@ function EmployeeDashboard() {
     if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
     if (picture.startsWith('http')) return picture;
     return '/src/assets/profile.svg';
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await secureLogout(navigate);
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   useEffect(() => {
@@ -104,6 +120,22 @@ function EmployeeDashboard() {
     setSidebarOpen(prev => !prev);
   };
 
+  // Calculate pending tasks data
+  const pendingTasks = tasks.filter(task => task.status?.toLowerCase() === 'pending');
+  const pendingCount = pendingTasks.length;
+  const totalTasks = tasks.length;
+  const nextTask = pendingTasks.length > 0 ? pendingTasks[0] : null;
+  const progressValue = totalTasks > 0 ? (totalTasks - pendingCount) / totalTasks : 0;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return null;
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
   return (
     <div className="full-screen">
       <DashboardHeader onToggleSidebar={toggleSidebar} />
@@ -121,10 +153,7 @@ function EmployeeDashboard() {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -145,7 +174,7 @@ function EmployeeDashboard() {
             </div>
             <div className="banner-middle">
               <p>
-                Your Today’s Attendance:{" "}
+                Your Today's Attendance:{" "}
                 <span className={
                   attendanceStatus === 'Checked In' || attendanceStatus === 'Checked Out'
                     ? 'status-done'
@@ -172,19 +201,60 @@ function EmployeeDashboard() {
           </div>
 
           <div className="info-cards">
-            <div className="info-card">
+            <div className="info-card position-card">
               <h2>Position</h2>
-              <h1 className="employee-role">{position}</h1>
+              <div className="position-content">
+                <div className="position-header">
+                  <i className="fas fa-briefcase"></i>
+                  <span className="position-value">{position}</span>
+                </div>
+              </div>
             </div>
-            <div className="info-card">
+            <div className="info-card leaves-card">
               <h2>Leave Days Left</h2>
-              <div className="info-card-leaves">
-                <h1 className="employee-leaves-left">15</h1>
+              <div className="leaves-content">
+                <div className="leaves-header">
+                  <i className="fas fa-calendar-alt"></i>
+                  <span className="leaves-count">15</span>
+                </div>
                 <button 
                   className="request-leave-btn"
                   onClick={() => navigate(`/employee/${id}/leave`)}
                 >
                   Request Leave
+                </button>
+              </div>
+            </div>
+            <div className="info-card pending-tasks-card">
+              <h2>Pending Tasks</h2>
+              <div className="pending-tasks-content">
+                <div className="pending-tasks-header">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  <span className="pending-count">{pendingCount}</span>
+                  {totalTasks > 0 && (
+                    <div className="progress-container">
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill" 
+                          style={{ width: `${progressValue * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {nextTask && (
+                  <div className="next-task-info">
+                    <p className="next-task-title">Title: {nextTask.title}</p>
+                    {nextTask.dueDate && (
+                      <p className="next-task-due">Due: {formatDate(nextTask.dueDate)}</p>
+                    )}
+                  </div>
+                )}
+                <button 
+                  className="view-tasks-btn"
+                  onClick={() => navigate(`/employee/${id}/tasks`)}
+                >
+                  View All
                 </button>
               </div>
             </div>
@@ -248,22 +318,26 @@ function EmployeeDashboard() {
                   announcements.map((ann) => (
                     <div className="announcement-card" key={ann._id}>
                       <h3>{ann.title}</h3>
-                      <p>
-                        {ann.message.length > 100
-                          ? ann.message.substring(0, 100) + "..."
-                          : ann.message}
-                      </p>
-                      <small>{new Date(ann.createdAt).toLocaleDateString()}</small>
+                      <p>{ann.message}</p>
+                      <small>
+                        Posted by: <strong>{ann.postedBy || 'Admin'}</strong> | {new Date(ann.createdAt).toLocaleString()}
+                      </small>
                     </div>
                   ))
                 ) : (
-                  <p style={{ textAlign: 'center', color: '#666', margin: '20px 0' }}>No announcements available.</p>
+                  <p>No announcements available.</p>
                 )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 }
