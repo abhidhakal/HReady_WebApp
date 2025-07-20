@@ -38,7 +38,12 @@ const EmployeeDialog = ({ open, onClose, onSubmit, initialValues, editing, loadi
   return (
     <div className="employee-modal-overlay">
       <div className="employee-modal-content">
-        <h3>{editing ? 'Edit Employee' : 'Add Employee'}</h3>
+        <div className="employee-modal-header">
+          <h3>{editing ? 'Edit Employee' : 'Add Employee'}</h3>
+          <button className="employee-modal-close" onClick={onClose}>
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
         <Formik
           enableReinitialize
           initialValues={initialValues}
@@ -47,38 +52,139 @@ const EmployeeDialog = ({ open, onClose, onSubmit, initialValues, editing, loadi
           {({ values, handleChange }) => (
             <Form>
               <div className="employee-modal-form">
-                <input type="text" name="name" placeholder="Name" value={values.name} onChange={handleChange} required className="outlined-input" />
-                <input type="email" name="email" placeholder="Email" value={values.email} onChange={handleChange} required className="outlined-input" />
+                <div className="employee-form-field">
+                  <label>Name</label>
+                  <input 
+                    type="text" 
+                    name="name" 
+                    placeholder="Enter employee name" 
+                    value={values.name} 
+                    onChange={handleChange} 
+                    required 
+                    className="employee-form-input" 
+                  />
+                </div>
+                
+                <div className="employee-form-field">
+                  <label>Email</label>
+                  <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="Enter employee email" 
+                    value={values.email} 
+                    onChange={handleChange} 
+                    required 
+                    className="employee-form-input" 
+                  />
+                </div>
+                
                 {!editing && (
-                  <div className="employee-password-field">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      placeholder="Password"
-                      value={values.password}
-                      onChange={handleChange}
-                      required
-                      className="outlined-input"
-                    />
-                    <span
-                      className="employee-password-toggle"
-                      onClick={() => setShowPassword(s => !s)}
-                    >
-                      <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                    </span>
+                  <div className="employee-form-field">
+                    <label>Password</label>
+                    <div className="employee-password-field-row">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        placeholder="Enter password"
+                        value={values.password}
+                        onChange={handleChange}
+                        required
+                        className="employee-form-input"
+                      />
+                      <button
+                        type="button"
+                        className="employee-toggle-visibility-btn"
+                        onClick={() => setShowPassword(s => !s)}
+                      >
+                        <img
+                          src={
+                            showPassword
+                              ? "/assets/icons/view_on.svg"
+                              : "/assets/icons/view_off.svg"
+                          }
+                          alt="Toggle password visibility"
+                        />
+                      </button>
+                    </div>
                   </div>
                 )}
-                <input type="text" name="profilePicture" placeholder="Profile Picture URL" value={values.profilePicture} onChange={handleChange} className="outlined-input" />
-                <input type="text" name="contactNo" placeholder="Contact No" value={values.contactNo} onChange={handleChange} className="outlined-input" />
-                <input type="text" name="department" placeholder="Department" value={values.department} onChange={handleChange} className="outlined-input" />
-                <input type="text" name="position" placeholder="Position" value={values.position} onChange={handleChange} className="outlined-input" />
-                <select name="status" value={values.status} onChange={handleChange} className="outlined-input">
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                
+                <div className="employee-form-field">
+                  <label>Profile Picture URL</label>
+                  <input 
+                    type="text" 
+                    name="profilePicture" 
+                    placeholder="Enter profile picture URL" 
+                    value={values.profilePicture} 
+                    onChange={handleChange} 
+                    className="employee-form-input" 
+                  />
+                </div>
+                
+                <div className="employee-form-field">
+                  <label>Contact Number</label>
+                  <input 
+                    type="text" 
+                    name="contactNo" 
+                    placeholder="Enter contact number" 
+                    value={values.contactNo} 
+                    onChange={handleChange} 
+                    className="employee-form-input" 
+                  />
+                </div>
+                
+                <div className="employee-form-field">
+                  <label>Department</label>
+                  <input 
+                    type="text" 
+                    name="department" 
+                    placeholder="Enter department" 
+                    value={values.department} 
+                    onChange={handleChange} 
+                    className="employee-form-input" 
+                  />
+                </div>
+                
+                <div className="employee-form-field">
+                  <label>Position</label>
+                  <input 
+                    type="text" 
+                    name="position" 
+                    placeholder="Enter position" 
+                    value={values.position} 
+                    onChange={handleChange} 
+                    className="employee-form-input" 
+                  />
+                </div>
+                
+                <div className="employee-form-field">
+                  <label>Status</label>
+                  <select 
+                    name="status" 
+                    value={values.status} 
+                    onChange={handleChange} 
+                    className="employee-form-input"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                
                 <div className="employee-modal-actions">
-                  <button type="button" onClick={onClose} className="employee-action-btn cancel">Cancel</button>
-                  <button type="submit" disabled={loading} className="employee-action-btn save">{loading ? 'Saving...' : (editing ? 'Update' : 'Add')}</button>
+                  <button 
+                    type="button" 
+                    onClick={onClose} 
+                    className="employee-action-btn cancel"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={loading} 
+                    className="employee-action-btn save"
+                  >
+                    {loading ? 'Saving...' : (editing ? 'Update' : 'Add')}
+                  </button>
                 </div>
               </div>
             </Form>
@@ -199,38 +305,38 @@ const ManageEmployees = () => {
         </nav>
 
         <div className="main-content-employees">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <div className="employees-header">
             <h2>Manage Employees</h2>
             <button onClick={handleAdd} className="add-employee-btn"><i className="fas fa-user-plus"></i>Add Employee</button>
           </div>
 
           {employees.length === 0 ? (
-            <div style={{ color: '#888', display: 'flex', alignItems: 'center', gap: 8, marginTop: 40 }}>
-              <span><i className="fas fa-users-slash" style={{ fontSize: 32 }}></i></span>
+            <div className="employees-empty-state">
+              <span className="employees-empty-icon"><i className="fas fa-users-slash"></i></span>
               No employees found.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="employees-list-container">
               {employees.map(emp => (
                 <Card key={emp._id}>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="employee-list-item">
                     <Avatar name={emp.name} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 16, display: 'flex', alignItems: 'center' }}>
-                        <span style={{ marginRight: 8 }}><i className="fas fa-user"></i></span>
-                        {emp.name} <span style={{ color: '#888', fontWeight: 400, fontSize: 13, marginLeft: 8 }}>({emp.email})</span>
+                    <div className="employee-info-main">
+                      <div className="employee-info-details employee-title-row">
+                        <span className="employee-title"><i className="fas fa-user"></i></span>
+                        {emp.name} <span className="employee-email">({emp.email})</span>
                         <StatusChip status={emp.status} />
                       </div>
-                      <div style={{ fontSize: 13, color: '#555', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginTop: 4 }}>
-                        <span><i className="fas fa-building" style={{ marginRight: 4 }}></i> {emp.department || '-'}</span>
-                        <span><i className="fas fa-briefcase" style={{ marginRight: 4 }}></i> {emp.position || '-'}</span>
-                        <span><i className="fas fa-calendar-alt" style={{ marginRight: 4 }}></i> {emp.date_of_joining ? new Date(emp.date_of_joining).toLocaleDateString() : '-'}</span>
-                        <span><i className="fas fa-phone-alt" style={{ marginRight: 4 }}></i> {emp.contactNo || '-'}</span>
+                      <div className="employee-info-details employee-meta-row">
+                        <span className="employee-meta-item"><i className="fas fa-building"></i> {emp.department || '-'}</span>
+                        <span className="employee-meta-item"><i className="fas fa-briefcase"></i> {emp.position || '-'}</span>
+                        <span className="employee-meta-item"><i className="fas fa-calendar-alt"></i> {emp.date_of_joining ? new Date(emp.date_of_joining).toLocaleDateString() : '-'}</span>
+                        <span className="employee-meta-item"><i className="fas fa-phone-alt"></i> {emp.contactNo || '-'}</span>
                       </div>
                     </div>
-                    <div style={{ marginLeft: 12, position: 'relative' }}>
-                      <button onClick={() => handleEdit(emp)} style={{ background: 'none', border: 'none', color: '#1976d2', fontSize: 18, cursor: 'pointer', marginRight: 8 }} title="Edit"><i className="fas fa-edit"></i></button>
-                      <button onClick={() => handleDelete(emp._id)} style={{ background: 'none', border: 'none', color: '#f44336', fontSize: 18, cursor: 'pointer' }} title="Delete"><i className="fas fa-trash-alt"></i></button>
+                    <div className="employee-actions">
+                      <button onClick={() => handleEdit(emp)} className="employee-action-btn edit" title="Edit"><i className="fas fa-edit"></i></button>
+                      <button onClick={() => handleDelete(emp._id)} className="employee-action-btn delete" title="Delete"><i className="fas fa-trash-alt"></i></button>
                     </div>
                   </div>
                 </Card>

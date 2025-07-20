@@ -1,81 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import '/src/pages/admin/styles/Dashboard.css';
+import './styles/EmployeeLeaves.css';
 import api from '../../api/axios';
 import logo from '/src/assets/primary_icon.webp';
-import '/src/pages/employee/styles/EmployeeLeaves.css';
 
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import TextField from '@mui/material/TextField';
+const Card = ({ children }) => (
+  <div className="leave-card">{children}</div>
+);
 
-function EmployeeLeaves() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+const LoadingShimmer = () => (
+  <div className="leave-loading-shimmer">
+    <div className="shimmer-header">
+      <div className="shimmer-status"></div>
+      <div className="shimmer-type"></div>
+    </div>
+    <div className="shimmer-dates"></div>
+    <div className="shimmer-reason"></div>
+  </div>
+);
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [name, setName] = useState('Employee');
-  const [position, setPosition] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
+const LeaveForm = ({ onSubmit, loading }) => {
   const [formData, setFormData] = useState({
     leaveType: '',
-    startDate: null,
-    endDate: null,
+    startDate: '',
+    endDate: '',
     reason: '',
     halfDay: false,
     attachment: null,
   });
-  const [leaves, setLeaves] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const token = localStorage.getItem('token');
-
-  const resolveProfilePicture = (picture) => {
-    if (!picture) return '/src/assets/profile.svg';
-    if (picture.startsWith('PHN2Zy')) return `data:image/svg+xml;base64,${picture}`;
-    if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
-    if (picture.startsWith('http')) return picture;
-    return `data:image/png;base64,${picture}`;
-  };
-
-  useEffect(() => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    const fetchEmployee = async () => {
-      try {
-        const res = await api.get('/employees/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setName(res.data.name || 'Employee');
-        setPosition(res.data.position || 'Employee');
-        setProfilePicture(res.data.profilePicture || '');
-      } catch (err) {
-        console.error('Error fetching employee:', err);
-      }
-    };
-
-    fetchEmployee();
-  }, [navigate]);
-
-  const fetchLeaves = async () => {
-    try {
-      const res = await api.get('/leaves', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setLeaves(res.data);
-    } catch (err) {
-      console.error('Error fetching leaves:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeaves();
-  }, []);
+  const [showForm, setShowForm] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -88,14 +42,185 @@ function EmployeeLeaves() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    onSubmit(formData);
+    setFormData({
+      leaveType: '',
+      startDate: '',
+      endDate: '',
+      reason: '',
+      halfDay: false,
+      attachment: null,
+    });
+    setShowForm(false);
+  };
+
+  return (
+    <Card>
+      <div className="leave-form-header">
+        <h3>Request Leave</h3>
+        <button
+          className="toggle-form-btn"
+          onClick={() => setShowForm(!showForm)}
+        >
+          <i className={`fas ${showForm ? 'fa-minus' : 'fa-plus'}`}></i>
+          {showForm ? 'Cancel' : 'New Request'}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="leave-form">
+          <div className="form-row">
+            <div className="form-field">
+              <label>Leave Type</label>
+              <select
+                name="leaveType"
+                value={formData.leaveType}
+                onChange={handleChange}
+                required
+                className="form-input"
+              >
+                <option value="">Select Leave Type</option>
+                <option value="Casual">Casual</option>
+                <option value="Sick">Sick</option>
+                <option value="Emergency">Emergency</option>
+                <option value="Annual">Annual</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="form-field">
+              <label>Half Day</label>
+              <div className="checkbox-field">
+                <input
+                  type="checkbox"
+                  name="halfDay"
+                  checked={formData.halfDay}
+                  onChange={handleChange}
+                  id="halfDay"
+                />
+                <label htmlFor="halfDay">Half Day Leave</label>
+              </div>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-field">
+              <label>Start Date</label>
+              <input
+                type="date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleChange}
+                required
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-field">
+              <label>End Date</label>
+              <input
+                type="date"
+                name="endDate"
+                value={formData.endDate}
+                onChange={handleChange}
+                required
+                className="form-input"
+              />
+            </div>
+          </div>
+
+          <div className="form-field">
+            <label>Reason</label>
+            <textarea
+              name="reason"
+              value={formData.reason}
+              onChange={handleChange}
+              required
+              className="form-input"
+              rows="3"
+              placeholder="Please provide a reason for your leave request"
+            />
+          </div>
+
+          <div className="form-field">
+            <label>Attachment (Optional)</label>
+            <input
+              type="file"
+              name="attachment"
+              onChange={handleChange}
+              className="form-input file-input"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            />
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="button"
+              className="form-btn cancel"
+              onClick={() => setShowForm(false)}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="form-btn submit"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  Submitting...
+                </>
+              ) : (
+                'Submit Request'
+              )}
+            </button>
+          </div>
+        </form>
+      )}
+    </Card>
+  );
+};
+
+const EmployeeLeaves = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [leaves, setLeaves] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const token = localStorage.getItem('token');
+
+  const fetchLeaves = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get('/leaves', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLeaves(res.data);
+    } catch (err) {
+      setError('Failed to fetch leave records');
+      console.error('Error fetching leaves:', err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchLeaves();
+  }, []);
+
+  const handleSubmitLeave = async (formData) => {
     setLoading(true);
     try {
       const payload = new FormData();
       payload.append('leaveType', formData.leaveType);
-      payload.append('startDate', formData.startDate.toISOString());
-      payload.append('endDate', formData.endDate.toISOString());
+      payload.append('startDate', formData.startDate);
+      payload.append('endDate', formData.endDate);
       payload.append('reason', formData.reason);
       payload.append('halfDay', formData.halfDay);
       if (formData.attachment) {
@@ -110,14 +235,6 @@ function EmployeeLeaves() {
       });
 
       alert('Leave requested successfully');
-      setFormData({
-        leaveType: '',
-        startDate: null,
-        endDate: null,
-        reason: '',
-        halfDay: false,
-        attachment: null,
-      });
       fetchLeaves();
     } catch (err) {
       console.error('Error submitting leave:', err);
@@ -126,13 +243,30 @@ function EmployeeLeaves() {
     setLoading(false);
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(prev => !prev);
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'approved':
+        return '#4caf50';
+      case 'rejected':
+        return '#f44336';
+      case 'pending':
+        return '#ff9800';
+      default:
+        return '#9e9e9e';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
+      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
@@ -158,124 +292,99 @@ function EmployeeLeaves() {
           </ul>
         </nav>
 
-        <div className="main-content">
-          <div className="employee-leaves">
-            <h2>Leave Request</h2>
-            <form onSubmit={handleSubmit}>
-              <select
-                name="leaveType"
-                value={formData.leaveType}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Leave Type</option>
-                <option value="Casual">Casual</option>
-                <option value="Sick">Sick</option>
-                <option value="Emergency">Emergency</option>
-                <option value="Annual">Annual</option>
-                <option value="Other">Other</option>
-              </select>
+        <div className="main-content-leaves">
+          <div className="leaves-header">
+            <h2>Leave Management</h2>
+          </div>
 
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Start Date"
-                  value={formData.startDate}
-                  onChange={(date) => setFormData((prev) => ({ ...prev, startDate: date }))}
-                  renderInput={(params) => (
-                    <TextField {...params} required size="small" />
-                  )}
-                />
-              </LocalizationProvider>
+          {error && (
+            <div className="leaves-error">
+              <i className="fas fa-exclamation-triangle"></i>
+              {error}
+            </div>
+          )}
 
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="End Date"
-                  value={formData.endDate}
-                  onChange={(date) => setFormData((prev) => ({ ...prev, endDate: date }))}
-                  renderInput={(params) => (
-                    <TextField {...params} required size="small" />
-                  )}
-                />
-              </LocalizationProvider>
+          <LeaveForm onSubmit={handleSubmitLeave} loading={loading} />
 
-              <input
-                type="text"
-                name="reason"
-                placeholder="Reason"
-                value={formData.reason}
-                onChange={handleChange}
-                required
-              />
-              <label className="half-day-checkbox">
-                <input
-                  type="checkbox"
-                  name="halfDay"
-                  checked={formData.halfDay}
-                  onChange={handleChange}
-                />
-                Half Day
-              </label>
-              <input
-                type="file"
-                name="attachment"
-                onChange={handleChange}
-              />
-              <button type="submit" disabled={loading}>
-                {loading ? 'Submitting...' : 'Request Leave'}
-              </button>
-            </form>
+          <div className="leaves-section">
+            <h3>Your Leave Records</h3>
 
-            <h2>Your Leave Records</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Dates</th>
-                  <th>Half Day</th>
-                  <th>Status</th>
-                  <th>Attachment</th>
-                  <th>Comment</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaves.length > 0 ? (
-                  leaves.map((leave) => (
-                    <tr key={leave._id}>
-                      <td>{leave.leaveType}</td>
-                      <td>
-                        {new Date(leave.startDate).toLocaleDateString()} -{' '}
-                        {new Date(leave.endDate).toLocaleDateString()}
-                      </td>
-                      <td>{leave.halfDay ? 'Yes' : 'No'}</td>
-                      <td>{leave.status}</td>
-                      <td>
-                        {leave.attachment ? (
-                          <a
-                            href={`${import.meta.env.VITE_API_BASE_URL}/${leave.attachment}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            View
-                          </a>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                      <td>{leave.adminComment || '—'}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6">No leave records found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            {loading && (
+              <div className="leaves-loading-container">
+                {[1, 2, 3, 4].map(i => (
+                  <Card key={i}>
+                    <LoadingShimmer />
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {!loading && leaves.length === 0 && (
+              <div className="leaves-empty-state">
+                <i className="fas fa-calendar-times"></i>
+                <p>No leave records found</p>
+              </div>
+            )}
+
+            {!loading && leaves.length > 0 && (
+              <div className="leaves-list-container">
+                {leaves.map((leave) => (
+                  <Card key={leave._id}>
+                    <div className="leave-card-header">
+                      <span 
+                        className="leave-status"
+                        style={{ backgroundColor: getStatusColor(leave.status) }}
+                      >
+                        {leave.status}
+                      </span>
+                      {leave.attachment && (
+                        <button className="attachment-btn" title="View Attachment">
+                          <i className="fas fa-paperclip"></i>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="leave-details">
+                      <div className="leave-detail-row">
+                        <span className="detail-label">Type:</span>
+                        <span className="detail-value">{leave.leaveType}</span>
+                      </div>
+
+                      <div className="leave-detail-row">
+                        <span className="detail-label">Dates:</span>
+                        <span className="detail-value">
+                          {formatDate(leave.startDate)} - {formatDate(leave.endDate)}
+                        </span>
+                      </div>
+
+                      <div className="leave-detail-row">
+                        <span className="detail-label">Half Day:</span>
+                        <span className="detail-value">{leave.halfDay ? 'Yes' : 'No'}</span>
+                      </div>
+
+                      {leave.reason && (
+                        <div className="leave-detail-row">
+                          <span className="detail-label">Reason:</span>
+                          <span className="detail-value">{leave.reason}</span>
+                        </div>
+                      )}
+
+                      {leave.adminComment && (
+                        <div className="leave-detail-row">
+                          <span className="detail-label comment">Admin Comment:</span>
+                          <span className="detail-value comment">{leave.adminComment}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default EmployeeLeaves;

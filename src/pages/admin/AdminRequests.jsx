@@ -5,6 +5,46 @@ import logo from '/src/assets/primary_icon.webp';
 import api from '../../api/axios';
 import './styles/AdminRequests.css';
 
+const StatusChip = ({ status }) => {
+  const getStatusColor = (status) => {
+    switch ((status || '').toLowerCase()) {
+      case 'approved':
+        return '#4caf50';
+      case 'rejected':
+        return '#f44336';
+      case 'pending':
+        return '#ff9800';
+      default:
+        return '#9e9e9e';
+    }
+  };
+
+  return (
+    <span 
+      className="request-status-chip"
+      style={{ backgroundColor: getStatusColor(status) }}
+    >
+      {status}
+    </span>
+  );
+};
+
+const Card = ({ children }) => (
+  <div className="request-card">{children}</div>
+);
+
+const LoadingShimmer = () => (
+  <div className="request-loading-shimmer">
+    <div className="shimmer-header">
+      <div className="shimmer-title"></div>
+      <div className="shimmer-status"></div>
+    </div>
+    <div className="shimmer-type"></div>
+    <div className="shimmer-message"></div>
+    <div className="shimmer-meta"></div>
+  </div>
+);
+
 function AdminRequests() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -23,11 +63,14 @@ function AdminRequests() {
       setRequests(res.data);
     } catch (err) {
       setError('Failed to fetch requests');
+      console.error('Error fetching requests:', err);
     }
     setLoading(false);
   };
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => { 
+    fetchRequests(); 
+  }, []);
 
   const handleActionClick = (id, mode) => {
     setActionState(s => ({ ...s, [id]: { mode, comment: '' } }));
@@ -54,8 +97,15 @@ function AdminRequests() {
       fetchRequests();
     } catch (err) {
       setError('Failed to update request');
+      console.error('Error updating request:', err);
     }
     setLoading(false);
+  };
+
+  const handleAttachmentClick = (attachmentUrl) => {
+    if (attachmentUrl) {
+      window.open(attachmentUrl, '_blank');
+    }
   };
 
   return (
@@ -86,55 +136,138 @@ function AdminRequests() {
             </li>
           </ul>
         </nav>
-        <div className="main-content">
-          <div className="admin-requests-container">
+        
+        <div className="main-content-requests">
+          <div className="requests-header">
             <h2>All Employee Requests</h2>
-            {loading && <div className="admin-requests-loading">Loading...</div>}
-            {error && <div className="admin-requests-error">{error}</div>}
-            <div className="admin-requests-list">
-              {requests.length === 0 && !loading && <div className="admin-requests-empty">No requests found.</div>}
+          </div>
+
+          {loading && (
+            <div className="requests-loading-container">
+              {[1, 2, 3, 4].map(i => (
+                <Card key={i}>
+                  <LoadingShimmer />
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {error && (
+            <div className="requests-error">
+              <i className="fas fa-exclamation-triangle"></i>
+              {error}
+            </div>
+          )}
+
+          {!loading && requests.length === 0 && !error && (
+            <div className="requests-empty-state">
+              <i className="fas fa-inbox"></i>
+              <p>No requests found.</p>
+            </div>
+          )}
+
+          {!loading && requests.length > 0 && (
+            <div className="requests-list-container">
               {requests.map(r => (
-                <div className="admin-requests-card" key={r._id}>
-                  <div className="admin-requests-card-header">
-                    <span className="admin-requests-card-title">{r.title}</span>
-                    <span className={`admin-requests-card-status status-${(r.status || '').toLowerCase()}`}>{r.status}</span>
+                <Card key={r._id}>
+                  <div className="request-card-header">
+                    <span className="request-title">{r.title}</span>
+                    <StatusChip status={r.status} />
                   </div>
-                  <div className="admin-requests-card-type">{r.type}</div>
-                  <div className="admin-requests-card-message">{r.message}</div>
-                  <div className="admin-requests-card-meta">
-                    <span>By: {r.createdBy?.name || r.createdBy?.email || 'Unknown'}</span>
-                    <span>{new Date(r.createdAt).toLocaleString()}</span>
+                  
+                  <div className="request-type">{r.type}</div>
+                  
+                  <div className="request-message">{r.message}</div>
+                  
+                  <div className="request-meta">
+                    <span className="request-creator">
+                      <i className="fas fa-user"></i>
+                      By: {r.createdBy?.name || r.createdBy?.email || 'Unknown'}
+                    </span>
+                    <span className="request-date">
+                      <i className="fas fa-calendar-alt"></i>
+                      {new Date(r.createdAt).toLocaleString()}
+                    </span>
                   </div>
-                  {r.attachment && <a href={r.attachment} target="_blank" rel="noopener noreferrer">Attachment</a>}
-                  {r.adminComment && <div className="admin-requests-card-admin"><em>Admin: {r.adminComment}</em></div>}
+
+                  {r.attachment && (
+                    <div className="request-attachment">
+                      <button 
+                        className="attachment-btn"
+                        onClick={() => handleAttachmentClick(r.attachment)}
+                      >
+                        <i className="fas fa-paperclip"></i>
+                        View Attachment
+                      </button>
+                    </div>
+                  )}
+
+                  {r.adminComment && (
+                    <div className="request-admin-comment">
+                      <i className="fas fa-comment"></i>
+                      <span><strong>Admin:</strong> {r.adminComment}</span>
+                    </div>
+                  )}
+
                   {r.status === 'pending' && (
-                    <div className="admin-requests-actions">
+                    <div className="request-actions">
                       {actionState[r._id]?.mode ? (
-                        <form className="admin-requests-action-form" onSubmit={e => { e.preventDefault(); handleActionSubmit(r._id, actionState[r._id].mode === 'approve' ? 'approved' : 'rejected'); }}>
+                        <div className="request-action-form">
                           <input
-                            className="admin-requests-action-input"
+                            className="request-comment-input"
                             type="text"
                             placeholder="Add a comment (optional)"
                             value={actionState[r._id]?.comment || ''}
                             onChange={e => handleCommentChange(r._id, e.target.value)}
+                            disabled={loading}
                           />
-                          <button type="submit" className={actionState[r._id].mode === 'approve' ? 'admin-requests-approve' : 'admin-requests-reject'}>
-                            {actionState[r._id].mode === 'approve' ? 'Approve' : 'Reject'}
+                          <button 
+                            type="button" 
+                            className={`request-action-btn ${actionState[r._id].mode === 'approve' ? 'approve' : 'reject'}`}
+                            onClick={() => handleActionSubmit(r._id, actionState[r._id].mode === 'approve' ? 'approved' : 'rejected')}
+                            disabled={loading}
+                          >
+                            {loading ? (
+                              <i className="fas fa-spinner fa-spin"></i>
+                            ) : (
+                              actionState[r._id].mode === 'approve' ? 'Approve' : 'Reject'
+                            )}
                           </button>
-                          <button type="button" className="admin-requests-cancel" onClick={() => handleActionCancel(r._id)}>Cancel</button>
-                        </form>
+                          <button 
+                            type="button" 
+                            className="request-action-btn cancel"
+                            onClick={() => handleActionCancel(r._id)}
+                            disabled={loading}
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       ) : (
-                        <>
-                          <button className="admin-requests-approve" onClick={() => handleActionClick(r._id, 'approve')}>Approve</button>
-                          <button className="admin-requests-reject" onClick={() => handleActionClick(r._id, 'reject')}>Reject</button>
-                        </>
+                        <div className="request-action-buttons">
+                          <button 
+                            className="request-action-btn approve"
+                            onClick={() => handleActionClick(r._id, 'approve')}
+                            disabled={loading}
+                          >
+                            <i className="fas fa-check"></i>
+                            Approve
+                          </button>
+                          <button 
+                            className="request-action-btn reject"
+                            onClick={() => handleActionClick(r._id, 'reject')}
+                            disabled={loading}
+                          >
+                            <i className="fas fa-times"></i>
+                            Reject
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

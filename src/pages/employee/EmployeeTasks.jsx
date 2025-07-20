@@ -2,26 +2,104 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import '/src/pages/employee/styles/EmployeeTasks.css';
+import './styles/EmployeeTasks.css';
 import logo from '/src/assets/primary_icon.webp';
+
+const Card = ({ children }) => (
+  <div className="task-card">{children}</div>
+);
+
+const LoadingShimmer = () => (
+  <div className="task-loading-shimmer">
+    <div className="shimmer-icon"></div>
+    <div className="shimmer-content">
+      <div className="shimmer-title"></div>
+      <div className="shimmer-description"></div>
+      <div className="shimmer-date"></div>
+    </div>
+  </div>
+);
+
+const StatusChip = ({ status, onStatusChange, taskId }) => {
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return '#ff9800';
+      case 'in progress':
+        return '#2196f3';
+      case 'completed':
+        return '#4caf50';
+      default:
+        return '#9e9e9e';
+    }
+  };
+
+  const getNextStatus = (currentStatus) => {
+    switch (currentStatus?.toLowerCase()) {
+      case 'pending':
+        return ['In Progress'];
+      case 'in progress':
+        return ['Completed'];
+      default:
+        return [];
+    }
+  };
+
+  const nextStatuses = getNextStatus(status);
+
+  if (nextStatuses.length === 0) {
+    return (
+      <span 
+        className="status-chip"
+        style={{ backgroundColor: getStatusColor(status) }}
+      >
+        {status}
+      </span>
+    );
+  }
+
+  return (
+    <div className="status-dropdown">
+      <select
+        value={status}
+        onChange={(e) => onStatusChange(taskId, e.target.value)}
+        className="status-select"
+        style={{ backgroundColor: getStatusColor(status) }}
+      >
+        <option value={status}>{status}</option>
+        {nextStatuses.map(nextStatus => (
+          <option key={nextStatus} value={nextStatus}>
+            {nextStatus}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
 
 const EmployeeTasks = () => {
   const { id } = useParams();
   const [tasks, setTasks] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
 
   const fetchTasks = async () => {
+    setLoading(true);
+    setError('');
     try {
       const res = await api.get('/tasks/my', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTasks(res.data);
     } catch (err) {
+      setError('Failed to fetch tasks');
       console.error('Error fetching tasks:', err);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -48,9 +126,18 @@ const EmployeeTasks = () => {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
+      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
 
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -77,49 +164,71 @@ const EmployeeTasks = () => {
           </ul>
         </nav>
 
-        <div className="main-content">
-          <div className="manage-employees">
+        <div className="main-content-tasks">
+          <div className="tasks-header">
             <h2>My Tasks</h2>
-            {tasks.length > 0 ? (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks.map((task) => (
-                    <tr key={task._id}>
-                      <td>{task.title}</td>
-                      <td>{task.description || '-'}</td>
-                      <td>
-                        {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString()
-                          : '-'}
-                      </td>
-                      <td>
-                        <select
-                          value={task.status}
-                          onChange={(e) =>
-                            handleStatusChange(task._id, e.target.value)
-                          }
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Completed">Completed</option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>No tasks assigned to you.</p>
-            )}
           </div>
+
+          {error && (
+            <div className="tasks-error">
+              <i className="fas fa-exclamation-triangle"></i>
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <div className="tasks-loading-container">
+              {[1, 2, 3, 4, 5].map(i => (
+                <Card key={i}>
+                  <LoadingShimmer />
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {!loading && tasks.length === 0 && (
+            <div className="tasks-empty-state">
+              <i className="fas fa-tasks"></i>
+              <p>No tasks assigned to you</p>
+            </div>
+          )}
+
+          {!loading && tasks.length > 0 && (
+            <div className="tasks-list-container">
+              {tasks.map((task) => (
+                <Card key={task._id}>
+                  <div className="task-card-header">
+                    <div className="task-icon">
+                      <i className="fas fa-clipboard-list"></i>
+                    </div>
+                    <div className="task-content">
+                      <h3 className="task-title">{task.title}</h3>
+                      <div className="task-meta">
+                        <span className="task-due-date">
+                          <i className="fas fa-calendar-alt"></i>
+                          Due: {formatDate(task.dueDate)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {task.description && (
+                    <div className="task-description">
+                      <p>{task.description}</p>
+                    </div>
+                  )}
+
+                  <div className="task-actions">
+                    <StatusChip
+                      status={task.status}
+                      onStatusChange={handleStatusChange}
+                      taskId={task._id}
+                    />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

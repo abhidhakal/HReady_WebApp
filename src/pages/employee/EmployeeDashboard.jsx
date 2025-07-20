@@ -141,7 +141,7 @@ function EmployeeDashboard() {
                   alt="Profile"
                 />
               </div>
-              <h2 className="employee-name">Hello, {name}</h2>
+              <h2 className="employee-name">Welcome, {name}</h2>
             </div>
             <div className="banner-middle">
               <p>
@@ -173,14 +173,19 @@ function EmployeeDashboard() {
 
           <div className="info-cards">
             <div className="info-card">
-              <h2>Role</h2>
+              <h2>Position</h2>
               <h1 className="employee-role">{position}</h1>
             </div>
             <div className="info-card">
               <h2>Leave Days Left</h2>
               <div className="info-card-leaves">
                 <h1 className="employee-leaves-left">15</h1>
-                <button className="request-leave-btn">Request Leave</button>
+                <button 
+                  className="request-leave-btn"
+                  onClick={() => navigate(`/employee/${id}/leave`)}
+                >
+                  Request Leave
+                </button>
               </div>
             </div>
           </div>
@@ -201,7 +206,7 @@ function EmployeeDashboard() {
                   {tasks.length > 0 ? (
                     tasks.slice(0, 3).map((task) => (
                       <tr key={task._id}>
-                        <td><strong>Task Name :  </strong>{task.title}</td>
+                        <td><strong>Task Name:</strong> {task.title}</td>
                         <td>
                           <span className={
                             `status-label ${
@@ -222,7 +227,7 @@ function EmployeeDashboard() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3">No tasks assigned to you.</td>
+                      <td colSpan="3" style={{ textAlign: 'center', color: '#666' }}>No tasks assigned to you.</td>
                     </tr>
                   )}
                 </tbody>
@@ -252,7 +257,7 @@ function EmployeeDashboard() {
                     </div>
                   ))
                 ) : (
-                  <p>No announcements available.</p>
+                  <p style={{ textAlign: 'center', color: '#666', margin: '20px 0' }}>No announcements available.</p>
                 )}
               </div>
             </div>

@@ -1,15 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import '/src/pages/admin/styles/Dashboard.css';
-import api from '../../api/axios';
 import logo from '/src/assets/primary_icon.webp';
-import '/src/pages/admin/styles/AdminLeaves.css';
+import api from '../../api/axios';
+import './styles/AdminLeaves.css';
 
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import TextField from '@mui/material/TextField';
+const StatusChip = ({ status }) => {
+  const getStatusColor = (status) => {
+    switch ((status || '').toLowerCase()) {
+      case 'approved':
+        return '#4caf50';
+      case 'rejected':
+        return '#f44336';
+      case 'pending':
+        return '#ff9800';
+      default:
+        return '#9e9e9e';
+    }
+  };
+
+  return (
+    <span 
+      className="leave-status-chip"
+      style={{ backgroundColor: getStatusColor(status) }}
+    >
+      {status}
+    </span>
+  );
+};
+
+const Card = ({ children }) => (
+  <div className="leave-card">{children}</div>
+);
+
+const LoadingShimmer = () => (
+  <div className="leave-loading-shimmer">
+    <div className="shimmer-header">
+      <div className="shimmer-title"></div>
+      <div className="shimmer-status"></div>
+    </div>
+    <div className="shimmer-details">
+      <div className="shimmer-row"></div>
+      <div className="shimmer-row"></div>
+    </div>
+    <div className="shimmer-reason"></div>
+  </div>
+);
 
 function AdminLeaves() {
   const { id } = useParams();
@@ -18,10 +54,12 @@ function AdminLeaves() {
   const [leaves, setLeaves] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     leaveType: '',
-    startDate: null,
-    endDate: null,
+    startDate: '',
+    endDate: '',
     reason: '',
     halfDay: false,
     attachment: null,
@@ -30,14 +68,18 @@ function AdminLeaves() {
   const token = localStorage.getItem('token');
 
   const fetchLeaves = async () => {
+    setLoading(true);
+    setError('');
     try {
       const res = await api.get('/leaves/all', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLeaves(res.data);
     } catch (err) {
+      setError('Failed to fetch leave requests');
       console.error('Error fetching leaves:', err);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -71,12 +113,12 @@ function AdminLeaves() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     try {
       const payload = new FormData();
       payload.append('leaveType', formData.leaveType);
-      payload.append('startDate', formData.startDate.toISOString());
-      payload.append('endDate', formData.endDate.toISOString());
+      payload.append('startDate', formData.startDate);
+      payload.append('endDate', formData.endDate);
       payload.append('reason', formData.reason);
       payload.append('halfDay', formData.halfDay);
       if (formData.attachment) {
@@ -93,8 +135,8 @@ function AdminLeaves() {
       alert('Leave created successfully.');
       setFormData({
         leaveType: '',
-        startDate: null,
-        endDate: null,
+        startDate: '',
+        endDate: '',
         reason: '',
         halfDay: false,
         attachment: null,
@@ -105,26 +147,38 @@ function AdminLeaves() {
       console.error('Error submitting leave:', err);
       alert('Error creating leave.');
     }
-    setLoading(false);
+    setFormLoading(false);
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev);
+  const handleAttachmentClick = (attachmentUrl) => {
+    if (attachmentUrl) {
+      window.open(`${import.meta.env.VITE_API_BASE_URL}/${attachmentUrl}`, '_blank');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      leaveType: '',
+      startDate: '',
+      endDate: '',
+      reason: '',
+      halfDay: false,
+      attachment: null,
+    });
   };
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
-
+      <DashboardHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-          <li><img src={logo} alt="Logo" /></li>
-            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
+            <li><img src={logo} alt="Logo" /></li>
+            <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/attendance`)}>Admin Attendance</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/tasks`)}>Manage Tasks</a></li>
-            <li><a onClick={() => navigate(`/admin/${id}/leaves`)}>Leaves</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}/leaves`)}>Leaves</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/announcements`)}>Manage Announcements</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/requests`)}>Requests</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/profile`)}>Profile</a></li>
@@ -142,19 +196,38 @@ function AdminLeaves() {
           </ul>
         </nav>
 
-        <div className="main-content">
-          <div className="admin-leaves">
+        <div className="main-content-leaves">
+          <div className="leaves-header">
             <h2>All Leave Requests</h2>
-
             <button
-              className="admin-leave-toggle"
-              onClick={() => setShowForm(!showForm)}
+              className="add-leave-btn"
+              onClick={() => {
+                if (showForm) {
+                  setShowForm(false);
+                  resetForm();
+                } else {
+                  setShowForm(true);
+                }
+              }}
             >
-              {showForm ? 'Close My Leave Form' : 'Request Leave for Myself'}
+              <i className="fas fa-plus"></i>
+              {showForm ? 'Close Form' : 'Request Leave for Myself'}
             </button>
+          </div>
 
-            {showForm && (
-              <form onSubmit={handleSubmit} className="admin-leave-form">
+          {error && (
+            <div className="leaves-error">
+              <i className="fas fa-exclamation-triangle"></i>
+              {error}
+            </div>
+          )}
+
+          {showForm && (
+            <Card>
+              <div className="leave-form-header">
+                <h3>Request Leave for Myself</h3>
+              </div>
+              <form onSubmit={handleSubmit} className="leave-form">
                 <div className="form-grid">
                   <div className="form-field">
                     <label>Leave Type</label>
@@ -163,6 +236,7 @@ function AdminLeaves() {
                       value={formData.leaveType}
                       onChange={handleChange}
                       required
+                      className="form-input"
                     >
                       <option value="">Select Leave Type</option>
                       <option value="Casual">Casual</option>
@@ -174,56 +248,52 @@ function AdminLeaves() {
                   </div>
 
                   <div className="form-field">
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DatePicker
-                        label="Start Date"
-                        value={formData.startDate}
-                        onChange={(date) =>
-                          setFormData((prev) => ({ ...prev, startDate: date }))
-                        }
-                        renderInput={(params) => (
-                          <TextField {...params} required size="small" />
-                        )}
-                      />
-                    </LocalizationProvider>
+                    <label>Start Date</label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      required
+                      className="form-input"
+                    />
                   </div>
 
                   <div className="form-field">
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DatePicker
-                        label="End Date"
-                        value={formData.endDate}
-                        onChange={(date) =>
-                          setFormData((prev) => ({ ...prev, endDate: date }))
-                        }
-                        renderInput={(params) => (
-                          <TextField {...params} required size="small" />
-                        )}
-                      />
-                    </LocalizationProvider>
+                    <label>End Date</label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      required
+                      className="form-input"
+                    />
                   </div>
 
                   <div className="form-field">
-                    <TextField
-                      label="Reason"
+                    <label>Reason</label>
+                    <textarea
                       name="reason"
                       value={formData.reason}
                       onChange={handleChange}
                       required
-                      size="small"
-                      fullWidth
+                      className="form-input"
+                      rows="3"
+                      placeholder="Enter reason for leave"
                     />
                   </div>
 
                   <div className="form-field checkbox-field">
-                    <label>
+                    <label className="checkbox-label">
                       <input
                         type="checkbox"
                         name="halfDay"
                         checked={formData.halfDay}
                         onChange={handleChange}
+                        className="checkbox-input"
                       />
-                      Half Day
+                      <span className="checkbox-text">Half Day</span>
                     </label>
                   </div>
 
@@ -233,91 +303,135 @@ function AdminLeaves() {
                       type="file"
                       name="attachment"
                       onChange={handleChange}
+                      className="form-input file-input"
                     />
                   </div>
 
                   <div className="form-field full-width">
-                    <button type="submit" disabled={loading}>
-                      {loading ? 'Submitting...' : 'Submit Leave'}
-                    </button>
+                    <div className="form-actions">
+                      <button 
+                        type="button" 
+                        className="form-btn cancel"
+                        onClick={() => {
+                          setShowForm(false);
+                          resetForm();
+                        }}
+                        disabled={formLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit" 
+                        className="form-btn submit"
+                        disabled={formLoading}
+                      >
+                        {formLoading ? (
+                          <>
+                            <i className="fas fa-spinner fa-spin"></i>
+                            Submitting...
+                          </>
+                        ) : (
+                          'Submit Leave'
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </form>
-            )}
+            </Card>
+          )}
 
-            <table>
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Type</th>
-                  <th>Dates</th>
-                  <th>Half Day</th>
-                  <th>Status</th>
-                  <th>Attachment</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaves.length > 0 ? (
-                  leaves.map((leave) => (
-                    <tr key={leave._id}>
-                      <td>
-                        {leave.requestedBy
-                          ? `${leave.requestedBy.name} (${leave.requestedBy.email})`
-                          : '—'}
-                      </td>
-                      <td>{leave.leaveType}</td>
-                      <td>
-                        {new Date(leave.startDate).toLocaleDateString()} -{' '}
-                        {new Date(leave.endDate).toLocaleDateString()}
-                      </td>
-                      <td>{leave.halfDay ? 'Yes' : 'No'}</td>
-                      <td>{leave.status}</td>
-                      <td>
-                        {leave.attachment ? (
-                          <a
-                            href={`${import.meta.env.VITE_API_BASE_URL}/${leave.attachment}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            View
-                          </a>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                      <td>
-                        {leave.status === 'Pending' ? (
-                          <div className="action-buttons">
-                            <button
-                              onClick={() =>
-                                handleUpdateStatus(leave._id, 'Approved')
-                              }
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleUpdateStatus(leave._id, 'Rejected')
-                              }
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7">No leave records found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          {loading && (
+            <div className="leaves-loading-container">
+              {[1, 2, 3, 4].map(i => (
+                <Card key={i}>
+                  <LoadingShimmer />
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {!loading && leaves.length === 0 && !error && (
+            <div className="leaves-empty-state">
+              <i className="fas fa-calendar-times"></i>
+              <p>No leave requests found.</p>
+            </div>
+          )}
+
+          {!loading && leaves.length > 0 && (
+            <div className="leaves-list-container">
+              {leaves.map((leave) => (
+                <Card key={leave._id}>
+                  <div className="leave-card-header">
+                    <span className="leave-employee">
+                      {leave.requestedBy?.name || leave.requestedBy?.email || 'Unknown Employee'}
+                    </span>
+                    <StatusChip status={leave.status} />
+                  </div>
+                  
+                  <div className="leave-details">
+                    <div className="leave-detail-row">
+                      <span className="leave-detail-item">
+                        <i className="fas fa-tag"></i>
+                        <strong>Type:</strong> {leave.leaveType}
+                      </span>
+                      <span className="leave-detail-item">
+                        <i className="fas fa-clock"></i>
+                        <strong>Half Day:</strong> {leave.halfDay ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                    
+                    <div className="leave-detail-row">
+                      <span className="leave-detail-item">
+                        <i className="fas fa-calendar-alt"></i>
+                        <strong>Start:</strong> {new Date(leave.startDate).toLocaleDateString()}
+                      </span>
+                      <span className="leave-detail-item">
+                        <i className="fas fa-calendar-check"></i>
+                        <strong>End:</strong> {new Date(leave.endDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="leave-reason">
+                    <strong>Reason:</strong>
+                    <p>{leave.reason}</p>
+                  </div>
+
+                  {leave.attachment && (
+                    <div className="leave-attachment">
+                      <button 
+                        className="attachment-btn"
+                        onClick={() => handleAttachmentClick(leave.attachment)}
+                      >
+                        <i className="fas fa-paperclip"></i>
+                        View Attachment
+                      </button>
+                    </div>
+                  )}
+
+                  {leave.status === 'Pending' && (
+                    <div className="leave-actions">
+                      <button
+                        className="leave-action-btn approve"
+                        onClick={() => handleUpdateStatus(leave._id, 'Approved')}
+                      >
+                        <i className="fas fa-check"></i>
+                        Approve
+                      </button>
+                      <button
+                        className="leave-action-btn reject"
+                        onClick={() => handleUpdateStatus(leave._id, 'Rejected')}
+                      >
+                        <i className="fas fa-times"></i>
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

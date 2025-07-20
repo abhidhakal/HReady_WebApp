@@ -2,36 +2,70 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import '/src/pages/admin/styles/Dashboard.css';
+import './styles/EmployeeAnnouncements.css';
 import logo from '/src/assets/primary_icon.webp';
+
+const Card = ({ children }) => (
+  <div className="announcement-card">{children}</div>
+);
+
+const LoadingShimmer = () => (
+  <div className="announcement-loading-shimmer">
+    <div className="shimmer-header">
+      <div className="shimmer-icon"></div>
+      <div className="shimmer-content">
+        <div className="shimmer-title"></div>
+        <div className="shimmer-meta"></div>
+      </div>
+    </div>
+    <div className="shimmer-message"></div>
+  </div>
+);
 
 const EmployeeAnnouncements = () => {
   const { id } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const fetchAnnouncements = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get('/announcements', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setAnnouncements(res.data);
+    } catch (err) {
+      setError('Failed to fetch announcements');
+      console.error('Error fetching announcements:', err);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        const res = await api.get('/announcements', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        setAnnouncements(res.data);
-      } catch (err) {
-        console.error('Error fetching announcements:', err);
-      }
-    };
     fetchAnnouncements();
   }, []);
 
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
+      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
@@ -57,28 +91,64 @@ const EmployeeAnnouncements = () => {
           </ul>
         </nav>
 
-        <div className="main-content">
-          <h2 style={{ color: '#042F46', marginTop: '20px', marginBottom: '20px' }}>All Announcements</h2>
-          {announcements.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {announcements.map((ann) => (
-                <div key={ann._id} style={{
-                  backgroundColor: '#f8f9fa',
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: '1px solid #ccc',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-                }}>
-                  <h3 style={{ color:"#333", margin: 0 }}>{ann.title}</h3>
-                  <p style={{ marginTop: '10px' }}>{ann.message}</p>
-                  <small style={{ color: '#555' }}>
-                    Posted by: <strong>{ann.postedBy || 'Admin'}</strong> | {new Date(ann.createdAt).toLocaleString()}
-                  </small>
-                </div>
+        <div className="main-content-announcements">
+          <div className="announcements-header">
+            <h2>Announcements</h2>
+          </div>
+
+          {error && (
+            <div className="announcements-error">
+              <i className="fas fa-exclamation-triangle"></i>
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <div className="announcements-loading-container">
+              {[1, 2, 3, 4].map(i => (
+                <Card key={i}>
+                  <LoadingShimmer />
+                </Card>
               ))}
             </div>
-          ) : (
-            <p>No announcements available.</p>
+          )}
+
+          {!loading && announcements.length === 0 && !error && (
+            <div className="announcements-empty-state">
+              <i className="fas fa-bullhorn"></i>
+              <p>No announcements yet!</p>
+            </div>
+          )}
+
+          {!loading && announcements.length > 0 && (
+            <div className="announcements-list-container">
+              {announcements.map((announcement) => (
+                <Card key={announcement._id}>
+                  <div className="announcement-card-header">
+                    <div className="announcement-icon">
+                      <i className="fas fa-bullhorn"></i>
+                    </div>
+                    <div className="announcement-content">
+                      <h3 className="announcement-title">{announcement.title}</h3>
+                      <div className="announcement-meta">
+                        <span className="announcement-author">
+                          <i className="fas fa-user"></i>
+                          {announcement.postedBy || 'Admin'}
+                        </span>
+                        <span className="announcement-date">
+                          <i className="fas fa-clock"></i>
+                          {formatDate(announcement.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="announcement-message">
+                    <p>{announcement.message}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
       </div>

@@ -2,9 +2,130 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import '/src/pages/admin/styles/AdminProfile.css';
+import './styles/EmployeeProfile.css';
 import Toast from '/src/components/common/Toast.jsx';
 import logo from '/src/assets/primary_icon.webp';
+
+const Card = ({ children }) => (
+  <div className="profile-card">{children}</div>
+);
+
+const LoadingShimmer = () => (
+  <div className="profile-loading-shimmer">
+    <div className="shimmer-avatar"></div>
+    <div className="shimmer-info">
+      <div className="shimmer-name"></div>
+      <div className="shimmer-email"></div>
+      <div className="shimmer-role"></div>
+    </div>
+  </div>
+);
+
+const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: '',
+    showCurrent: false,
+    showNew: false,
+    showConfirm: false,
+  });
+
+  const handleChange = (e) => {
+    setPasswords({ ...passwords, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(passwords);
+    setPasswords({
+      current: '',
+      new: '',
+      confirm: '',
+      showCurrent: false,
+      showNew: false,
+      showConfirm: false,
+    });
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="profile-modal-overlay">
+      <div className="profile-modal-content">
+        <div className="profile-modal-header">
+          <h3>
+            <i className="fas fa-lock"></i>
+            Change Password
+          </h3>
+          <button className="profile-modal-close" onClick={onClose}>
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="password-form">
+          {['current', 'new', 'confirm'].map((field) => (
+            <div className="form-field" key={field}>
+              <label>
+                {field === 'current' ? 'Current Password' : 
+                 field === 'new' ? 'New Password' : 'Confirm New Password'}
+              </label>
+              <div className="password-input-group">
+                <input
+                  type={passwords[`show${field[0].toUpperCase() + field.slice(1)}`] ? 'text' : 'password'}
+                  name={field}
+                  value={passwords[field]}
+                  onChange={handleChange}
+                  required
+                  className="form-input"
+                  placeholder={`Enter ${field === 'current' ? 'current' : 'new'} password`}
+                />
+                <button
+                  type="button"
+                  className="toggle-visibility-btn"
+                  onClick={() =>
+                    setPasswords((prev) => ({
+                      ...prev,
+                      [`show${field[0].toUpperCase() + field.slice(1)}`]:
+                        !prev[`show${field[0].toUpperCase() + field.slice(1)}`],
+                    }))
+                  }
+                >
+                  <i className={`fas ${passwords[`show${field[0].toUpperCase() + field.slice(1)}`] ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <div className="form-actions">
+            <button 
+              type="button" 
+              className="form-btn cancel"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="form-btn submit"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  Changing...
+                </>
+              ) : (
+                'Change Password'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const EmployeeProfile = () => {
   const { id } = useParams();
@@ -16,14 +137,6 @@ const EmployeeProfile = () => {
     contactNo: '',
     profilePicture: '',
     role: 'employee',
-  });
-  const [passwords, setPasswords] = useState({
-    current: '',
-    new: '',
-    confirm: '',
-    showCurrent: false,
-    showNew: false,
-    showConfirm: false,
   });
   const [editing, setEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -41,6 +154,7 @@ const EmployeeProfile = () => {
   };
 
   const fetchProfile = async () => {
+    setLoading(true);
     try {
       const res = await api.get('/employees/me', {
         headers: { Authorization: `Bearer ${token}` },
@@ -54,14 +168,14 @@ const EmployeeProfile = () => {
       });
     } catch (err) {
       console.error('Error fetching profile:', err);
+      setToast({ message: 'Failed to fetch profile', type: 'error' });
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchProfile();
   }, []);
-
-  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -87,7 +201,7 @@ const EmployeeProfile = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
-        setToast({ message: 'Profile picture updated.', type: 'success' });
+        setToast({ message: 'Profile picture updated successfully.', type: 'success' });
         fetchProfile();
       } catch (err) {
         console.error('Error uploading profile picture:', err);
@@ -119,11 +233,7 @@ const EmployeeProfile = () => {
     }
   };
 
-  const handlePasswordChange = (e) => {
-    setPasswords({ ...passwords, [e.target.name]: e.target.value });
-  };
-
-  const handleChangePassword = async () => {
+  const handleChangePassword = async (passwords) => {
     if (passwords.new !== passwords.confirm) {
       setToast({ message: 'New passwords do not match.', type: 'error' });
       return;
@@ -135,14 +245,6 @@ const EmployeeProfile = () => {
         newPassword: passwords.new,
       }, {
         headers: { Authorization: `Bearer ${token}` },
-      });
-      setPasswords({
-        current: '',
-        new: '',
-        confirm: '',
-        showCurrent: false,
-        showNew: false,
-        showConfirm: false,
       });
       setShowPasswordModal(false);
       setToast({ message: 'Password changed successfully.', type: 'success' });
@@ -161,7 +263,7 @@ const EmployeeProfile = () => {
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
+      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
@@ -171,6 +273,7 @@ const EmployeeProfile = () => {
             <li><a onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/requests`)}>Requests</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
             <li>
               <a
@@ -186,179 +289,172 @@ const EmployeeProfile = () => {
           </ul>
         </nav>
 
-        <div className="main-content profile-page">
-          <div className="profile-banner">
-            <div className="profile-banner-left">
-              <img
-                src={resolveProfilePicture(profile.profilePicture)}
-                alt="Profile"
-                className="profile-banner-picture"
-              />
-              {editing && (
-                <>
-                  <label htmlFor="profilePicUpload" className="profile-picture-overlay">
-                    <img src="/assets/icons/edit_icon.svg" alt="Edit" className="edit-icon-image" />
-                  </label>
-                  <input
-                    id="profilePicUpload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    style={{ display: 'none' }}
-                  />
-                </>
-              )}
+        <div className="main-content-profile">
+          {loading && !editing ? (
+            <div className="profile-loading-container">
+              <Card>
+                <LoadingShimmer />
+              </Card>
             </div>
-
-            <div className="profile-banner-text">
-              <h2>Hello,</h2>
-              <p>{profile.name}</p>
-            </div>
-            <button
-              className="edit-profile-btn"
-              onClick={() => {
-                if (editing) {
-                  setToast({ message: 'Edit cancelled.', type: 'info' });
-                  fetchProfile();
-                }
-                setEditing(!editing);
-              }}
-            >
-              {editing ? 'Cancel' : 'Edit Profile'}
-            </button>
-          </div>
-
-          <div className="profile-cards-horizontal">
-            <div className="profile-card">
-              <h3>Personal Information</h3>
-              <div className="profile-field">
-                <label>Name:</label>
-                {editing ? (
-                  <input name="name" value={profile.name} onChange={handleChange} />
-                ) : (
-                  <span>{profile.name}</span>
-                )}
-              </div>
-              <div className="profile-field">
-                <label>Email:</label>
-                {editing ? (
-                  <input name="email" value={profile.email} onChange={handleChange} />
-                ) : (
-                  <span>{profile.email}</span>
-                )}
-              </div>
-              <div className="profile-field">
-                <label>Contact No:</label>
-                {editing ? (
-                  <input name="contactNo" value={profile.contactNo} onChange={handleChange} />
-                ) : (
-                  <span>{profile.contactNo || '-'}</span>
-                )}
-              </div>
-              {editing && (
-                <button
-                  className="save-btn"
-                  onClick={handleSaveProfile}
-                  disabled={loading || uploading}
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </button>
-              )}
-            </div>
-
-            <div className="profile-card">
-              <h3>Role</h3>
-              <p>{profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}</p>
-              <ul className="role-permissions">
-                <li>View Attendance</li>
-                <li>Request Leave</li>
-                <li>Update Profile</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="profile-card full-width-card change-password-card">
-            <h3 className="clickable-title">Security</h3>
-            <div className="card-actions">
-              <button
-                className="change-password-btn"
-                onClick={() => setShowPasswordModal(true)}
-              >
-                Change Password
-              </button>
-            </div>
-          </div>
-
-          {showPasswordModal && (
-            <div className="modal-overlay">
-              <div className="modal large-modal">
-                <h3>Change Password</h3>
-                {['current', 'new', 'confirm'].map((field) => (
-                  <div className="modal-field-row" key={field}>
-                    <input
-                      type={
-                        passwords[`show${field[0].toUpperCase() + field.slice(1)}`]
-                          ? 'text'
-                          : 'password'
-                      }
-                      name={field}
-                      value={passwords[field]}
-                      onChange={handlePasswordChange}
-                      placeholder={
-                        field === 'current'
-                          ? 'Current Password'
-                          : field === 'new'
-                          ? 'New Password'
-                          : 'Confirm New Password'
-                      }
-                    />
-                    <button
-                      className="toggle-visibility-btn"
-                      onClick={() =>
-                        setPasswords((prev) => ({
-                          ...prev,
-                          [`show${field[0].toUpperCase() + field.slice(1)}`]:
-                            !prev[`show${field[0].toUpperCase() + field.slice(1)}`],
-                        }))
-                      }
-                    >
+          ) : (
+            <div className="profile-content">
+              <Card>
+                <div className="profile-main-section">
+                  <div className="profile-avatar-section">
+                    <div className="profile-avatar-container">
                       <img
-                        src={
-                          passwords[`show${field[0].toUpperCase() + field.slice(1)}`]
-                            ? '/assets/icons/view_on.svg'
-                            : '/assets/icons/view_off.svg'
-                        }
-                        alt="Toggle"
+                        src={resolveProfilePicture(profile.profilePicture)}
+                        alt="Profile"
+                        className="profile-avatar"
                       />
-                    </button>
+                      {editing && (
+                        <>
+                          <label htmlFor="profilePicUpload" className="profile-avatar-overlay">
+                            <i className="fas fa-camera"></i>
+                          </label>
+                          <input
+                            id="profilePicUpload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            style={{ display: 'none' }}
+                          />
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className="profile-info">
+                      <h3 className="profile-name">{profile.name}</h3>
+                      <p className="profile-email">{profile.email}</p>
+                      <p className="profile-role">Role: {profile.role}</p>
+                      {profile.contactNo && (
+                        <p className="profile-contact">Contact: {profile.contactNo}</p>
+                      )}
+                    </div>
                   </div>
-                ))}
 
-                <div className="modal-actions">
-                  <button onClick={handleChangePassword} disabled={loading}>
-                    {loading ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowPasswordModal(false);
-                      setPasswords({
-                        current: '',
-                        new: '',
-                        confirm: '',
-                        showCurrent: false,
-                        showNew: false,
-                        showConfirm: false,
-                      });
-                    }}
-                  >
-                    Cancel
-                  </button>
+                  {editing ? (
+                    <div className="profile-edit-section">
+                      <div className="form-field">
+                        <label>Name</label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={profile.name}
+                          onChange={handleChange}
+                          className="form-input"
+                          placeholder="Enter your name"
+                        />
+                      </div>
+                      
+                      <div className="form-field">
+                        <label>Email</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={profile.email}
+                          onChange={handleChange}
+                          className="form-input"
+                          placeholder="Enter your email"
+                        />
+                      </div>
+                      
+                      <div className="form-field">
+                        <label>Contact Number</label>
+                        <input
+                          type="text"
+                          name="contactNo"
+                          value={profile.contactNo}
+                          onChange={handleChange}
+                          className="form-input"
+                          placeholder="Enter your contact number"
+                        />
+                      </div>
+
+                      <div className="profile-edit-actions">
+                        <button
+                          className="profile-btn cancel"
+                          onClick={() => {
+                            setEditing(false);
+                            fetchProfile();
+                          }}
+                          disabled={loading}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className="profile-btn save"
+                          onClick={handleSaveProfile}
+                          disabled={loading || uploading}
+                        >
+                          {loading ? (
+                            <>
+                              <i className="fas fa-spinner fa-spin"></i>
+                              Saving...
+                            </>
+                          ) : (
+                            'Save Changes'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="profile-actions">
+                      <button
+                        className="profile-btn edit"
+                        onClick={() => setEditing(true)}
+                      >
+                        <i className="fas fa-edit"></i>
+                        Edit Profile
+                      </button>
+                      <button
+                        className="profile-btn password"
+                        onClick={() => setShowPasswordModal(true)}
+                      >
+                        <i className="fas fa-lock"></i>
+                        Change Password
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                <div className="profile-permissions-section">
+                  <h4>Employee Permissions</h4>
+                  <div className="permissions-list">
+                    <div className="permission-item">
+                      <i className="fas fa-calendar-check"></i>
+                      <span>View Attendance</span>
+                    </div>
+                    <div className="permission-item">
+                      <i className="fas fa-tasks"></i>
+                      <span>View Tasks</span>
+                    </div>
+                    <div className="permission-item">
+                      <i className="fas fa-calendar-alt"></i>
+                      <span>Request Leaves</span>
+                    </div>
+                    <div className="permission-item">
+                      <i className="fas fa-bullhorn"></i>
+                      <span>View Announcements</span>
+                    </div>
+                    <div className="permission-item">
+                      <i className="fas fa-clipboard-list"></i>
+                      <span>Submit Requests</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
           )}
         </div>
       </div>
+
+      <PasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSubmit={handleChangePassword}
+        loading={loading}
+      />
     </div>
   );
 };

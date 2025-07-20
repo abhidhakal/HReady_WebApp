@@ -16,6 +16,12 @@ function AdminDashboard() {
   const [tasks, setTasks] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const [toast, setToast] = useState({ message: '', type: '' });
+  const [pendingLeaveRequests, setPendingLeaveRequests] = useState(0);
+  const [todayOverview, setTodayOverview] = useState({
+    active: 0,
+    onLeave: 0,
+    absent: 0
+  });
   const navigate = useNavigate();
 
   const resolveProfilePicture = (picture) => {
@@ -71,11 +77,52 @@ function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    api.get('/employees', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    })
-      .then(res => setEmployeeCount(res.data.length))
-      .catch(() => {});
+    const fetchEmployeesAndOverview = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await api.get('/employees', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const employees = res.data;
+        setEmployeeCount(employees.length);
+        
+        // Calculate today's overview
+        let active = 0, onLeave = 0, absent = 0;
+        employees.forEach(emp => {
+          if (emp.status?.toLowerCase() === 'active') active++;
+          else if (emp.status?.toLowerCase() === 'on leave') onLeave++;
+          else if (emp.status?.toLowerCase() === 'absent') absent++;
+        });
+        
+        setTodayOverview({ active, onLeave, absent });
+      } catch (err) {
+        console.error('Error fetching employees:', err);
+      }
+    };
+
+    fetchEmployeesAndOverview();
+  }, []);
+
+  useEffect(() => {
+    const fetchPendingLeaveRequests = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await api.get('/leaves/all', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const pendingCount = res.data.filter(leave => 
+          leave.status?.toLowerCase() === 'pending'
+        ).length;
+        
+        setPendingLeaveRequests(pendingCount);
+      } catch (err) {
+        console.error('Error fetching leave requests:', err);
+      }
+    };
+
+    fetchPendingLeaveRequests();
   }, []);
 
   useEffect(() => {
@@ -136,7 +183,7 @@ function AdminDashboard() {
             </div>
             <div className="banner-middle">
               <p>
-                Your Today’s Attendance:{" "}
+                Your Today's Attendance:{" "}
                 <span className={
                   attendanceStatus === 'Checked In' || attendanceStatus === 'Checked Out'
                     ? 'status-done'
@@ -164,20 +211,27 @@ function AdminDashboard() {
 
           <div className="info-cards">
             <div className="info-card">
-              <h2>Today’s Overview</h2>
-              <p><strong>Active Employees:</strong> 45</p>
-              <p><strong>On Leave:</strong> 4</p>
-              <p><strong>Absent:</strong> 9</p>
+              <h2>Today's Overview</h2>
+              <p><strong>Active:</strong> {todayOverview.active}</p>
+              <p><strong>On Leave:</strong> {todayOverview.onLeave}</p>
+              <p><strong>Absent:</strong> {todayOverview.absent}</p>
             </div>
             <div className="info-card">
               <h2>Total Employees</h2>
               <h1 className="employee-role">{employeeCount}</h1>
             </div>
             <div className="info-card">
-              <h2>Pending Leave Requests</h2>
               <div className="info-card-leaves">
-                <h1 className="employee-leaves-left">4</h1>
-                <button className="request-leave-btn">Review Now</button>
+                <div>
+                  <h2>Pending Leave Requests</h2>
+                  <h1 className="employee-leaves-left">{pendingLeaveRequests}</h1>
+                </div>
+                <button 
+                  className="request-leave-btn"
+                  onClick={() => navigate(`/admin/${id}/leaves`)}
+                >
+                  Review
+                </button>
               </div>
             </div>
           </div>
@@ -219,7 +273,7 @@ function AdminDashboard() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3">No tasks available.</td>
+                      <td colSpan="3" style={{ textAlign: 'center', color: '#666' }}>No tasks available.</td>
                     </tr>
                   )}
                 </tbody>
@@ -246,7 +300,7 @@ function AdminDashboard() {
                     </div>
                   ))
                 ) : (
-                  <p>No announcements available.</p>
+                  <p style={{ textAlign: 'center', color: '#666', margin: '20px 0' }}>No announcements available.</p>
                 )}
               </div>
             </div>
