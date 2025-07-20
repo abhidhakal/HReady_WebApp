@@ -270,6 +270,7 @@ const EmployeeProfile = () => {
             <li><img src={logo} alt="Logo" /></li>
             <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/payroll`)}>My Payroll</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>

@@ -145,6 +145,7 @@ function EmployeeDashboard() {
             <li><img src={logo} alt="Logo" /></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/payroll`)}>My Payroll</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
@@ -208,6 +209,17 @@ function EmployeeDashboard() {
                   <i className="fas fa-briefcase"></i>
                   <span className="position-value">{position}</span>
                 </div>
+              </div>
+            </div>
+            <div className="info-card payroll-card-nav">
+              <h2>My Payroll</h2>
+              <div className="payroll-content-nav">
+                <button 
+                  className="view-payroll-btn"
+                  onClick={() => navigate(`/employee/${id}/payroll`)}
+                >
+                  Go to Payroll
+                </button>
               </div>
             </div>
             <div className="info-card leaves-card">

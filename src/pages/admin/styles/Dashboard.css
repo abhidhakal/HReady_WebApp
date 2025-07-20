@@ -140,7 +140,7 @@ button {
 /* Info Cards */
 .info-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin: 20px 0;
 }
@@ -450,6 +450,38 @@ button {
 
 .view-tasks-btn:hover {
   background-color: #f57c00;
+  transform: translateY(-1px);
+}
+
+/* Payroll Card */
+.payroll-card-nav {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-left: 4px solid #4caf50;
+}
+
+.payroll-status {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  flex: 1;
+}
+
+.view-payroll-btn {
+  padding: 10px 18px;
+  background-color: #042F46;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  align-self: flex-end;
+  margin-top: auto;
+}
+
+.view-payroll-btn:hover {
+  background-color: #031f2e;
   transform: translateY(-1px);
 }
 
@@ -917,12 +949,26 @@ button {
     font-size: 14px;
   }
   
-  .employees-header, .leave-requests-header, .position-header, .leaves-header, .pending-tasks-header {
+  .employees-header, .leave-requests-header, .position-header, .leaves-header, .pending-tasks-header, .payroll-header {
     gap: 8px;
+  }
+  
+  .payroll-status {
+    font-size: 12px;
+  }
+  
+  .view-payroll-btn {
+    padding: 6px 12px;
+    font-size: 11px;
   }
   
   .employees-count, .leave-requests-count, .leaves-count, .pending-count {
     font-size: 24px;
+  }
+  
+  .view-payroll-btn {
+    padding: 6px 12px;
+    font-size: 11px;
   }
   
   .position-value {
@@ -942,7 +988,7 @@ button {
     font-size: 11px;
   }
   
-  .view-employees-btn, .review-leave-btn, .view-tasks-btn {
+  .view-employees-btn, .review-leave-btn, .view-tasks-btn, .view-payroll-btn {
     padding: 6px 12px;
     font-size: 11px;
   }

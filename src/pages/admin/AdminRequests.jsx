@@ -117,6 +117,7 @@ function AdminRequests() {
             <li><img src={logo} alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Employees</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/attendance`)}>Attendance</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/tasks`)}>Tasks</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/leaves`)}>Leaves</a></li>

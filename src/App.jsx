@@ -13,7 +13,9 @@ import Services from './components/sections/Services';
 import EmployeeDashboard from './pages/employee/EmployeeDashboard.jsx';
 import EmployeeAnnouncements from './pages/employee/EmployeeAnnouncements.jsx';
 import EmployeeAttendance from './pages/employee/EmployeeAttendance.jsx';
+import EmployeePayroll from './pages/employee/EmployeePayroll.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import PayrollDashboard from './pages/admin/PayrollDashboard.jsx';
 import ManageEmployees from './pages/admin/ManageEmployees.jsx';
 import ManageAnnouncements from './pages/admin/ManageAnnouncements.jsx';
 import AdminAttendance from './pages/admin/AdminAttendance.jsx';
@@ -43,6 +45,7 @@ function App() {
           <Route path="/employee/:id" element={<EmployeeDashboard />} />
           <Route path="/employee/:id/announcements" element={<EmployeeAnnouncements />} />
           <Route path="/employee/:id/attendance" element={<EmployeeAttendance />} />
+          <Route path="/employee/:id/payroll" element={<EmployeePayroll />} />
           <Route path="/employee/:id/profile" element={<EmployeeProfile />} />
           <Route path="/employee/:id/tasks" element={<EmployeeTasks />} />
           <Route path="/employee/:id/leave" element={<EmployeeLeaves />} />
@@ -50,6 +53,7 @@ function App() {
 
           {/* ADMIN */}
           <Route path="/admin/:id" element={<AdminDashboard />} />
+          <Route path="/admin/:id/payroll" element={<PayrollDashboard />} />
           <Route path="/admin/:id/employees" element={<ManageEmployees />} />
           <Route path="/admin/:id/announcements" element={<ManageAnnouncements />} />
           <Route path="/admin/:id/attendance" element={<AdminAttendance />} />

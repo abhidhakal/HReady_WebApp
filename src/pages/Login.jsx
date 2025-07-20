@@ -50,7 +50,7 @@ function Login() {
 
   // Validate password strength
   const validatePassword = (password) => {
-    return password.length >= 8;
+    return password.length >= 5;
   };
 
   // Handle form submission
@@ -69,7 +69,7 @@ function Login() {
     }
 
     if (!validatePassword(password)) {
-      setToast({ message: 'Password must be at least 8 characters long', type: 'error' });
+      setToast({ message: 'Password must be at least 5 characters long', type: 'error' });
       return;
     }
 

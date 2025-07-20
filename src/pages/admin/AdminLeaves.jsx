@@ -176,6 +176,7 @@ function AdminLeaves() {
             <li><img src={logo} alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/attendance`)}>Admin Attendance</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/tasks`)}>Manage Tasks</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}/leaves`)}>Leaves</a></li>
