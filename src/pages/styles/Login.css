@@ -386,8 +386,8 @@
 
 /* Loading spinner */
 .loading-spinner {
-  width: 16px;
-  height: 16px;
+  width: 16px !important;
+  height: 16px !important;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid white;
   border-radius: 50%;

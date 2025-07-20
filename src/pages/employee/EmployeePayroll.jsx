@@ -2,12 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
-import './styles/EmployeePayroll.css';
+import '/src/pages/admin/styles/PayrollDashboard.css';
 import api from '../../api/axios';
 import Toast from '../../components/common/Toast';
 import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
 import logo from '/src/assets/primary_icon.webp';
 import { secureLogout } from '../../utils/authUtils';
+
+// Custom currency formatter for Rs.
+const formatCurrency = (amount, currency = 'Rs.') => {
+  if (currency === 'Rs.' || currency === 'NPR') {
+    // Format with comma as thousand separator and Rs. prefix
+    return `Rs. ${Number(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+  }
+  // Fallback to Intl for other currencies
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  } catch {
+    return amount;
+  }
+};
 
 const EmployeePayroll = () => {
   const { id } = useParams();
@@ -23,6 +40,16 @@ const EmployeePayroll = () => {
   const [name, setName] = useState('Employee');
   const [profilePicture, setProfilePicture] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [bankForm, setBankForm] = useState({
+    bankName: '',
+    accountNumber: '',
+    accountHolderName: '',
+    routingNumber: '',
+    swiftCode: '',
+    accountType: '',
+  });
+  const [isAddBank, setIsAddBank] = useState(false); // distinguish add vs update
   
   const navigate = useNavigate();
 
@@ -77,15 +104,29 @@ const EmployeePayroll = () => {
   const fetchPayrollData = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // Get current user info first
+      const userRes = await api.get('/employees/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const employeeId = userRes.data._id;
+      
       const [payrollsRes, salaryRes, bankRes] = await Promise.all([
-        api.get('/payrolls/my-payrolls'),
-        api.get('/salaries/my-salary'),
-        api.get('/bank-accounts/my-account')
+        api.get(`/payrolls/employee/${employeeId}/history`),
+        api.get(`/salaries/employee/${employeeId}`),
+        api.get(`/bank-accounts/employee/${employeeId}`)
       ]);
 
       setPayrolls(payrollsRes.data);
       setSalary(salaryRes.data);
-      setBankAccount(bankRes.data);
+      // Fix: set bankAccount to the default or first account if array
+      setBankAccount(
+        Array.isArray(bankRes.data)
+          ? bankRes.data.find(acc => acc.isDefault) || bankRes.data[0] || null
+          : bankRes.data
+      );
     } catch (error) {
       console.error('Error fetching payroll data:', error);
       setToast({ message: 'Failed to load payroll data', type: 'error' });
@@ -125,14 +166,62 @@ const EmployeePayroll = () => {
     }
   };
 
-  const formatCurrency = (amount, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+  // When opening modal, prefill form
+  const openBankModal = (isAdd = false) => {
+    setIsAddBank(isAdd);
+    if (!isAdd && bankAccount) {
+      setBankForm({
+        bankName: bankAccount.bankName || '',
+        accountNumber: bankAccount.accountNumber || '',
+        accountHolderName: bankAccount.accountHolderName || '',
+        routingNumber: bankAccount.routingNumber || '',
+        swiftCode: bankAccount.swiftCode || '',
+        accountType: bankAccount.accountType || '',
+      });
+    } else {
+      setBankForm({
+        bankName: '',
+        accountNumber: '',
+        accountHolderName: '',
+        routingNumber: '',
+        swiftCode: '',
+        accountType: '',
+      });
+    }
+    setShowBankModal(true);
   };
 
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+  const handleBankFormChange = (e) => {
+    setBankForm({ ...bankForm, [e.target.name]: e.target.value });
+  };
+
+  const handleBankFormSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      if (isAddBank) {
+        // Get employeeId
+        const token = localStorage.getItem('token');
+        const userRes = await api.get('/employees/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const employeeId = userRes.data._id;
+        await api.post('/bank-accounts', { ...bankForm, employeeId });
+        setToast({ message: 'Bank information added!', type: 'success' });
+      } else {
+        await api.put(`/bank-accounts/${bankAccount._id}`, bankForm);
+        setToast({ message: 'Bank information updated!', type: 'success' });
+      }
+      setShowBankModal(false);
+      fetchPayrollData();
+    } catch (error) {
+      setToast({ message: 'Failed to save bank info', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -158,13 +247,13 @@ const EmployeePayroll = () => {
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src={logo} alt="Logo" /></li>
-            <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/payroll`)}>My Payroll</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/tasks`)}>Tasks</a></li>
-            <li><a onClick={() => navigate(`/employee/${id}/leaves`)}>Leaves</a></li>
-            <li><a onClick={() => navigate(`/employee/${id}/requests`)}>Requests</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/leave`)}>Leave</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/announcements`)}>Announcements</a></li>
-            <li><a className="active" onClick={() => navigate(`/employee/${id}/payroll`)}>Payroll</a></li>
+            <li><a onClick={() => navigate(`/employee/${id}/requests`)}>Requests</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/profile`)}>Profile</a></li>
             <li>
               <a
@@ -379,7 +468,7 @@ const EmployeePayroll = () => {
                       <div className="salary-header">
                         <h3>Current Salary Structure</h3>
                         <span className="effective-date">
-                          Effective: {new Date(salary.effectiveDate).toLocaleDateString()}
+                          Effective: {salary.effectiveDate ? new Date(salary.effectiveDate).toLocaleDateString() : 'N/A'}
                         </span>
                       </div>
                       
@@ -392,15 +481,23 @@ const EmployeePayroll = () => {
                           </div>
                           <div className="breakdown-item">
                             <span>Housing Allowance:</span>
-                            <span>{formatCurrency(salary.housingAllowance, salary.currency)}</span>
+                            <span>{formatCurrency(salary.allowances?.housing || 0, salary.currency)}</span>
                           </div>
                           <div className="breakdown-item">
                             <span>Transport Allowance:</span>
-                            <span>{formatCurrency(salary.transportAllowance, salary.currency)}</span>
+                            <span>{formatCurrency(salary.allowances?.transport || 0, salary.currency)}</span>
                           </div>
                           <div className="breakdown-item">
                             <span>Meal Allowance:</span>
-                            <span>{formatCurrency(salary.mealAllowance, salary.currency)}</span>
+                            <span>{formatCurrency(salary.allowances?.meal || 0, salary.currency)}</span>
+                          </div>
+                          <div className="breakdown-item">
+                            <span>Medical Allowance:</span>
+                            <span>{formatCurrency(salary.allowances?.medical || 0, salary.currency)}</span>
+                          </div>
+                          <div className="breakdown-item">
+                            <span>Other Allowance:</span>
+                            <span>{formatCurrency(salary.allowances?.other || 0, salary.currency)}</span>
                           </div>
                           <div className="breakdown-item total">
                             <span>Total Allowances:</span>
@@ -412,15 +509,19 @@ const EmployeePayroll = () => {
                           <h4>Deductions</h4>
                           <div className="breakdown-item">
                             <span>Tax:</span>
-                            <span>{formatCurrency(salary.tax, salary.currency)}</span>
+                            <span>{formatCurrency(salary.deductions?.tax || 0, salary.currency)}</span>
                           </div>
                           <div className="breakdown-item">
                             <span>Insurance:</span>
-                            <span>{formatCurrency(salary.insurance, salary.currency)}</span>
+                            <span>{formatCurrency(salary.deductions?.insurance || 0, salary.currency)}</span>
                           </div>
                           <div className="breakdown-item">
                             <span>Pension:</span>
-                            <span>{formatCurrency(salary.pension, salary.currency)}</span>
+                            <span>{formatCurrency(salary.deductions?.pension || 0, salary.currency)}</span>
+                          </div>
+                          <div className="breakdown-item">
+                            <span>Other Deduction:</span>
+                            <span>{formatCurrency(salary.deductions?.other || 0, salary.currency)}</span>
                           </div>
                           <div className="breakdown-item total">
                             <span>Total Deductions:</span>
@@ -458,7 +559,6 @@ const EmployeePayroll = () => {
                         <h3>Payment Account</h3>
                         <span className="account-status active">Active</span>
                       </div>
-                      
                       <div className="banking-details">
                         <div className="detail-row">
                           <span>Bank Name:</span>
@@ -477,13 +577,16 @@ const EmployeePayroll = () => {
                           <span>{bankAccount.routingNumber}</span>
                         </div>
                         <div className="detail-row">
+                          <span>SWIFT Code:</span>
+                          <span>{bankAccount.swiftCode}</span>
+                        </div>
+                        <div className="detail-row">
                           <span>Account Holder:</span>
                           <span>{bankAccount.accountHolderName}</span>
                         </div>
                       </div>
-                      
                       <div className="banking-actions">
-                        <button className="update-btn">
+                        <button className="update-btn" onClick={() => openBankModal(false)}>
                           <i className="fas fa-edit"></i>
                           Update Information
                         </button>
@@ -493,10 +596,98 @@ const EmployeePayroll = () => {
                     <div className="empty-state">
                       <i className="fas fa-university"></i>
                       <p>No banking information available</p>
-                      <button className="add-banking-btn">
+                      <button className="add-banking-btn" onClick={() => openBankModal(true)}>
                         <i className="fas fa-plus"></i>
                         Add Banking Information
                       </button>
+                    </div>
+                  )}
+
+                  {/* Bank Info Modal (Add or Update) */}
+                  {showBankModal && (
+                    <div className="modal-overlay">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h3>{isAddBank ? 'Add Bank Information' : 'Update Bank Information'}</h3>
+                          <button className="modal-close" onClick={() => setShowBankModal(false)}>
+                            <i className="fas fa-times"></i>
+                          </button>
+                        </div>
+                        <form onSubmit={handleBankFormSubmit}>
+                          <div className="modal-body">
+                            <div className="form-group">
+                              <label>Bank Name:</label>
+                              <input
+                                type="text"
+                                name="bankName"
+                                value={bankForm.bankName}
+                                onChange={handleBankFormChange}
+                                required
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Account Number:</label>
+                              <input
+                                type="text"
+                                name="accountNumber"
+                                value={bankForm.accountNumber}
+                                onChange={handleBankFormChange}
+                                required
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Account Holder Name:</label>
+                              <input
+                                type="text"
+                                name="accountHolderName"
+                                value={bankForm.accountHolderName}
+                                onChange={handleBankFormChange}
+                                required
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Routing Number:</label>
+                              <input
+                                type="text"
+                                name="routingNumber"
+                                value={bankForm.routingNumber}
+                                onChange={handleBankFormChange}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>SWIFT Code:</label>
+                              <input
+                                type="text"
+                                name="swiftCode"
+                                value={bankForm.swiftCode}
+                                onChange={handleBankFormChange}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Account Type:</label>
+                              <select
+                                name="accountType"
+                                value={bankForm.accountType || 'Saving'}
+                                onChange={handleBankFormChange}
+                                required
+                              >
+                                <option value="Saving">Saving</option>
+                                <option value="Savings">Savings</option>
+                                <option value="Current">Current</option>
+                                <option value="Checking">Checking</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="modal-footer">
+                            <button type="button" className="btn-secondary" onClick={() => setShowBankModal(false)}>
+                              Cancel
+                            </button>
+                            <button type="submit" className="btn-primary" disabled={loading}>
+                              {loading ? 'Saving...' : (isAddBank ? 'Add' : 'Save')}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   )}
                 </div>
