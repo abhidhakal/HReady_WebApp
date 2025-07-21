@@ -1,5 +1,5 @@
 import React from "react";
-import "/src/components/styles/Footer.css";
+import "../styles/Footer.css";
 import { Link } from "react-router-dom";
 
 function Footer() {
@@ -8,7 +8,7 @@ function Footer() {
       <div className="footer-content">
         <div className="footer-section">
           <div className="footer-brand">
-            <img src="src/assets/primary.webp" alt="HReady Logo" />
+            <img src="../../assets/primary.webp" alt="HReady Logo" />
             <div className="footer-brand-details">
               <h3>HReady</h3>
               <p>Smart HR Management Solution</p>

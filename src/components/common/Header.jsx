@@ -6,7 +6,7 @@ function Header() {
   return (
     <header className="header">
       <Link to="/">
-        <img className="header-logo" src="/src/assets/primary_transparent.webp" alt="HReady" />
+        <img className="header-logo" src="../../assets/primary_transparent.webp" alt="HReady" />
       </Link>
       <div className="header-texts">
       <Link to="/services">

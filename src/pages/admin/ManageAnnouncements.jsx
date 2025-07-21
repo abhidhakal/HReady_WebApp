@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import logo from '/src/assets/primary_icon.webp';
+import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import logo from '../../assets/primary_icon.webp';
 import './styles/ManageAnnouncements.css';
 
 const Card = ({ children }) => (

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import './styles/EmployeeAnnouncements.css';
-import logo from '/src/assets/primary_icon.webp';
+import logo from '../../assets/primary_icon.webp';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>

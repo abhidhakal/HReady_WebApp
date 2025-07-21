@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
+import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import './styles/PayrollDashboard.css';
 import api from '../../api/axios';
@@ -9,7 +9,7 @@ import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
 import PayrollPaymentModal from '../../components/payroll/PayrollPaymentModal';
 import SalaryManagement from '../../components/payroll/SalaryManagement';
 import AuthCheck from '../../components/common/AuthCheck';
-import logo from '/src/assets/primary_icon.webp';
+import logo from '../../assets/primary_icon.webp';
 import { secureLogout } from '../../utils/authUtils';
 import Modal from '../../components/common/Modal';
 
@@ -488,14 +488,13 @@ const PayrollDashboard = () => {
         onClose={() => setToast({ message: '', type: '' })}
       />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
-
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
             <li><img src={logo} alt="Logo" /></li>
-            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
+            <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
-            <li><a className="active" onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>
+            <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/attendance`)}>Admin Attendance</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/tasks`)}>Manage Tasks</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/leaves`)}>Leaves</a></li>

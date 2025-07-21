@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import './styles/EmployeeLeaves.css';
 import api from '../../api/axios';
-import logo from '/src/assets/primary_icon.webp';
+import logo from '../../assets/primary_icon.webp';
 
 const Card = ({ children }) => (
   <div className="leave-card">{children}</div>

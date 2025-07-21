@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import '/src/pages/admin/styles/Dashboard.css';
+import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import '../../pages/admin/styles/Dashboard.css';
 import api from '../../api/axios';
 import Toast from '../../components/common/Toast';
 import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
-import logo from '/src/assets/primary_icon.webp';
+import logo from '../../assets/primary_icon.webp';
 import { secureLogout } from '../../utils/authUtils';
+import { getApiBaseUrl } from '../../utils/env';
 
 function AdminDashboard() {
   const { id } = useParams();
@@ -28,10 +29,10 @@ function AdminDashboard() {
   const navigate = useNavigate();
 
   const resolveProfilePicture = (picture) => {
-    if (!picture) return '/src/assets/profile.svg';
-    if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
+    if (!picture) return '../../assets/profile.svg';
+    if (picture.startsWith('/')) return `${getApiBaseUrl()}${picture}`;
     if (picture.startsWith('http')) return picture;
-    return '/src/assets/profile.svg';
+    return '../../assets/profile.svg';
   };
 
   const handleLogoutClick = () => {

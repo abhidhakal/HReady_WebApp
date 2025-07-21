@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
+import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import '/src/pages/employee/styles/EmployeeAttendance.css';
-import logo from '/src/assets/primary_icon.webp';
+import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const statusColor = status => {

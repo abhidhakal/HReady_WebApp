@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import api from '../../api/axios';
 import '/src/pages/admin/styles/ManageEmployees.css';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import logo from '/src/assets/primary_icon.webp';
+import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const statusColor = status => {

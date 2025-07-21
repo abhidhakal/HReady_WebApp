@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import '/src/pages/admin/styles/AdminAttendance.css';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import logo from '/src/assets/primary_icon.webp';
+import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const statusColor = status => {

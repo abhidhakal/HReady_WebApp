@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import api from '../../api/axios';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import '/src/pages/admin/styles/ManageTasks.css';
-import logo from '/src/assets/primary_icon.webp';
+import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import '../../pages/admin/styles/ManageTasks.css';
+import logo from '../../assets/primary_icon.webp';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import TextField from '@mui/material/TextField';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import Toast from '/src/components/common/Toast.jsx';
+import Toast from '../../components/common/Toast.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const statusColor = status => {

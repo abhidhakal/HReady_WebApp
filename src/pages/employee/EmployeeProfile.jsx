@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
+import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import './styles/EmployeeProfile.css';
-import Toast from '/src/components/common/Toast.jsx';
-import logo from '/src/assets/primary_icon.webp';
+import Toast from '../../components/common/Toast.jsx';
+import logo from '../../assets/primary_icon.webp';
+import { getApiBaseUrl } from '../../utils/env';
 
 const Card = ({ children }) => (
   <div className="profile-card">{children}</div>
@@ -147,10 +148,10 @@ const EmployeeProfile = () => {
   const token = localStorage.getItem('token');
 
   const resolveProfilePicture = (picture) => {
-    if (!picture) return '/src/assets/profile.svg';
-    if (picture.startsWith('/')) return `${import.meta.env.VITE_API_BASE_URL}${picture}`;
+    if (!picture) return '../../assets/profile.svg';
+    if (picture.startsWith('/')) return `${getApiBaseUrl()}${picture}`;
     if (picture.startsWith('http')) return picture;
-    return '/src/assets/profile.svg';
+    return '../../assets/profile.svg';
   };
 
   const fetchProfile = async () => {
