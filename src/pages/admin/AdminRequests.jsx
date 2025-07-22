@@ -4,6 +4,7 @@ import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 // import logo from '../../assets/primary_icon.webp';
 import api from '../../api/axios';
 import './styles/AdminRequests.css';
+import Skeleton from '@mui/material/Skeleton';
 
 const StatusChip = ({ status }) => {
   const getStatusColor = (status) => {
@@ -50,7 +51,7 @@ function AdminRequests() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionState, setActionState] = useState({}); // { [requestId]: { mode: 'approve'|'reject'|null, comment: '' } }
 
@@ -143,59 +144,53 @@ function AdminRequests() {
             <h2>All Employee Requests</h2>
           </div>
 
-          {loading && (
-            <div className="requests-loading-container">
-              {[1, 2, 3, 4].map(i => (
-                <Card key={i}>
-                  <LoadingShimmer />
-                </Card>
+          {loading ? (
+            <div className="requests-list-container">
+              {[1,2,3,4].map(i => (
+                <div className="request-card" key={i}>
+                  <div className="request-header">
+                    <Skeleton variant="text" width="60%" height={24} />
+                    <Skeleton variant="text" width="30%" height={18} />
+                  </div>
+                  <Skeleton variant="text" width="80%" height={18} />
+                  <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                </div>
               ))}
             </div>
-          )}
-
-          {error && (
-            <div className="requests-error">
-              <i className="fas fa-exclamation-triangle"></i>
-              {error}
-            </div>
-          )}
-
-          {!loading && requests.length === 0 && !error && (
+          ) : requests.length === 0 ? (
             <div className="requests-empty-state">
               <i className="fas fa-inbox"></i>
               <p>No requests found.</p>
             </div>
-          )}
-
-          {!loading && requests.length > 0 && (
+          ) : (
             <div className="requests-list-container">
-              {requests.map(r => (
-                <Card key={r._id}>
+              {requests.map(request => (
+                <div className="request-card" key={request._id}>
                   <div className="request-card-header">
-                    <span className="request-title">{r.title}</span>
-                    <StatusChip status={r.status} />
+                    <span className="request-title">{request.title}</span>
+                    <StatusChip status={request.status} />
                   </div>
                   
-                  <div className="request-type">{r.type}</div>
+                  <div className="request-type">{request.type}</div>
                   
-                  <div className="request-message">{r.message}</div>
+                  <div className="request-message">{request.message}</div>
                   
                   <div className="request-meta">
                     <span className="request-creator">
                       <i className="fas fa-user"></i>
-                      By: {r.createdBy?.name || r.createdBy?.email || 'Unknown'}
+                      By: {request.createdBy?.name || request.createdBy?.email || 'Unknown'}
                     </span>
                     <span className="request-date">
                       <i className="fas fa-calendar-alt"></i>
-                      {new Date(r.createdAt).toLocaleString()}
+                      {new Date(request.createdAt).toLocaleString()}
                     </span>
                   </div>
 
-                  {r.attachment && (
+                  {request.attachment && (
                     <div className="request-attachment">
                       <button 
                         className="attachment-btn"
-                        onClick={() => handleAttachmentClick(r.attachment)}
+                        onClick={() => handleAttachmentClick(request.attachment)}
                       >
                         <i className="fas fa-paperclip"></i>
                         View Attachment
@@ -203,41 +198,41 @@ function AdminRequests() {
                     </div>
                   )}
 
-                  {r.adminComment && (
+                  {request.adminComment && (
                     <div className="request-admin-comment">
                       <i className="fas fa-comment"></i>
-                      <span><strong>Admin:</strong> {r.adminComment}</span>
+                      <span><strong>Admin:</strong> {request.adminComment}</span>
                     </div>
                   )}
 
-                  {r.status === 'pending' && (
+                  {request.status === 'pending' && (
                     <div className="request-actions">
-                      {actionState[r._id]?.mode ? (
+                      {actionState[request._id]?.mode ? (
                         <div className="request-action-form">
                           <input
                             className="request-comment-input"
                             type="text"
                             placeholder="Add a comment (optional)"
-                            value={actionState[r._id]?.comment || ''}
-                            onChange={e => handleCommentChange(r._id, e.target.value)}
+                            value={actionState[request._id]?.comment || ''}
+                            onChange={e => handleCommentChange(request._id, e.target.value)}
                             disabled={loading}
                           />
                           <button 
                             type="button" 
-                            className={`request-action-btn ${actionState[r._id].mode === 'approve' ? 'approve' : 'reject'}`}
-                            onClick={() => handleActionSubmit(r._id, actionState[r._id].mode === 'approve' ? 'approved' : 'rejected')}
+                            className={`request-action-btn ${actionState[request._id].mode === 'approve' ? 'approve' : 'reject'}`}
+                            onClick={() => handleActionSubmit(request._id, actionState[request._id].mode === 'approve' ? 'approved' : 'rejected')}
                             disabled={loading}
                           >
                             {loading ? (
                               <i className="fas fa-spinner fa-spin"></i>
                             ) : (
-                              actionState[r._id].mode === 'approve' ? 'Approve' : 'Reject'
+                              actionState[request._id].mode === 'approve' ? 'Approve' : 'Reject'
                             )}
                           </button>
                           <button 
                             type="button" 
                             className="request-action-btn cancel"
-                            onClick={() => handleActionCancel(r._id)}
+                            onClick={() => handleActionCancel(request._id)}
                             disabled={loading}
                           >
                             Cancel
@@ -247,7 +242,7 @@ function AdminRequests() {
                         <div className="request-action-buttons">
                           <button 
                             className="request-action-btn approve"
-                            onClick={() => handleActionClick(r._id, 'approve')}
+                            onClick={() => handleActionClick(request._id, 'approve')}
                             disabled={loading}
                           >
                             <i className="fas fa-check"></i>
@@ -255,7 +250,7 @@ function AdminRequests() {
                           </button>
                           <button 
                             className="request-action-btn reject"
-                            onClick={() => handleActionClick(r._id, 'reject')}
+                            onClick={() => handleActionClick(request._id, 'reject')}
                             disabled={loading}
                           >
                             <i className="fas fa-times"></i>
@@ -265,7 +260,7 @@ function AdminRequests() {
                       )}
                     </div>
                   )}
-                </Card>
+                </div>
               ))}
             </div>
           )}

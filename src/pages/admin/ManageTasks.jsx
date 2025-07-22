@@ -11,6 +11,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Toast from '../../components/common/Toast.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import Skeleton from '@mui/material/Skeleton';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -179,6 +180,7 @@ const TaskDialog = ({ open, onClose, onSubmit, initialValues, editing, loading, 
 const ManageTasks = () => {
   const { id } = useParams();
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
@@ -206,6 +208,7 @@ const ManageTasks = () => {
 
   // Fetch tasks
   const fetchTasks = async () => {
+    setLoading(true);
     try {
       const res = await api.get('/tasks', {
         headers: { Authorization: `Bearer ${token}` },
@@ -214,6 +217,7 @@ const ManageTasks = () => {
     } catch (err) {
       console.error('Error fetching tasks:', err);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -337,7 +341,20 @@ const ManageTasks = () => {
             </button>
           </div>
 
-          {tasks.length === 0 ? (
+          {loading ? (
+            <div className="tasks-list-container">
+              {[1,2,3,4,5].map(i => (
+                <div className="task-card" key={i}>
+                  <div className="task-header">
+                    <Skeleton variant="text" width="60%" height={24} />
+                    <Skeleton variant="text" width="30%" height={18} />
+                  </div>
+                  <Skeleton variant="text" width="80%" height={18} />
+                  <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                </div>
+              ))}
+            </div>
+          ) : tasks.length === 0 ? (
             <Card>
               <div className="task-empty-state">
                 <span className="task-empty-icon"><i className="fas fa-tasks"></i></span>

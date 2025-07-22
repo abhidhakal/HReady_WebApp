@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import './styles/ManageAnnouncements.css';
+import Skeleton from '@mui/material/Skeleton';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>
@@ -144,7 +145,7 @@ const AnnouncementDialog = ({ open, onClose, onSubmit, initialData, editing, loa
 const ManageAnnouncements = () => {
   const { id } = useParams();
   const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -286,47 +287,48 @@ const ManageAnnouncements = () => {
             </div>
           )}
 
-          {loading && (
-            <div className="announcements-loading-container">
-              {[1, 2, 3, 4].map(i => (
-                <Card key={i}>
-                  <LoadingShimmer />
-                </Card>
+          {loading ? (
+            <div className="announcements-list-container">
+              {[1,2,3,4].map(i => (
+                <div className="announcement-card" key={i}>
+                  <div className="announcement-header">
+                    <Skeleton variant="text" width="60%" height={24} />
+                    <Skeleton variant="text" width="30%" height={18} />
+                  </div>
+                  <Skeleton variant="text" width="80%" height={18} />
+                  <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                </div>
               ))}
             </div>
-          )}
-
-          {!loading && announcements.length === 0 && !error && (
+          ) : announcements.length === 0 ? (
             <div className="announcements-empty-state">
               <i className="fas fa-bullhorn"></i>
               <p>No announcements yet!</p>
             </div>
-          )}
-
-          {!loading && announcements.length > 0 && (
+          ) : (
             <div className="announcements-list-container">
-              {announcements.map((announcement) => {
-                const isLong = announcement.message.length > 120;
+              {announcements.map(ann => {
+                const isLong = ann.message && ann.message.length > 120;
                 return (
-                  <Card key={announcement._id}>
+                  <div className="announcement-card" key={ann._id}>
                     <div className="announcement-card-header">
                       <div className="announcement-icon">
                         <i className="fas fa-bullhorn"></i>
                       </div>
                       <div className="announcement-title">
-                        {announcement.title}
+                        {ann.title}
                       </div>
                       <div className="announcement-actions">
                         <button
                           className="announcement-action-btn edit"
-                          onClick={() => handleEdit(announcement)}
+                          onClick={() => handleEdit(ann)}
                           title="Edit"
                         >
                           <i className="fas fa-edit"></i>
                         </button>
                         <button
                           className="announcement-action-btn delete"
-                          onClick={() => handleDelete(announcement._id)}
+                          onClick={() => handleDelete(ann._id)}
                           title="Delete"
                         >
                           <i className="fas fa-trash"></i>
@@ -337,13 +339,13 @@ const ManageAnnouncements = () => {
                     <div className="announcement-chips">
                       <span 
                         className="announcement-chip audience"
-                        style={{ backgroundColor: getAudienceColor(announcement.audience) }}
+                        style={{ backgroundColor: getAudienceColor(ann.audience) }}
                       >
-                        {announcement.audience}
+                        {ann.audience}
                       </span>
-                      {announcement.createdAt && (
+                      {ann.createdAt && (
                         <span className="announcement-chip date">
-                          {new Date(announcement.createdAt).toLocaleDateString()}
+                          {new Date(ann.createdAt).toLocaleDateString()}
                         </span>
                       )}
                     </div>
@@ -351,21 +353,21 @@ const ManageAnnouncements = () => {
                     <div className="announcement-message">
                       {isLong ? (
                         <>
-                          <p>{announcement.message.substring(0, 120)}...</p>
+                          <p>{ann.message.substring(0, 120)}...</p>
                           <button 
                             className="read-more-btn"
                             onClick={() => {
-                              alert(`${announcement.title}\n\n${announcement.message}`);
+                              alert(`${ann.title}\n\n${ann.message}`);
                             }}
                           >
                             Read More
                           </button>
                         </>
                       ) : (
-                        <p>{announcement.message}</p>
+                        <p>{ann.message}</p>
                       )}
                     </div>
-                  </Card>
+                  </div>
                 );
               })}
             </div>

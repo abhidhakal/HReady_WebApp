@@ -5,6 +5,7 @@ import api from '../../api/axios';
 import '/src/pages/admin/styles/ManageEmployees.css';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import Skeleton from '@mui/material/Skeleton';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -197,6 +198,7 @@ const EmployeeDialog = ({ open, onClose, onSubmit, initialValues, editing, loadi
 const ManageEmployees = () => {
   const { id } = useParams();
   const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
@@ -206,6 +208,7 @@ const ManageEmployees = () => {
   const navigate = useNavigate();
 
   const fetchEmployees = async () => {
+    setLoading(true);
     try {
       const res = await api.get('/employees', {
         headers: { Authorization: `Bearer ${token}` },
@@ -214,6 +217,7 @@ const ManageEmployees = () => {
     } catch (err) {
       console.error('Error fetching employees:', err);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -310,7 +314,22 @@ const ManageEmployees = () => {
             <button onClick={handleAdd} className="add-employee-btn"><i className="fas fa-user-plus"></i>Add Employee</button>
           </div>
 
-          {employees.length === 0 ? (
+          {loading ? (
+            <div className="employees-list-container">
+              {[1,2,3,4,5].map(i => (
+                <Card key={i}>
+                  <div className="employee-list-item">
+                    <Skeleton variant="circular" width={40} height={40} style={{ marginRight: 16 }} />
+                    <div style={{ flex: 1 }}>
+                      <Skeleton variant="text" width="60%" height={24} />
+                      <Skeleton variant="text" width="40%" height={18} />
+                      <Skeleton variant="text" width="80%" height={18} />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : employees.length === 0 ? (
             <div className="employees-empty-state">
               <span className="employees-empty-icon"><i className="fas fa-users-slash"></i></span>
               No employees found.

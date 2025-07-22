@@ -8,6 +8,7 @@ import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
 // import logo from '../../assets/primary_icon.webp';
 import { secureLogout } from '../../utils/authUtils';
 import { getApiBaseUrl } from '../../utils/env';
+import Skeleton from '@mui/material/Skeleton';
 
 function AdminDashboard() {
   const { id } = useParams();
@@ -27,6 +28,7 @@ function AdminDashboard() {
   });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
@@ -99,6 +101,7 @@ function AdminDashboard() {
 
   useEffect(() => {
     const fetchEmployeesAndOverview = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem('token');
         const res = await api.get('/employees', {
@@ -120,6 +123,7 @@ function AdminDashboard() {
       } catch (err) {
         console.error('Error fetching employees:', err);
       }
+      setLoading(false);
     };
 
     fetchEmployeesAndOverview();
@@ -228,57 +232,67 @@ function AdminDashboard() {
             </div>
           </div>
 
-          <div className="info-cards">
-            <div className="info-card overview-card">
-              <h2>Today's Overview</h2>
-              <div className="overview-content">
-                <div className="overview-item">
-                  <i className="fas fa-user-check"></i>
-                  <span className="overview-label">Active:</span>
-                  <span className="overview-value">{todayOverview.active}</span>
+          <div className="dashboard-overview">
+            {loading ? (
+              <div className="dashboard-stats-skeletons">
+                {[1,2,3].map(i => (
+                  <Skeleton key={i} variant="rectangular" width={220} height={120} style={{ margin: 16 }} />
+                ))}
+              </div>
+            ) : (
+              <div className="dashboard-stats">
+                <div className="info-card overview-card">
+                  <h2>Today's Overview</h2>
+                  <div className="overview-content">
+                    <div className="overview-item">
+                      <i className="fas fa-user-check"></i>
+                      <span className="overview-label">Active:</span>
+                      <span className="overview-value">{todayOverview.active}</span>
+                    </div>
+                    <div className="overview-item">
+                      <i className="fas fa-umbrella-beach"></i>
+                      <span className="overview-label">On Leave:</span>
+                      <span className="overview-value">{todayOverview.onLeave}</span>
+                    </div>
+                    <div className="overview-item">
+                      <i className="fas fa-user-times"></i>
+                      <span className="overview-label">Absent:</span>
+                      <span className="overview-value">{todayOverview.absent}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="overview-item">
-                  <i className="fas fa-umbrella-beach"></i>
-                  <span className="overview-label">On Leave:</span>
-                  <span className="overview-value">{todayOverview.onLeave}</span>
+                <div className="info-card employees-card">
+                  <h2>Total Employees</h2>
+                  <div className="employees-content">
+                    <div className="employees-header">
+                      <i className="fas fa-users"></i>
+                      <span className="employees-count">{employeeCount}</span>
+                    </div>
+                    <button 
+                      className="view-employees-btn"
+                      onClick={() => navigate(`/admin/${id}/employees`)}
+                    >
+                      Manage
+                    </button>
+                  </div>
                 </div>
-                <div className="overview-item">
-                  <i className="fas fa-user-times"></i>
-                  <span className="overview-label">Absent:</span>
-                  <span className="overview-value">{todayOverview.absent}</span>
+                <div className="info-card leave-requests-card">
+                  <h2>Pending Leave Requests</h2>
+                  <div className="leave-requests-content">
+                    <div className="leave-requests-header">
+                      <i className="fas fa-clock"></i>
+                      <span className="leave-requests-count">{pendingLeaveRequests}</span>
+                    </div>
+                    <button 
+                      className="review-leave-btn"
+                      onClick={() => navigate(`/admin/${id}/leaves`)}
+                    >
+                      Review
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="info-card employees-card">
-              <h2>Total Employees</h2>
-              <div className="employees-content">
-                <div className="employees-header">
-                  <i className="fas fa-users"></i>
-                  <span className="employees-count">{employeeCount}</span>
-                </div>
-                <button 
-                  className="view-employees-btn"
-                  onClick={() => navigate(`/admin/${id}/employees`)}
-                >
-                  Manage
-                </button>
-              </div>
-            </div>
-            <div className="info-card leave-requests-card">
-              <h2>Pending Leave Requests</h2>
-              <div className="leave-requests-content">
-                <div className="leave-requests-header">
-                  <i className="fas fa-clock"></i>
-                  <span className="leave-requests-count">{pendingLeaveRequests}</span>
-                </div>
-                <button 
-                  className="review-leave-btn"
-                  onClick={() => navigate(`/admin/${id}/leaves`)}
-                >
-                  Review
-                </button>
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="other-section">

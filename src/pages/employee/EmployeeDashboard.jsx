@@ -6,6 +6,7 @@ import api from '../../api/axios';
 import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
 import { secureLogout } from '../../utils/authUtils';
 import { getApiBaseUrl } from '../../utils/env';
+import Skeleton from '@mui/material/Skeleton';
 
 function EmployeeDashboard() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ function EmployeeDashboard() {
   const [tasks, setTasks] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const resolveProfilePicture = (picture) => {
@@ -40,6 +42,7 @@ function EmployeeDashboard() {
   };
 
   useEffect(() => {
+    setLoading(true);
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
@@ -84,8 +87,7 @@ function EmployeeDashboard() {
       }
     };
 
-    fetchEmployee();
-    fetchAttendance();
+    Promise.all([fetchEmployee(), fetchAttendance()]).finally(() => setLoading(false));
   }, [navigate]);
 
   useEffect(() => {
@@ -163,185 +165,195 @@ function EmployeeDashboard() {
         </nav>
 
         <div className="main-content">
-          <div className="welcome-banner">
-            <div className="banner-left">
-              <div className="profile-picture">
-                <img
-                  src={resolveProfilePicture(profilePicture)}
-                  alt="Profile"
-                />
+          {loading ? (
+            <div className="dashboard-skeletons">
+              {[1,2,3].map(i => (
+                <Skeleton key={i} variant="rectangular" width={320} height={160} style={{ margin: 16 }} />
+              ))}
+            </div>
+          ) : (
+            <div className="dashboard-content">
+              <div className="welcome-banner">
+                <div className="banner-left">
+                  <div className="profile-picture">
+                    <img
+                      src={resolveProfilePicture(profilePicture)}
+                      alt="Profile"
+                    />
+                  </div>
+                  <h2 className="employee-name">Welcome, {name}</h2>
+                </div>
+                <div className="banner-middle">
+                  <p>
+                    Your Today's Attendance:{" "}
+                    <span className={
+                      attendanceStatus === 'Checked In' || attendanceStatus === 'Checked Out'
+                        ? 'status-done'
+                        : 'status-not-done'
+                    }>
+                      {attendanceStatus}
+                    </span>
+                  </p>
+                  <small
+                    className="go-attendance-label"
+                    onClick={() => navigate(`/employee/${id}/attendance`)}
+                  >
+                    click here to complete attendance
+                  </small>
+                </div>
+                <div className="banner-right">
+                  <button
+                    className="edit-profile"
+                    onClick={() => navigate(`/employee/${id}/profile`)}
+                  >
+                    Edit Employee Profile
+                  </button>
+                </div>
               </div>
-              <h2 className="employee-name">Welcome, {name}</h2>
-            </div>
-            <div className="banner-middle">
-              <p>
-                Your Today's Attendance:{" "}
-                <span className={
-                  attendanceStatus === 'Checked In' || attendanceStatus === 'Checked Out'
-                    ? 'status-done'
-                    : 'status-not-done'
-                }>
-                  {attendanceStatus}
-                </span>
-              </p>
-              <small
-                className="go-attendance-label"
-                onClick={() => navigate(`/employee/${id}/attendance`)}
-              >
-                click here to complete attendance
-              </small>
-            </div>
-            <div className="banner-right">
-              <button
-                className="edit-profile"
-                onClick={() => navigate(`/employee/${id}/profile`)}
-              >
-                Edit Employee Profile
-              </button>
-            </div>
-          </div>
 
-          <div className="info-cards">
-            <div className="info-card position-card">
-              <h2>Position</h2>
-              <div className="position-content">
-                <div className="position-header">
-                  <i className="fas fa-briefcase"></i>
-                  <span className="position-value">{position}</span>
-                </div>
-              </div>
-            </div>
-            <div className="info-card payroll-card-nav">
-              <h2>My Payroll</h2>
-              <div className="payroll-content-nav">
-                <button 
-                  className="view-payroll-btn"
-                  onClick={() => navigate(`/employee/${id}/payroll`)}
-                >
-                  Go to Payroll
-                </button>
-              </div>
-            </div>
-            <div className="info-card leaves-card">
-              <h2>Leave Days Left</h2>
-              <div className="leaves-content">
-                <div className="leaves-header">
-                  <i className="fas fa-calendar-alt"></i>
-                  <span className="leaves-count">15</span>
-                </div>
-                <button 
-                  className="request-leave-btn"
-                  onClick={() => navigate(`/employee/${id}/leave`)}
-                >
-                  Request Leave
-                </button>
-              </div>
-            </div>
-            <div className="info-card pending-tasks-card">
-              <h2>Pending Tasks</h2>
-              <div className="pending-tasks-content">
-                <div className="pending-tasks-header">
-                  <i className="fas fa-exclamation-triangle"></i>
-                  <span className="pending-count">{pendingCount}</span>
-                  {totalTasks > 0 && (
-                    <div className="progress-container">
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill" 
-                          style={{ width: `${progressValue * 100}%` }}
-                        ></div>
-                      </div>
+              <div className="info-cards">
+                <div className="info-card position-card">
+                  <h2>Position</h2>
+                  <div className="position-content">
+                    <div className="position-header">
+                      <i className="fas fa-briefcase"></i>
+                      <span className="position-value">{position}</span>
                     </div>
-                  )}
+                  </div>
                 </div>
-                {nextTask && (
-                  <div className="next-task-info">
-                    <p className="next-task-title">Title: {nextTask.title}</p>
-                    {nextTask.dueDate && (
-                      <p className="next-task-due">Due: {formatDate(nextTask.dueDate)}</p>
+                <div className="info-card payroll-card-nav">
+                  <h2>My Payroll</h2>
+                  <div className="payroll-content-nav">
+                    <button 
+                      className="view-payroll-btn"
+                      onClick={() => navigate(`/employee/${id}/payroll`)}
+                    >
+                      Go to Payroll
+                    </button>
+                  </div>
+                </div>
+                <div className="info-card leaves-card">
+                  <h2>Leave Days Left</h2>
+                  <div className="leaves-content">
+                    <div className="leaves-header">
+                      <i className="fas fa-calendar-alt"></i>
+                      <span className="leaves-count">15</span>
+                    </div>
+                    <button 
+                      className="request-leave-btn"
+                      onClick={() => navigate(`/employee/${id}/leave`)}
+                    >
+                      Request Leave
+                    </button>
+                  </div>
+                </div>
+                <div className="info-card pending-tasks-card">
+                  <h2>Pending Tasks</h2>
+                  <div className="pending-tasks-content">
+                    <div className="pending-tasks-header">
+                      <i className="fas fa-exclamation-triangle"></i>
+                      <span className="pending-count">{pendingCount}</span>
+                      {totalTasks > 0 && (
+                        <div className="progress-container">
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill" 
+                              style={{ width: `${progressValue * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {nextTask && (
+                      <div className="next-task-info">
+                        <p className="next-task-title">Title: {nextTask.title}</p>
+                        {nextTask.dueDate && (
+                          <p className="next-task-due">Due: {formatDate(nextTask.dueDate)}</p>
+                        )}
+                      </div>
+                    )}
+                    <button 
+                      className="view-tasks-btn"
+                      onClick={() => navigate(`/employee/${id}/tasks`)}
+                    >
+                      View All
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="other-section">
+                <div className="task-section">
+                  <div className="task-header">
+                    <h2>Task List</h2>
+                    <button
+                      className="edit-task"
+                      onClick={() => navigate(`/employee/${id}/tasks`)}
+                    >
+                      View Tasks
+                    </button>
+                  </div>
+                  <table className="task-table">
+                    <tbody>
+                      {tasks.length > 0 ? (
+                        tasks.slice(0, 3).map((task) => (
+                          <tr key={task._id}>
+                            <td><strong>Task Name:</strong> {task.title}</td>
+                            <td>
+                              <span className={
+                                `status-label ${
+                                  task.status === 'Pending'
+                                    ? 'pending'
+                                    : task.status === 'In Progress'
+                                    ? 'doing'
+                                    : 'completed'
+                                }`
+                              }>
+                                {task.status}
+                              </span>
+                            </td>
+                            <td>
+                              <a onClick={() => navigate(`/employee/${id}/tasks`)}>Details</a>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" style={{ textAlign: 'center', color: '#666' }}>No tasks assigned to you.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="announcement-section">
+                  <div className="announcement-header">
+                    <h2>Recent Announcements</h2>
+                    <button
+                      className="edit-announcement"
+                      onClick={() => navigate(`/employee/${id}/announcements`)}
+                    >
+                      View All
+                    </button>
+                  </div>
+                  <div className="announcement-box-cards scrollable-announcements">
+                    {announcements.length > 0 ? (
+                      announcements.map((ann) => (
+                        <div className="announcement-card" key={ann._id}>
+                          <h3>{ann.title}</h3>
+                          <p>{ann.message}</p>
+                          <small>
+                            Posted by: <strong>{ann.postedBy || 'Admin'}</strong> | {new Date(ann.createdAt).toLocaleString()}
+                          </small>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No announcements available.</p>
                     )}
                   </div>
-                )}
-                <button 
-                  className="view-tasks-btn"
-                  onClick={() => navigate(`/employee/${id}/tasks`)}
-                >
-                  View All
-                </button>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="other-section">
-            <div className="task-section">
-              <div className="task-header">
-                <h2>Task List</h2>
-                <button
-                  className="edit-task"
-                  onClick={() => navigate(`/employee/${id}/tasks`)}
-                >
-                  View Tasks
-                </button>
-              </div>
-              <table className="task-table">
-                <tbody>
-                  {tasks.length > 0 ? (
-                    tasks.slice(0, 3).map((task) => (
-                      <tr key={task._id}>
-                        <td><strong>Task Name:</strong> {task.title}</td>
-                        <td>
-                          <span className={
-                            `status-label ${
-                              task.status === 'Pending'
-                                ? 'pending'
-                                : task.status === 'In Progress'
-                                ? 'doing'
-                                : 'completed'
-                            }`
-                          }>
-                            {task.status}
-                          </span>
-                        </td>
-                        <td>
-                          <a onClick={() => navigate(`/employee/${id}/tasks`)}>Details</a>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="3" style={{ textAlign: 'center', color: '#666' }}>No tasks assigned to you.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="announcement-section">
-              <div className="announcement-header">
-                <h2>Recent Announcements</h2>
-                <button
-                  className="edit-announcement"
-                  onClick={() => navigate(`/employee/${id}/announcements`)}
-                >
-                  View All
-                </button>
-              </div>
-              <div className="announcement-box-cards scrollable-announcements">
-                {announcements.length > 0 ? (
-                  announcements.map((ann) => (
-                    <div className="announcement-card" key={ann._id}>
-                      <h3>{ann.title}</h3>
-                      <p>{ann.message}</p>
-                      <small>
-                        Posted by: <strong>{ann.postedBy || 'Admin'}</strong> | {new Date(ann.createdAt).toLocaleString()}
-                      </small>
-                    </div>
-                  ))
-                ) : (
-                  <p>No announcements available.</p>
-                )}
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 

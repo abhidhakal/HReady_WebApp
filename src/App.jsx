@@ -23,10 +23,10 @@ import AdminProfile from './pages/admin/AdminProfile.jsx';
 import EmployeeProfile from './pages/employee/EmployeeProfile.jsx';
 import ManageTasks from './pages/admin/ManageTasks.jsx';
 import EmployeeTasks from './pages/employee/EmployeeTasks.jsx';
-import EmployeeLeaves from './pages/employee/EmployeeLEaves.jsx';
 import AdminLeaves from './pages/admin/AdminLeaves.jsx';
 import EmployeeRequest from './pages/employee/EmployeeRequest.jsx';
 import AdminRequests from './pages/admin/AdminRequests.jsx';
+import EmployeeLeaves from './pages/employee/EmployeeLeave.jsx';
 
 function App() {
   return (
