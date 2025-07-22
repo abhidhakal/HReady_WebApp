@@ -3,21 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import './styles/EmployeeTasks.css';
+import Skeleton from '@mui/material/Skeleton';
 // import logo from '../../assets/primary_icon.webp';
 
 const Card = ({ children }) => (
   <div className="task-card">{children}</div>
-);
-
-const LoadingShimmer = () => (
-  <div className="task-loading-shimmer">
-    <div className="shimmer-icon"></div>
-    <div className="shimmer-content">
-      <div className="shimmer-title"></div>
-      <div className="shimmer-description"></div>
-      <div className="shimmer-date"></div>
-    </div>
-  </div>
 );
 
 const StatusChip = ({ status, onStatusChange, taskId }) => {
@@ -181,7 +171,12 @@ const EmployeeTasks = () => {
             <div className="tasks-loading-container">
               {[1, 2, 3, 4, 5].map(i => (
                 <Card key={i}>
-                  <LoadingShimmer />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <Skeleton variant="text" width="60%" height={24} />
+                    <Skeleton variant="text" width="40%" height={18} />
+                    <Skeleton variant="text" width="80%" height={18} />
+                    <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                  </div>
                 </Card>
               ))}
             </div>

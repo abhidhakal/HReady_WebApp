@@ -5,6 +5,7 @@ import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import '/src/pages/employee/styles/EmployeeAttendance.css';
 // import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import Skeleton from '@mui/material/Skeleton';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -131,56 +132,67 @@ const EmployeeAttendance = () => {
 
         <div className="main-content attendance-page" style={{ maxWidth: 600, margin: '0 auto' }}>
           <h2 style={{ marginBottom: 24 }}>My Attendance</h2>
-          <Card>
-            <div className="attendance-header">
-              <span className="attendance-header-title">Today</span>
-              <StatusChip status={todayStatus} />
-            </div>
-            {attendanceRecord ? (
-              <div className="attendance-details">
-                <div className="attendance-date">
-                  <span className="attendance-date-icon"><i className="fas fa-calendar-alt"></i></span>
-                  <span className="attendance-date-text">{new Date(attendanceRecord.date).toLocaleDateString()}</span>
-                </div>
-                <div className="attendance-check-in">
-                  <span className="attendance-check-in-icon"><i className="fas fa-sign-in-alt"></i></span>
-                  <span className="attendance-check-in-label">Check In:</span>&nbsp;
-                  <span className="attendance-check-in-time">{attendanceRecord.check_in_time ? new Date(attendanceRecord.check_in_time).toLocaleTimeString() : '-'}</span>
-                </div>
-                <div className="attendance-check-out">
-                  <span className="attendance-check-out-icon"><i className="fas fa-sign-out-alt"></i></span>
-                  <span className="attendance-check-out-label">Check Out:</span>&nbsp;
-                  <span className="attendance-check-out-time">{attendanceRecord.check_out_time ? new Date(attendanceRecord.check_out_time).toLocaleTimeString() : '-'}</span>
-                </div>
-                <div className="attendance-total-hours">
-                  <span className="attendance-total-hours-icon"><i className="fas fa-clock"></i></span>
-                  <span className="attendance-total-hours-label">Total Hours:</span>&nbsp;
-                  <span className="attendance-total-hours-value">{attendanceRecord.total_hours ? attendanceRecord.total_hours.toFixed(2) : '-'}</span>
-                </div>
+          {!attendanceRecord ? (
+            <Card>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Skeleton variant="text" width="60%" height={24} />
+                <Skeleton variant="text" width="40%" height={18} />
+                <Skeleton variant="text" width="80%" height={18} />
+                <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
               </div>
-            ) : (
-              <div className="attendance-empty-state">
-                <span className="attendance-empty-state-icon"><i className="fas fa-info-circle"></i></span>
-                No record for today.
+            </Card>
+          ) : (
+            <Card>
+              <div className="attendance-header">
+                <span className="attendance-header-title">Today</span>
+                <StatusChip status={todayStatus} />
               </div>
-            )}
-            <div className="attendance-actions">
-              <button
-                className={`attendance-btn ${todayStatus === 'Not Checked In' ? 'checked-in-btn' : ''}`}
-                onClick={handleCheckIn}
-                disabled={todayStatus !== 'Not Checked In'}
-              >
-                <i className="fas fa-sign-in-alt" style={{ marginRight: 8 }}></i>Check In
-              </button>
-              <button
-                className={`attendance-btn ${todayStatus === 'Checked In' ? 'checked-in-btn' : ''}`}
-                onClick={handleCheckOut}
-                disabled={todayStatus !== 'Checked In'}
-              >
-                <i className="fas fa-sign-out-alt" style={{ marginRight: 8 }}></i>Check Out
-              </button>
-            </div>
-          </Card>
+              {attendanceRecord ? (
+                <div className="attendance-details">
+                  <div className="attendance-date">
+                    <span className="attendance-date-icon"><i className="fas fa-calendar-alt"></i></span>
+                    <span className="attendance-date-text">{new Date(attendanceRecord.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="attendance-check-in">
+                    <span className="attendance-check-in-icon"><i className="fas fa-sign-in-alt"></i></span>
+                    <span className="attendance-check-in-label">Check In:</span>&nbsp;
+                    <span className="attendance-check-in-time">{attendanceRecord.check_in_time ? new Date(attendanceRecord.check_in_time).toLocaleTimeString() : '-'}</span>
+                  </div>
+                  <div className="attendance-check-out">
+                    <span className="attendance-check-out-icon"><i className="fas fa-sign-out-alt"></i></span>
+                    <span className="attendance-check-out-label">Check Out:</span>&nbsp;
+                    <span className="attendance-check-out-time">{attendanceRecord.check_out_time ? new Date(attendanceRecord.check_out_time).toLocaleTimeString() : '-'}</span>
+                  </div>
+                  <div className="attendance-total-hours">
+                    <span className="attendance-total-hours-icon"><i className="fas fa-clock"></i></span>
+                    <span className="attendance-total-hours-label">Total Hours:</span>&nbsp;
+                    <span className="attendance-total-hours-value">{attendanceRecord.total_hours ? attendanceRecord.total_hours.toFixed(2) : '-'}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="attendance-empty-state">
+                  <span className="attendance-empty-state-icon"><i className="fas fa-info-circle"></i></span>
+                  No record for today.
+                </div>
+              )}
+              <div className="attendance-actions">
+                <button
+                  className={`attendance-btn ${todayStatus === 'Not Checked In' ? 'checked-in-btn' : ''}`}
+                  onClick={handleCheckIn}
+                  disabled={todayStatus !== 'Not Checked In'}
+                >
+                  <i className="fas fa-sign-in-alt" style={{ marginRight: 8 }}></i>Check In
+                </button>
+                <button
+                  className={`attendance-btn ${todayStatus === 'Checked In' ? 'checked-in-btn' : ''}`}
+                  onClick={handleCheckOut}
+                  disabled={todayStatus !== 'Checked In'}
+                >
+                  <i className="fas fa-sign-out-alt" style={{ marginRight: 8 }}></i>Check Out
+                </button>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>

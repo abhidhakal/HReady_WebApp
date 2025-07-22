@@ -7,6 +7,7 @@ import api from '../../api/axios';
 import Toast from '../../components/common/Toast';
 import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
 import { secureLogout } from '../../utils/authUtils';
+import Skeleton from '@mui/material/Skeleton';
 
 // Custom currency formatter for Rs.
 const formatCurrency = (amount, currency = 'Rs.') => {
@@ -227,7 +228,15 @@ const EmployeePayroll = () => {
       <div className="full-screen">
         <DashboardHeader onToggleSidebar={toggleSidebar} />
         <div className="dashboard-container">
-          <div className="loading-spinner">Loading...</div>
+          <div style={{ margin: '32px 0' }}>
+            {[1,2,3].map(i => (
+              <div key={i} style={{ marginBottom: 24 }}>
+                <Skeleton variant="rectangular" width="100%" height={80} style={{ marginBottom: 16 }} />
+                <Skeleton variant="text" width="60%" height={32} />
+                <Skeleton variant="text" width="40%" height={24} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

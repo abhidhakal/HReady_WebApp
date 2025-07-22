@@ -5,20 +5,10 @@ import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import './styles/AdminProfile.css';
 import Toast from '../../components/common/Toast.jsx';
 import { getApiBaseUrl } from '../../utils/env';
+import Skeleton from '@mui/material/Skeleton';
 
 const Card = ({ children }) => (
   <div className="profile-card">{children}</div>
-);
-
-const LoadingShimmer = () => (
-  <div className="profile-loading-shimmer">
-    <div className="shimmer-avatar"></div>
-    <div className="shimmer-info">
-      <div className="shimmer-name"></div>
-      <div className="shimmer-email"></div>
-      <div className="shimmer-role"></div>
-    </div>
-  </div>
 );
 
 const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
@@ -316,7 +306,18 @@ const AdminProfile = () => {
           {loading && !editing ? (
             <div className="profile-loading-container">
               <Card>
-                <LoadingShimmer />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                  <Skeleton variant="circular" width={80} height={80} />
+                  <div>
+                    <Skeleton variant="text" width={180} height={32} />
+                    <Skeleton variant="text" width={220} height={24} />
+                    <Skeleton variant="text" width={120} height={20} />
+                  </div>
+                </div>
+                <div style={{ marginTop: 32 }}>
+                  <Skeleton variant="rectangular" width="100%" height={60} style={{ marginBottom: 16 }} />
+                  <Skeleton variant="rectangular" width="100%" height={40} />
+                </div>
               </Card>
             </div>
           ) : (

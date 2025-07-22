@@ -5,6 +5,7 @@ import '/src/pages/admin/styles/AdminAttendance.css';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 // import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import Skeleton from '@mui/material/Skeleton';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -153,6 +154,21 @@ const AdminAttendance = () => {
 
         <div className="main-content attendance-page">
           <h2 className="attendance-page-title">Attendance Management</h2>
+
+          {attendanceRecords.length === 0 && !myRecord ? (
+            <div style={{ margin: '32px 0' }}>
+              {[1,2,3].map(i => (
+                <Card key={i}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <Skeleton variant="text" width="60%" height={24} />
+                    <Skeleton variant="text" width="40%" height={18} />
+                    <Skeleton variant="text" width="80%" height={18} />
+                    <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : null}
 
           <Card>
             <div className="attendance-header">

@@ -3,22 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import './styles/EmployeeAnnouncements.css';
+import Skeleton from '@mui/material/Skeleton';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>
-);
-
-const LoadingShimmer = () => (
-  <div className="announcement-loading-shimmer">
-    <div className="shimmer-header">
-      <div className="shimmer-icon"></div>
-      <div className="shimmer-content">
-        <div className="shimmer-title"></div>
-        <div className="shimmer-meta"></div>
-      </div>
-    </div>
-    <div className="shimmer-message"></div>
-  </div>
 );
 
 const EmployeeAnnouncements = () => {
@@ -107,7 +95,12 @@ const EmployeeAnnouncements = () => {
             <div className="announcements-loading-container">
               {[1, 2, 3, 4].map(i => (
                 <Card key={i}>
-                  <LoadingShimmer />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <Skeleton variant="text" width="60%" height={24} />
+                    <Skeleton variant="text" width="30%" height={18} />
+                    <Skeleton variant="text" width="80%" height={18} />
+                    <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                  </div>
                 </Card>
               ))}
             </div>
