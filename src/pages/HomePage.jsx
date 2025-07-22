@@ -24,22 +24,22 @@ function HomePage() {
 
   const features = [
     {
-      icon: "/src/assets/employee_tracking.png",
+      icon: "/assets/images/employee_tracking.png",
       title: "Employee Management",
       description: "Comprehensive employee database with role management and performance tracking"
     },
     {
-      icon: "/src/assets/attendance_tracking.png", 
+      icon: "/assets/images/attendance_tracking.png", 
       title: "Attendance Tracking",
       description: "Automated time tracking with geolocation and flexible scheduling"
     },
     {
-      icon: "/src/assets/payroll_automation.png",
+      icon: "/assets/images/payroll_automation.png",
       title: "Payroll Automation", 
       description: "Seamless payroll processing with tax calculations and direct deposits"
     },
     {
-      icon: "/src/assets/leave_and_tasks.png",
+      icon: "/assets/images/leave_and_tasks.png",
       title: "Leave & Tasks Management",
       description: "Streamlined leave requests and task assignment with approval workflows"
     }
@@ -89,7 +89,7 @@ function HomePage() {
           </div>
           <div className="home-hero-image">
             <img 
-              src="src/assets/hero-illustration.png"
+              src="/assets/images/hero-illustration.png"
               alt="HR Management System illustration showing connected employees and management tools"
               loading="eager"
               style={{ transform: `translateY(${scrollY * 0.1}px)` }}
@@ -176,7 +176,7 @@ function HomePage() {
           </div>
           <div className="home-how-image">
             <img 
-              src="/src/assets/how-it-works.png"
+              src="/assets/images/how-it-works.png"
               alt="Step-by-step process illustration showing how HReady works"
               loading="lazy"
             />

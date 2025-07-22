@@ -160,7 +160,7 @@ function GetStarted() {
           </div>
           <div className="hero-image">
             <img 
-              src="/src/assets/get-started-hero.png" 
+              src="/assets/images/get-started-hero.png" 
               alt="HReady setup process illustration"
               loading="lazy"
             />

@@ -175,7 +175,7 @@ function Login() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <img className="logo" src="/src/assets/primary_icon.webp" alt="HReady" />
+            <img className="logo" src="/assets/images/primary_icon.webp" alt="HReady" />
             <h1>Welcome Back</h1>
             <p>Sign in to your HReady account to continue managing your workforce efficiently.</p>
           </div>

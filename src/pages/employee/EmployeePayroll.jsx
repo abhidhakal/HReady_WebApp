@@ -6,7 +6,6 @@ import '../../pages/admin/styles/PayrollDashboard.css';
 import api from '../../api/axios';
 import Toast from '../../components/common/Toast';
 import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
-import logo from '../../assets/primary_icon.webp';
 import { secureLogout } from '../../utils/authUtils';
 
 // Custom currency formatter for Rs.
@@ -54,9 +53,10 @@ const EmployeePayroll = () => {
   const navigate = useNavigate();
 
   const resolveProfilePicture = (picture) => {
-    if (!picture) return '../../assets/profile.svg';
+    if (!picture) return '/assets/images/profile.svg';
+    if (picture.startsWith('/')) return `${getApiBaseUrl()}${picture}`;
     if (picture.startsWith('http')) return picture;
-    return '../../assets/profile.svg';
+    return '/assets/images/profile.svg';
   };
 
   const handleLogoutClick = () => {
@@ -245,7 +245,7 @@ const EmployeePayroll = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={logo} alt="Logo" /></li>
+          <li><img src="/assets/images/primary_icon.webp" alt="Logo" /></li>
             <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/payroll`)}>My Payroll</a></li>

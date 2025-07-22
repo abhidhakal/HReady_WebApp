@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
-import logo from '../../assets/primary_icon.webp';
 import './styles/ManageAnnouncements.css';
 
 const Card = ({ children }) => (
@@ -244,7 +243,7 @@ const ManageAnnouncements = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={logo} alt="Logo" /></li>
+            <li><img src="/assets/images/primary_icon.webp" alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>

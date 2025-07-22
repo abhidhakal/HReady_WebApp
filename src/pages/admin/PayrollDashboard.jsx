@@ -9,7 +9,6 @@ import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
 import PayrollPaymentModal from '../../components/payroll/PayrollPaymentModal';
 import SalaryManagement from '../../components/payroll/SalaryManagement';
 import AuthCheck from '../../components/common/AuthCheck';
-import logo from '../../assets/primary_icon.webp';
 import { secureLogout } from '../../utils/authUtils';
 import Modal from '../../components/common/Modal';
 
@@ -491,7 +490,7 @@ const PayrollDashboard = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={logo} alt="Logo" /></li>
+            <li><img src="/assets/images/primary_icon.webp" alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>

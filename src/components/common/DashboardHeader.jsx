@@ -9,7 +9,7 @@ function DashboardHeader({ username = 'John Doe', onToggleSidebar }) {
         <img src='/assets/icons/hamburger.svg' alt='Menu'/>
       </div>
       <div className="dashboard-logo">
-        <img className='header-logo' src='../../assets/primary_transparent.webp' alt='HReady'/>
+        <img className='header-logo' src='/assets/images/primary_transparent.webp' alt='HReady'/>
       </div>
       <nav className="header-nav">
         <Link className='abt-us-label' to="/about-us">About Us</Link>

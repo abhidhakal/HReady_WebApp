@@ -4,7 +4,7 @@ import { Formik, Form } from 'formik';
 import api from '../../api/axios';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import '../../pages/admin/styles/ManageTasks.css';
-import logo from '../../assets/primary_icon.webp';
+// import logo from '../../assets/primary_icon.webp';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import TextField from '@mui/material/TextField';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -305,7 +305,7 @@ const ManageTasks = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={logo} alt="Logo" /></li>
+            <li><img src="/assets/images/primary_icon.webp" alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>

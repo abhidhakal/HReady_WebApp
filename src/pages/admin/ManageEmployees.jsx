@@ -4,7 +4,6 @@ import { Formik, Form } from 'formik';
 import api from '../../api/axios';
 import '/src/pages/admin/styles/ManageEmployees.css';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
-import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const statusColor = status => {
@@ -99,8 +98,8 @@ const EmployeeDialog = ({ open, onClose, onSubmit, initialValues, editing, loadi
                         <img
                           src={
                             showPassword
-                              ? "../assets/icons/view_on.svg"
-                              : "../assets/icons/view_off.svg"
+                              ? "/assets/icons/view_on.svg"
+                              : "/assets/icons/view_off.svg"
                           }
                           alt="Toggle password visibility"
                         />
@@ -281,7 +280,7 @@ const ManageEmployees = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={logo} alt="Logo" /></li>
+          <li><img src="/assets/images/primary_icon.webp" alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>

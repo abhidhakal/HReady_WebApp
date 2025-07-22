@@ -4,7 +4,6 @@ import api from '../../api/axios';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import './styles/AdminProfile.css';
 import Toast from '../../components/common/Toast.jsx';
-import logo from '../../assets/primary_icon.webp';
 import { getApiBaseUrl } from '../../utils/env';
 
 const Card = ({ children }) => (
@@ -172,10 +171,10 @@ const AdminProfile = () => {
   }, []);
 
   const resolveProfilePicture = (picture) => {
-    if (!picture) return '../../assets/profile.svg';
+    if (!picture) return '/assets/images/profile.svg';
     if (picture.startsWith('/')) return `${getApiBaseUrl()}${picture}`;
     if (picture.startsWith('http')) return picture;
-    return '../../assets/profile.svg';
+    return '/assets/images/profile.svg';
   };
 
   const handleChange = (e) => {
@@ -289,7 +288,7 @@ const AdminProfile = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={logo} alt="Logo" /></li>
+            <li><img src="/assets/images/primary_icon.webp" alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>

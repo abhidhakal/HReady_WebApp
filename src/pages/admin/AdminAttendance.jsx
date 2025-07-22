@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import '/src/pages/admin/styles/AdminAttendance.css';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import logo from '../../assets/primary_icon.webp';
+// import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const statusColor = status => {
@@ -127,7 +127,7 @@ const AdminAttendance = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-            <li><img src={logo} alt="Logo" /></li>
+            <li><img src={'/assets/images/primary_icon.webp'} alt="Logo" /></li>
             <li><a onClick={() => navigate(`/admin/${id}`)}>Dashboard</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/employees`)}>Manage Employees</a></li>
             <li><a onClick={() => navigate(`/admin/${id}/payroll`)}>Payroll Management</a></li>
