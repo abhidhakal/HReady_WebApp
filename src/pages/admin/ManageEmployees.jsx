@@ -99,8 +99,8 @@ const EmployeeDialog = ({ open, onClose, onSubmit, initialValues, editing, loadi
                         <img
                           src={
                             showPassword
-                              ? "/assets/icons/view_on.svg"
-                              : "/assets/icons/view_off.svg"
+                              ? "../assets/icons/view_on.svg"
+                              : "../assets/icons/view_off.svg"
                           }
                           alt="Toggle password visibility"
                         />
