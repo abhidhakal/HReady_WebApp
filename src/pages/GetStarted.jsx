@@ -302,38 +302,38 @@ function GetStarted() {
         </section>
 
         {/* CTA Section */}
-        <section className="cta">
-          <div className="cta-content">
+        <section className="home-cta">
+          <div className="home-cta-content">
             <h2>Ready to Get Started?</h2>
             <p>Contact our team today and we'll set up HReady for your business with personalized configuration and training.</p>
-            <div className="cta-buttons">
-              <Link to="/contact" className="primary-btn">
+            <div className="home-cta-buttons">
+              <Link to="/contact" className="home-primary-cta-btn">
                 <span>Contact Our Team</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 2H2l8 9.46V19l4-2v-6.54L22 2z"/>
                 </svg>
               </Link>
-              <Link to="/contact" className="secondary-btn">
+              <Link to="/contact" className="home-secondary-cta-btn">
                 <span>Schedule Demo</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 2H2l8 9.46V19l4-2v-6.54L22 2z"/>
                 </svg>
               </Link>
             </div>
-            <div className="cta-features">
-              <div className="cta-feature">
+            <div className="home-cta-features">
+              <div className="home-cta-feature">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 12l2 2 4-4"/>
                 </svg>
                 <span>Free setup service</span>
               </div>
-              <div className="cta-feature">
+              <div className="home-cta-feature">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 12l2 2 4-4"/>
                 </svg>
                 <span>24-hour setup completion</span>
               </div>
-              <div className="cta-feature">
+              <div className="home-cta-feature">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 12l2 2 4-4"/>
                 </svg>
