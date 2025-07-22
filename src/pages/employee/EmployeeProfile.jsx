@@ -138,7 +138,8 @@ const EmployeeProfile = () => {
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
-    if (picture.startsWith('/')) return `${getApiBaseUrl()}${picture}`;
+    const base = getApiBaseUrl().replace(/\/api$/, '');
+    if (picture.startsWith('/uploads')) return `${base}/api${picture}`;
     if (picture.startsWith('http')) return picture;
     return '/assets/images/profile.svg';
   };

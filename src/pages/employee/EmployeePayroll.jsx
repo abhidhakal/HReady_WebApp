@@ -53,13 +53,6 @@ const EmployeePayroll = () => {
   
   const navigate = useNavigate();
 
-  const resolveProfilePicture = (picture) => {
-    if (!picture) return '/assets/images/profile.svg';
-    if (picture.startsWith('/')) return `${getApiBaseUrl()}${picture}`;
-    if (picture.startsWith('http')) return picture;
-    return '/assets/images/profile.svg';
-  };
-
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
   };
