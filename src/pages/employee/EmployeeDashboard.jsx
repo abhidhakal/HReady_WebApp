@@ -211,76 +211,27 @@ function EmployeeDashboard() {
                 </div>
               </div>
 
-              <div className="info-cards">
-                <div className="info-card position-card">
-                  <h2>Position</h2>
-                  <div className="position-content">
-                    <div className="position-header">
-                      <i className="fas fa-briefcase"></i>
-                      <span className="position-value">{position}</span>
+              {/* Info Cards Section */}
+              {loading ? (
+                <div className="info-cards">
+                  {[1,2,3,4].map(i => (
+                    <div className="info-card" key={i}>
+                      <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 12 }} />
+                      <Skeleton variant="rectangular" width={80} height={32} />
+                      <Skeleton variant="text" width={40} height={16} style={{ marginTop: 12 }} />
                     </div>
-                  </div>
+                  ))}
                 </div>
-                <div className="info-card payroll-card-nav">
-                  <h2>My Payroll</h2>
-                  <div className="payroll-content-nav">
-                    <button 
-                      className="view-payroll-btn"
-                      onClick={() => navigate(`/employee/${id}/payroll`)}
-                    >
-                      Go to Payroll
-                    </button>
-                  </div>
+              ) : (
+                <div className="info-cards">
+                  {/* Place your real info cards here, each with className="info-card" */}
+                  {/* Example: */}
+                  <div className="info-card overview-card">...</div>
+                  <div className="info-card position-card">...</div>
+                  <div className="info-card leaves-card">...</div>
+                  <div className="info-card pending-tasks-card">...</div>
                 </div>
-                <div className="info-card leaves-card">
-                  <h2>Leave Days Left</h2>
-                  <div className="leaves-content">
-                    <div className="leaves-header">
-                      <i className="fas fa-calendar-alt"></i>
-                      <span className="leaves-count">15</span>
-                    </div>
-                    <button 
-                      className="request-leave-btn"
-                      onClick={() => navigate(`/employee/${id}/leave`)}
-                    >
-                      Request Leave
-                    </button>
-                  </div>
-                </div>
-                <div className="info-card pending-tasks-card">
-                  <h2>Pending Tasks</h2>
-                  <div className="pending-tasks-content">
-                    <div className="pending-tasks-header">
-                      <i className="fas fa-exclamation-triangle"></i>
-                      <span className="pending-count">{pendingCount}</span>
-                      {totalTasks > 0 && (
-                        <div className="progress-container">
-                          <div className="progress-bar">
-                            <div 
-                              className="progress-fill" 
-                              style={{ width: `${progressValue * 100}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {nextTask && (
-                      <div className="next-task-info">
-                        <p className="next-task-title">Title: {nextTask.title}</p>
-                        {nextTask.dueDate && (
-                          <p className="next-task-due">Due: {formatDate(nextTask.dueDate)}</p>
-                        )}
-                      </div>
-                    )}
-                    <button 
-                      className="view-tasks-btn"
-                      onClick={() => navigate(`/employee/${id}/tasks`)}
-                    >
-                      View All
-                    </button>
-                  </div>
-                </div>
-              </div>
+              )}
 
               <div className="other-section">
                 <div className="task-section">

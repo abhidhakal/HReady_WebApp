@@ -232,16 +232,22 @@ function AdminDashboard() {
             </div>
           </div>
 
-          <div className="dashboard-overview">
-            {loading ? (
-              <div className="dashboard-stats-skeletons">
-                {[1,2,3].map(i => (
-                  <Skeleton key={i} variant="rectangular" width={220} height={120} style={{ margin: 16 }} />
-                ))}
-              </div>
-            ) : (
-              <div className="dashboard-stats">
-                <div className="info-card overview-card">
+          {/* Info Cards Section */}
+          {loading ? (
+            <div className="info-cards">
+              {[1,2,3,4].map(i => (
+                <div className="info-card" key={i}>
+                  <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 12 }} />
+                  <Skeleton variant="rectangular" width={80} height={32} />
+                  <Skeleton variant="text" width={40} height={16} style={{ marginTop: 12 }} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="info-cards">
+              {/* Place your real info cards here, each with className="info-card" */}
+              {/* Example: */}
+              <div className="info-card overview-card">
                   <h2>Today's Overview</h2>
                   <div className="overview-content">
                     <div className="overview-item">
@@ -291,9 +297,12 @@ function AdminDashboard() {
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+                <div className="info-card position-card">
+                  <h2>Position</h2>
+                  <p>Admin</p>
+                </div>
+            </div>
+          )}
 
           <div className="other-section">
             <div className="task-section">
