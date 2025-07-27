@@ -1,35 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 // import logo from '../../assets/primary_icon.webp';
 import api from '../../api/axios';
 import './styles/EmployeeRequest.css';
 import Skeleton from '@mui/material/Skeleton';
 
+// Validation schema for request form
+const RequestSchema = Yup.object().shape({
+  title: Yup.string()
+    .required('Title is required')
+    .min(3, 'Title must be at least 3 characters'),
+  message: Yup.string()
+    .required('Message is required')
+    .min(10, 'Message must be at least 10 characters'),
+  type: Yup.string()
+    .required('Type is required')
+    .oneOf(['request', 'report'], 'Invalid type'),
+});
+
 const Card = ({ children }) => (
   <div className="request-card">{children}</div>
 );
 
 const RequestForm = ({ onSubmit, loading }) => {
-  const [form, setForm] = useState({ 
-    title: '', 
-    message: '', 
-    type: 'request', 
-    attachment: null 
-  });
   const [showForm, setShowForm] = useState(false);
-
-  const handleChange = e => {
-    const { name, value, files } = e.target;
-    setForm(f => ({ ...f, [name]: files ? files[0] : value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(form);
-    setForm({ title: '', message: '', type: 'request', attachment: null });
-    setShowForm(false);
-  };
 
   return (
     <Card>
@@ -45,83 +42,99 @@ const RequestForm = ({ onSubmit, loading }) => {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="request-form">
-          <div className="form-row">
-            <div className="form-field">
-              <label>Title</label>
-              <input
-                name="title"
-                value={form.title}
-                onChange={handleChange}
-                placeholder="Enter a title"
-                required
-                className="form-input"
-              />
-            </div>
+        <Formik
+          initialValues={{
+            title: '',
+            message: '',
+            type: 'request',
+            attachment: null,
+          }}
+          validationSchema={RequestSchema}
+          onSubmit={(values, { setSubmitting, resetForm }) => {
+            onSubmit(values);
+            resetForm();
+            setShowForm(false);
+            setSubmitting(false);
+          }}
+        >
+          {({ isSubmitting, errors, touched, setFieldValue }) => (
+            <Form className="request-form">
+              <div className="form-row">
+                <div className="form-field">
+                  <label>Title</label>
+                  <Field
+                    name="title"
+                    placeholder="Enter a title"
+                    className={`form-input ${errors.title && touched.title ? 'error' : ''}`}
+                  />
+                  <ErrorMessage name="title" component="div" className="error-message" />
+                </div>
 
-            <div className="form-field">
-              <label>Type</label>
-              <select
-                name="type"
-                value={form.type}
-                onChange={handleChange}
-                className="form-input"
-              >
-                <option value="request">Request</option>
-                <option value="report">Report</option>
-              </select>
-            </div>
-          </div>
+                <div className="form-field">
+                  <label>Type</label>
+                  <Field
+                    as="select"
+                    name="type"
+                    className={`form-input ${errors.type && touched.type ? 'error' : ''}`}
+                  >
+                    <option value="request">Request</option>
+                    <option value="report">Report</option>
+                  </Field>
+                  <ErrorMessage name="type" component="div" className="error-message" />
+                </div>
+              </div>
 
-          <div className="form-field">
-            <label>Message</label>
-            <textarea
-              name="message"
-              value={form.message}
-              onChange={handleChange}
-              placeholder="Describe your request or report"
-              required
-              className="form-input"
-              rows="4"
-            />
-          </div>
+              <div className="form-field">
+                <label>Message</label>
+                <Field
+                  as="textarea"
+                  name="message"
+                  placeholder="Describe your request or report"
+                  className={`form-input ${errors.message && touched.message ? 'error' : ''}`}
+                  rows="4"
+                />
+                <ErrorMessage name="message" component="div" className="error-message" />
+              </div>
 
-          <div className="form-field">
-            <label>Attachment (Optional)</label>
-            <input
-              type="file"
-              name="attachment"
-              onChange={handleChange}
-              className="form-input file-input"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            />
-          </div>
+              <div className="form-field">
+                <label>Attachment (Optional)</label>
+                <input
+                  type="file"
+                  onChange={(event) => {
+                    setFieldValue("attachment", event.currentTarget.files[0]);
+                  }}
+                  className="form-input file-input"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+              </div>
 
-          <div className="form-actions">
-            <button
-              type="button"
-              className="form-btn cancel"
-              onClick={() => setShowForm(false)}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="form-btn submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <i className="fas fa-spinner fa-spin"></i>
-                  Sending...
-                </>
-              ) : (
-                'Send Request'
-              )}
-            </button>
-          </div>
-        </form>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="form-btn cancel"
+                  onClick={() => setShowForm(false)}
+                  disabled={loading || isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="form-btn submit"
+                  disabled={loading || isSubmitting}
+                >
+                  {loading || isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Request'
+                  )}
+                </button>
+              </div>
+            </Form>
+          )}
+        </Formik>
       )}
     </Card>
   );

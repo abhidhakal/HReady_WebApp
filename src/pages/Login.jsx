@@ -2,13 +2,23 @@ import '/src/pages/styles/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import Toast from '../components/common/Toast';
-import api from '../api/axios';
+import api, { checkApiHealth } from '../api/axios';
+
+// Validation schema
+const LoginSchema = Yup.object().shape({
+  email: Yup.string()
+    .email('Please enter a valid email address')
+    .required('Email is required'),
+  password: Yup.string()
+    .min(5, 'Password must be at least 5 characters long')
+    .required('Password is required'),
+});
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [attempts, setAttempts] = useState(0);
@@ -42,43 +52,22 @@ function Login() {
     }
   }, [navigate]);
 
-  // Validate email format
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Validate password strength
-  const validatePassword = (password) => {
-    return password.length >= 5;
-  };
-
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Basic client-side validation
-    if (!email || !password) {
-      setToast({ message: 'Please fill in all fields', type: 'error' });
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setToast({ message: 'Please enter a valid email address', type: 'error' });
-      return;
-    }
-
-    if (!validatePassword(password)) {
-      setToast({ message: 'Password must be at least 5 characters long', type: 'error' });
-      return;
-    }
-
+  const handleSubmit = async (values, { setSubmitting }) => {
     setLoading(true);
+    setToast({ message: 'Signing in...', type: 'info' });
 
     try {
+      // Check if API is ready first (for slow Render deployments)
+      const isApiReady = await checkApiHealth();
+      if (!isApiReady) {
+        // Wait a bit and try again
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+
       const res = await api.post('/auth/login', {
-        email: email.trim().toLowerCase(),
-        password
+        email: values.email.trim().toLowerCase(),
+        password: values.password
       });
 
       const data = res.data;
@@ -143,9 +132,10 @@ function Login() {
         // Other errors
         setToast({ message: errorMessage, type: 'error' });
       }
+    } finally {
+      setLoading(false);
+      setSubmitting(false);
     }
-
-    setLoading(false);
   };
 
   // Check if form should be disabled
@@ -196,86 +186,81 @@ function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="login-form">
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">Email Address</label>
-              <div className="input-wrapper">
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  required
-                  className="form-input"
-                  disabled={isFormDisabled()}
-                  autoComplete="email"
-                />
-              </div>
-            </div>
+          <Formik
+            initialValues={{ email: '', password: '' }}
+            validationSchema={LoginSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ isSubmitting, errors, touched }) => (
+              <Form className="login-form">
+                <div className="form-group">
+                  <label htmlFor="email" className="form-label">Email Address</label>
+                  <div className="input-wrapper">
+                    <Field
+                      type="email"
+                      id="email"
+                      name="email"
+                      placeholder="Enter your email address"
+                      className={`form-input ${errors.email && touched.email ? 'error' : ''}`}
+                      disabled={isFormDisabled()}
+                      autoComplete="email"
+                    />
+                  </div>
+                  <ErrorMessage name="email" component="div" className="error-message" />
+                </div>
 
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
-              <div className="password-field-row">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  className="form-input"
-                  disabled={isFormDisabled()}
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className="toggle-visibility-btn"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  disabled={isFormDisabled()}
+                <div className="form-group">
+                  <label htmlFor="password" className="form-label">Password</label>
+                  <div className="password-field-row">
+                    <Field
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      name="password"
+                      placeholder="Enter your password"
+                      className={`form-input ${errors.password && touched.password ? 'error' : ''}`}
+                      disabled={isFormDisabled()}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      className="toggle-visibility-btn"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      disabled={isFormDisabled()}
+                    >
+                      <img
+                        src={
+                          showPassword
+                            ? "/assets/icons/view_on.svg"
+                            : "/assets/icons/view_off.svg"
+                        }
+                        alt="Toggle password visibility"
+                      />
+                    </button>
+                  </div>
+                  <ErrorMessage name="password" component="div" className="error-message" />
+                </div>
+
+                {attempts > 0 && (
+                  <div className="attempts-warning">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    <span>Failed attempts: {attempts}/5</span>
+                  </div>
+                )}
+
+                <button 
+                  type="submit" 
+                  className="login-btn" 
+                  disabled={isFormDisabled() || isSubmitting}
                 >
-                  <img
-                    src={
-                      showPassword
-                        ? "/assets/icons/view_on.svg"
-                        : "/assets/icons/view_off.svg"
-                    }
-                    alt="Toggle password visibility"
-                  />
-                </button>
-              </div>
-            </div>
-
-            {attempts > 0 && (
-              <div className="attempts-warning">
-                <i className="fas fa-exclamation-triangle"></i>
-                <span>Failed attempts: {attempts}/5</span>
-              </div>
-            )}
-
-            <button 
-              type="submit" 
-              className="login-btn" 
-              disabled={isFormDisabled()}
-            >
-              {loading ? (
-                <>
-                  <span>Signing In...</span>
-                  <div className="loading-spinner"></div>
-                </>
-              ) : (
-                <>
                   <span>Sign In</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
-                </>
-              )}
-            </button>
-          </form>
+                </button>
+              </Form>
+            )}
+          </Formik>
 
           <div className="login-footer">
             <Link to="/" className="return-link">

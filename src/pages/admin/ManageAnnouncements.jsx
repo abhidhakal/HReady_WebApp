@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import api from '../../api/axios';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import './styles/ManageAnnouncements.css';
@@ -24,37 +26,20 @@ const LoadingShimmer = () => (
   </div>
 );
 
+// Validation schema for announcement form
+const AnnouncementSchema = Yup.object().shape({
+  title: Yup.string()
+    .required('Title is required')
+    .min(3, 'Title must be at least 3 characters'),
+  message: Yup.string()
+    .required('Message is required')
+    .min(10, 'Message must be at least 10 characters'),
+  audience: Yup.string()
+    .required('Audience is required')
+    .oneOf(['all', 'employees', 'management'], 'Invalid audience'),
+});
+
 const AnnouncementDialog = ({ open, onClose, onSubmit, initialData, editing, loading }) => {
-  const [formData, setFormData] = useState({
-    title: '',
-    message: '',
-    audience: 'all'
-  });
-
-  React.useEffect(() => {
-    if (initialData) {
-      setFormData({
-        title: initialData.title || '',
-        message: initialData.message || '',
-        audience: initialData.audience || 'all'
-      });
-    } else {
-      setFormData({
-        title: '',
-        message: '',
-        audience: 'all'
-      });
-    }
-  }, [initialData]);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
 
   if (!open) return null;
 
@@ -71,72 +56,86 @@ const AnnouncementDialog = ({ open, onClose, onSubmit, initialData, editing, loa
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="announcement-form">
-          <div className="form-field">
-            <label>Title</label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-              className="form-input"
-              placeholder="Enter announcement title"
-            />
-          </div>
+        <Formik
+          initialValues={{
+            title: initialData?.title || '',
+            message: initialData?.message || '',
+            audience: initialData?.audience || 'all'
+          }}
+          validationSchema={AnnouncementSchema}
+          onSubmit={(values, { setSubmitting, resetForm }) => {
+            onSubmit(values);
+            resetForm();
+            setSubmitting(false);
+          }}
+          enableReinitialize
+        >
+          {({ isSubmitting, errors, touched }) => (
+            <Form className="announcement-form">
+              <div className="form-field">
+                <label>Title</label>
+                <Field
+                  type="text"
+                  name="title"
+                  placeholder="Enter announcement title"
+                  className={`form-input ${errors.title && touched.title ? 'error' : ''}`}
+                />
+                <ErrorMessage name="title" component="div" className="error-message" />
+              </div>
 
-          <div className="form-field">
-            <label>Message</label>
-            <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              required
-              className="form-input"
-              rows="4"
-              placeholder="Enter announcement message"
-            />
-          </div>
+              <div className="form-field">
+                <label>Message</label>
+                <Field
+                  as="textarea"
+                  name="message"
+                  rows="4"
+                  placeholder="Enter announcement message"
+                  className={`form-input ${errors.message && touched.message ? 'error' : ''}`}
+                />
+                <ErrorMessage name="message" component="div" className="error-message" />
+              </div>
 
-          <div className="form-field">
-            <label>Audience</label>
-            <select
-              name="audience"
-              value={formData.audience}
-              onChange={handleChange}
-              className="form-input"
-            >
-              <option value="all">All</option>
-              <option value="employees">Employees</option>
-              <option value="management">Management</option>
-            </select>
-          </div>
+              <div className="form-field">
+                <label>Audience</label>
+                <Field
+                  as="select"
+                  name="audience"
+                  className={`form-input ${errors.audience && touched.audience ? 'error' : ''}`}
+                >
+                  <option value="all">All</option>
+                  <option value="employees">Employees</option>
+                  <option value="management">Management</option>
+                </Field>
+                <ErrorMessage name="audience" component="div" className="error-message" />
+              </div>
 
-          <div className="form-actions">
-            <button 
-              type="button" 
-              className="form-btn cancel"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="form-btn submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <i className="fas fa-spinner fa-spin"></i>
-                  {editing ? 'Updating...' : 'Adding...'}
-                </>
-              ) : (
-                editing ? 'Update' : 'Add'
-              )}
-            </button>
-          </div>
-        </form>
+              <div className="form-actions">
+                <button 
+                  type="button" 
+                  className="form-btn cancel"
+                  onClick={onClose}
+                  disabled={loading || isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="form-btn submit"
+                  disabled={loading || isSubmitting}
+                >
+                  {loading || isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i>
+                      {editing ? 'Updating...' : 'Adding...'}
+                    </>
+                  ) : (
+                    editing ? 'Update' : 'Add'
+                  )}
+                </button>
+              </div>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );

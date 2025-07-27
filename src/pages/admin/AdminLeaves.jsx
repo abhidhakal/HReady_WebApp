@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import api from '../../api/axios';
 import './styles/AdminLeaves.css';
@@ -29,6 +31,21 @@ const StatusChip = ({ status }) => {
   );
 };
 
+// Validation schema for admin leave form
+const AdminLeaveSchema = Yup.object().shape({
+  leaveType: Yup.string()
+    .required('Leave type is required'),
+  startDate: Yup.date()
+    .required('Start date is required')
+    .min(new Date(), 'Start date cannot be in the past'),
+  endDate: Yup.date()
+    .required('End date is required')
+    .min(Yup.ref('startDate'), 'End date must be after start date'),
+  reason: Yup.string()
+    .required('Reason is required')
+    .min(10, 'Reason must be at least 10 characters long'),
+});
+
 const Card = ({ children }) => (
   <div className="leave-card">{children}</div>
 );
@@ -42,14 +59,6 @@ function AdminLeaves() {
   const [loading, setLoading] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    leaveType: '',
-    startDate: '',
-    endDate: '',
-    reason: '',
-    halfDay: false,
-    attachment: null,
-  });
 
   const token = localStorage.getItem('token');
 
@@ -86,29 +95,17 @@ function AdminLeaves() {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    if (type === 'checkbox') {
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else if (type === 'file') {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setFormLoading(true);
     try {
       const payload = new FormData();
-      payload.append('leaveType', formData.leaveType);
-      payload.append('startDate', formData.startDate);
-      payload.append('endDate', formData.endDate);
-      payload.append('reason', formData.reason);
-      payload.append('halfDay', formData.halfDay);
-      if (formData.attachment) {
-        payload.append('attachment', formData.attachment);
+      payload.append('leaveType', values.leaveType);
+      payload.append('startDate', values.startDate);
+      payload.append('endDate', values.endDate);
+      payload.append('reason', values.reason);
+      payload.append('halfDay', values.halfDay);
+      if (values.attachment) {
+        payload.append('attachment', values.attachment);
       }
 
       await api.post('/leaves/admin', payload, {
@@ -119,14 +116,7 @@ function AdminLeaves() {
       });
 
       alert('Leave created successfully.');
-      setFormData({
-        leaveType: '',
-        startDate: '',
-        endDate: '',
-        reason: '',
-        halfDay: false,
-        attachment: null,
-      });
+      resetForm();
       setShowForm(false);
       fetchLeaves();
     } catch (err) {
@@ -134,6 +124,7 @@ function AdminLeaves() {
       alert('Error creating leave.');
     }
     setFormLoading(false);
+    setSubmitting(false);
   };
 
   const handleAttachmentClick = (attachmentUrl) => {
@@ -142,16 +133,7 @@ function AdminLeaves() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      leaveType: '',
-      startDate: '',
-      endDate: '',
-      reason: '',
-      halfDay: false,
-      attachment: null,
-    });
-  };
+
 
   return (
     <div className="full-screen">
@@ -189,12 +171,7 @@ function AdminLeaves() {
             <button
               className="add-leave-btn"
               onClick={() => {
-                if (showForm) {
-                  setShowForm(false);
-                  resetForm();
-                } else {
-                  setShowForm(true);
-                }
+                setShowForm(!showForm);
               }}
             >
               <i className="fas fa-plus"></i>
@@ -214,117 +191,124 @@ function AdminLeaves() {
               <div className="leave-form-header">
                 <h3>Request Leave for Myself</h3>
               </div>
-              <form onSubmit={handleSubmit} className="leave-form">
-                <div className="form-grid">
-                  <div className="form-field">
-                    <label>Leave Type</label>
-                    <select
-                      name="leaveType"
-                      value={formData.leaveType}
-                      onChange={handleChange}
-                      required
-                      className="form-input"
-                    >
-                      <option value="">Select Leave Type</option>
-                      <option value="Casual">Casual</option>
-                      <option value="Sick">Sick</option>
-                      <option value="Emergency">Emergency</option>
-                      <option value="Annual">Annual</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
+              <Formik
+                initialValues={{
+                  leaveType: '',
+                  startDate: '',
+                  endDate: '',
+                  reason: '',
+                  halfDay: false,
+                  attachment: null,
+                }}
+                validationSchema={AdminLeaveSchema}
+                onSubmit={handleSubmit}
+              >
+                {({ isSubmitting, errors, touched, setFieldValue }) => (
+                  <Form className="leave-form">
+                    <div className="form-grid">
+                      <div className="form-field">
+                        <label>Leave Type</label>
+                        <Field
+                          as="select"
+                          name="leaveType"
+                          className={`form-input ${errors.leaveType && touched.leaveType ? 'error' : ''}`}
+                        >
+                          <option value="">Select Leave Type</option>
+                          <option value="Casual">Casual</option>
+                          <option value="Sick">Sick</option>
+                          <option value="Emergency">Emergency</option>
+                          <option value="Annual">Annual</option>
+                          <option value="Other">Other</option>
+                        </Field>
+                        <ErrorMessage name="leaveType" component="div" className="error-message" />
+                      </div>
 
-                  <div className="form-field">
-                    <label>Start Date</label>
-                    <input
-                      type="date"
-                      name="startDate"
-                      value={formData.startDate}
-                      onChange={handleChange}
-                      required
-                      className="form-input"
-                    />
-                  </div>
+                      <div className="form-field">
+                        <label>Start Date</label>
+                        <Field
+                          type="date"
+                          name="startDate"
+                          className={`form-input ${errors.startDate && touched.startDate ? 'error' : ''}`}
+                        />
+                        <ErrorMessage name="startDate" component="div" className="error-message" />
+                      </div>
 
-                  <div className="form-field">
-                    <label>End Date</label>
-                    <input
-                      type="date"
-                      name="endDate"
-                      value={formData.endDate}
-                      onChange={handleChange}
-                      required
-                      className="form-input"
-                    />
-                  </div>
+                      <div className="form-field">
+                        <label>End Date</label>
+                        <Field
+                          type="date"
+                          name="endDate"
+                          className={`form-input ${errors.endDate && touched.endDate ? 'error' : ''}`}
+                        />
+                        <ErrorMessage name="endDate" component="div" className="error-message" />
+                      </div>
 
-                  <div className="form-field">
-                    <label>Reason</label>
-                    <textarea
-                      name="reason"
-                      value={formData.reason}
-                      onChange={handleChange}
-                      required
-                      className="form-input"
-                      rows="3"
-                      placeholder="Enter reason for leave"
-                    />
-                  </div>
+                      <div className="form-field">
+                        <label>Reason</label>
+                        <Field
+                          as="textarea"
+                          name="reason"
+                          className={`form-input ${errors.reason && touched.reason ? 'error' : ''}`}
+                          rows="3"
+                          placeholder="Enter reason for leave"
+                        />
+                        <ErrorMessage name="reason" component="div" className="error-message" />
+                      </div>
 
-                  <div className="form-field checkbox-field">
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        name="halfDay"
-                        checked={formData.halfDay}
-                        onChange={handleChange}
-                        className="checkbox-input"
-                      />
-                      <span className="checkbox-text">Half Day</span>
-                    </label>
-                  </div>
+                      <div className="form-field checkbox-field">
+                        <label className="checkbox-label">
+                          <Field
+                            type="checkbox"
+                            name="halfDay"
+                            className="checkbox-input"
+                          />
+                          <span className="checkbox-text">Half Day</span>
+                        </label>
+                      </div>
 
-                  <div className="form-field">
-                    <label>Attachment (optional)</label>
-                    <input
-                      type="file"
-                      name="attachment"
-                      onChange={handleChange}
-                      className="form-input file-input"
-                    />
-                  </div>
+                      <div className="form-field">
+                        <label>Attachment (optional)</label>
+                        <input
+                          type="file"
+                          onChange={(event) => {
+                            setFieldValue("attachment", event.currentTarget.files[0]);
+                          }}
+                          className="form-input file-input"
+                        />
+                      </div>
 
-                  <div className="form-field full-width">
-                    <div className="form-actions">
-                      <button 
-                        type="button" 
-                        className="form-btn cancel"
-                        onClick={() => {
-                          setShowForm(false);
-                          resetForm();
-                        }}
-                        disabled={formLoading}
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        type="submit" 
-                        className="form-btn submit"
-                        disabled={formLoading}
-                      >
-                        {formLoading ? (
-                          <>
-                            <i className="fas fa-spinner fa-spin"></i>
-                            Submitting...
-                          </>
-                        ) : (
-                          'Submit Leave'
-                        )}
-                      </button>
+                      <div className="form-field full-width">
+                        <div className="form-actions">
+                          <button 
+                            type="button" 
+                            className="form-btn cancel"
+                            onClick={() => {
+                              setShowForm(false);
+                            }}
+                            disabled={formLoading || isSubmitting}
+                          >
+                            Cancel
+                          </button>
+                          <button 
+                            type="submit" 
+                            className="form-btn submit"
+                            disabled={formLoading || isSubmitting}
+                          >
+                            {formLoading || isSubmitting ? (
+                              <>
+                                <i className="fas fa-spinner fa-spin"></i>
+                                Submitting...
+                              </>
+                            ) : (
+                              'Submit Leave'
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </form>
+                  </Form>
+                )}
+              </Formik>
             </Card>
           )}
 

@@ -16,6 +16,13 @@ const PayrollDashboard = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [payrollGenerating, setPayrollGenerating] = useState(false);
+  const [bulkApproving, setBulkApproving] = useState(false);
+  const [bulkPaying, setBulkPaying] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [stats, setStats] = useState({});
   const [payrolls, setPayrolls] = useState([]);
@@ -88,42 +95,56 @@ const PayrollDashboard = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setIsAuthenticated(false);
+          setAuthLoading(false);
+          navigate('/login');
+          return;
+        }
 
-    api.get('/admins/me')
-      .then(res => {
+        const res = await api.get('/admins/me');
         setName(res.data.name || 'Admin');
         setProfilePicture(res.data.profilePicture || '');
+        setUserRole(res.data.role);
         
         // Check if user is admin
         if (res.data.role !== 'admin') {
+          setIsAuthenticated(false);
           setToast({ message: 'Access denied. Admin privileges required.', type: 'error' });
           navigate('/login');
+        } else {
+          setIsAuthenticated(true);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error('Error fetching admin data:', error);
+        setIsAuthenticated(false);
         if (error.response?.status === 403) {
           setToast({ message: 'Access denied. Please log in as admin.', type: 'error' });
           navigate('/login');
         } else {
-        setName('Admin');
-        setProfilePicture('');
+          setName('Admin');
+          setProfilePicture('');
         }
-      });
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuth();
   }, [navigate]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (isAuthenticated && !authLoading) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated, authLoading]);
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
+      setDashboardLoading(true);
       
       // Check if user is authenticated
       const token = localStorage.getItem('token');
@@ -155,7 +176,7 @@ const PayrollDashboard = () => {
       setToast({ message: 'Failed to load dashboard data', type: 'error' });
       }
     } finally {
-      setLoading(false);
+      setDashboardLoading(false);
     }
   };
 
@@ -197,7 +218,7 @@ const PayrollDashboard = () => {
 
   const generatePayroll = async () => {
     try {
-      setLoading(true);
+      setPayrollGenerating(true);
       const res = await api.post('/payrolls/generate', {
         month: selectedMonth,
         year: selectedYear
@@ -215,7 +236,7 @@ const PayrollDashboard = () => {
         type: 'error' 
       });
     } finally {
-      setLoading(false);
+      setPayrollGenerating(false);
     }
   };
 
@@ -379,7 +400,7 @@ const PayrollDashboard = () => {
     
     if (!confirmed) return;
     
-    setLoading(true);
+    setBulkApproving(true);
     try {
       await Promise.all(
         drafts.map(p => api.put(`/payrolls/${p._id}/approve`))
@@ -389,7 +410,7 @@ const PayrollDashboard = () => {
     } catch (error) {
       setToast({ message: 'Failed to approve all payrolls', type: 'error' });
     } finally {
-      setLoading(false);
+      setBulkApproving(false);
     }
   };
 
@@ -415,7 +436,7 @@ const PayrollDashboard = () => {
     
     if (!confirmed) return;
     
-    setLoading(true);
+    setBulkPaying(true);
     try {
       await Promise.all(
         approved.map(p => api.put(`/payrolls/${p._id}/mark-paid`, {
@@ -429,7 +450,7 @@ const PayrollDashboard = () => {
     } catch (error) {
       setToast({ message: 'Failed to mark payrolls as paid', type: 'error' });
     } finally {
-      setLoading(false);
+      setBulkPaying(false);
     }
   };
 
@@ -467,26 +488,46 @@ const PayrollDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || dashboardLoading) {
     return (
       <div className="full-screen">
         <DashboardHeader onToggleSidebar={toggleSidebar} />
         <div className="dashboard-container">
-          <div className="loading-spinner">Loading...</div>
+          <div className="loading-spinner">
+            {authLoading ? 'Checking authentication...' : 'Loading dashboard...'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="full-screen">
+        <DashboardHeader onToggleSidebar={toggleSidebar} />
+        <div className="dashboard-container">
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h3>Authentication Required</h3>
+            <p>Please log in to access this page.</p>
+            <p>Required role: admin</p>
+            <p>Current role: {userRole || 'Not logged in'}</p>
+            <button onClick={() => navigate('/login')}>
+              Go to Login
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <AuthCheck requiredRole="admin">
     <div className="full-screen">
       <Toast
         message={toast.message}
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
@@ -519,10 +560,10 @@ const PayrollDashboard = () => {
                 <button 
                   className="generate-payroll-btn"
                   onClick={handlePrePayroll}
-                  disabled={loading}
+                  disabled={payrollGenerating}
                 >
                   <i className="fas fa-plus"></i>
-                  Generate Payroll
+                  {payrollGenerating ? 'Generating...' : 'Generate Payroll'}
                 </button>
               </div>
             </div>
@@ -712,11 +753,11 @@ const PayrollDashboard = () => {
                       </div>
                       
                       <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                        <button className="btn-primary" onClick={bulkApprovePayrolls} disabled={loading}>
-                          <i className="fas fa-check-double"></i> Bulk Approve All
+                        <button className="btn-primary" onClick={bulkApprovePayrolls} disabled={bulkApproving}>
+                          <i className="fas fa-check-double"></i> {bulkApproving ? 'Approving...' : 'Bulk Approve All'}
                         </button>
-                        <button className="btn-primary" onClick={bulkMarkAsPaid} disabled={loading}>
-                          <i className="fas fa-credit-card"></i> Bulk Mark as Paid
+                        <button className="btn-primary" onClick={bulkMarkAsPaid} disabled={bulkPaying}>
+                          <i className="fas fa-credit-card"></i> {bulkPaying ? 'Processing...' : 'Bulk Mark as Paid'}
                         </button>
                       </div>
                     </div>
@@ -1004,7 +1045,7 @@ const PayrollDashboard = () => {
         }}
         onConfirm={markAsPaid}
         payroll={selectedPayroll}
-        loading={loading}
+        loading={false}
       />
 
       <LogoutConfirmModal
@@ -1170,7 +1211,6 @@ const PayrollDashboard = () => {
         </Modal>
       )}
     </div>
-    </AuthCheck>
   );
 };
 

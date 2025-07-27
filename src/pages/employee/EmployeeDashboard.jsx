@@ -141,7 +141,7 @@ function EmployeeDashboard() {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="employee" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
@@ -237,45 +237,54 @@ function EmployeeDashboard() {
               <div className="other-section">
                 <div className="task-section">
                   <div className="task-header">
-                    <h2>Task List</h2>
+                    <h2>My Tasks</h2>
                     <button
                       className="edit-task"
                       onClick={() => navigate(`/employee/${id}/tasks`)}
                     >
-                      View Tasks
+                      View All Tasks
                     </button>
                   </div>
-                  <table className="task-table">
-                    <tbody>
-                      {tasks.length > 0 ? (
-                        tasks.slice(0, 3).map((task) => (
-                          <tr key={task._id}>
-                            <td><strong>Task Name:</strong> {task.title}</td>
-                            <td>
-                              <span className={
-                                `status-label ${
-                                  task.status === 'Pending'
-                                    ? 'pending'
-                                    : task.status === 'In Progress'
-                                    ? 'doing'
-                                    : 'completed'
-                                }`
-                              }>
-                                {task.status}
-                              </span>
-                            </td>
-                            <td>
-                              <a onClick={() => navigate(`/employee/${id}/tasks`)}>Details</a>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="3" style={{ textAlign: 'center', color: '#666' }}>No tasks assigned to you.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                  <div className="task-cards-container">
+                    {tasks.length > 0 ? (
+                      tasks.slice(0, 6).map((task) => (
+                        <div key={task._id} className="task-card">
+                          <div className="task-card-header">
+                            <h3 className="task-title">{task.title}</h3>
+                            <span className={`task-status ${task.status?.toLowerCase().replace(' ', '-')}`}>
+                              {task.status}
+                            </span>
+                          </div>
+                          {task.description && (
+                            <p className="task-description">
+                              {task.description.length > 80 
+                                ? task.description.slice(0, 80) + '...' 
+                                : task.description
+                              }
+                            </p>
+                          )}
+                          <div className="task-card-footer">
+                            <span className="task-due-date">
+                              <i className="fas fa-calendar-alt"></i>
+                              Due: {formatDate(task.dueDate)}
+                            </span>
+                            <button 
+                              className="task-details-btn"
+                              onClick={() => navigate(`/employee/${id}/tasks`)}
+                            >
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-tasks-message">
+                        <i className="fas fa-clipboard-list"></i>
+                        <p>No tasks assigned to you.</p>
+                        <small>Check back later for new assignments.</small>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="announcement-section">
                   <div className="announcement-header">

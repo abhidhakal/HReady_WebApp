@@ -1,50 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
 import './styles/EmployeeLeaves.css';
 import api from '../../api/axios';
 import Skeleton from '@mui/material/Skeleton';
 // import logo from '../../assets/primary_icon.webp';
 
+// Validation schema for leave form
+const LeaveSchema = Yup.object().shape({
+  leaveType: Yup.string()
+    .required('Leave type is required'),
+  startDate: Yup.date()
+    .required('Start date is required')
+    .min(new Date(), 'Start date cannot be in the past'),
+  endDate: Yup.date()
+    .required('End date is required')
+    .min(Yup.ref('startDate'), 'End date must be after start date'),
+  reason: Yup.string()
+    .required('Reason is required')
+    .min(10, 'Reason must be at least 10 characters long'),
+});
+
 const Card = ({ children }) => (
   <div className="leave-card">{children}</div>
 );
 
 const LeaveForm = ({ onSubmit, loading }) => {
-  const [formData, setFormData] = useState({
-    leaveType: '',
-    startDate: '',
-    endDate: '',
-    reason: '',
-    halfDay: false,
-    attachment: null,
-  });
   const [showForm, setShowForm] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    if (type === 'checkbox') {
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else if (type === 'file') {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-    setFormData({
-      leaveType: '',
-      startDate: '',
-      endDate: '',
-      reason: '',
-      halfDay: false,
-      attachment: null,
-    });
-    setShowForm(false);
-  };
 
   return (
     <Card>
@@ -60,116 +44,129 @@ const LeaveForm = ({ onSubmit, loading }) => {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="leave-form">
-          <div className="form-row">
-            <div className="form-field">
-              <label>Leave Type</label>
-              <select
-                name="leaveType"
-                value={formData.leaveType}
-                onChange={handleChange}
-                required
-                className="form-input"
-              >
-                <option value="">Select Leave Type</option>
-                <option value="Casual">Casual</option>
-                <option value="Sick">Sick</option>
-                <option value="Emergency">Emergency</option>
-                <option value="Annual">Annual</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+        <Formik
+          initialValues={{
+            leaveType: '',
+            startDate: '',
+            endDate: '',
+            reason: '',
+            halfDay: false,
+            attachment: null,
+          }}
+          validationSchema={LeaveSchema}
+          onSubmit={(values, { setSubmitting, resetForm }) => {
+            onSubmit(values);
+            resetForm();
+            setShowForm(false);
+            setSubmitting(false);
+          }}
+        >
+          {({ isSubmitting, errors, touched, setFieldValue }) => (
+            <Form className="leave-form">
+              <div className="form-row">
+                <div className="form-field">
+                  <label>Leave Type</label>
+                  <Field
+                    as="select"
+                    name="leaveType"
+                    className={`form-input ${errors.leaveType && touched.leaveType ? 'error' : ''}`}
+                  >
+                    <option value="">Select Leave Type</option>
+                    <option value="Casual">Casual</option>
+                    <option value="Sick">Sick</option>
+                    <option value="Emergency">Emergency</option>
+                    <option value="Annual">Annual</option>
+                    <option value="Other">Other</option>
+                  </Field>
+                  <ErrorMessage name="leaveType" component="div" className="error-message" />
+                </div>
 
-            <div className="form-field">
-              <label>Half Day</label>
-              <div className="checkbox-field">
-                <input
-                  type="checkbox"
-                  name="halfDay"
-                  checked={formData.halfDay}
-                  onChange={handleChange}
-                  id="halfDay"
-                />
-                <label htmlFor="halfDay">Half Day Leave</label>
+                <div className="form-field">
+                  <label>Half Day</label>
+                  <div className="checkbox-field">
+                    <Field
+                      type="checkbox"
+                      name="halfDay"
+                      id="halfDay"
+                    />
+                    <label htmlFor="halfDay">Half Day Leave</label>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="form-row">
-            <div className="form-field">
-              <label>Start Date</label>
-              <input
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                required
-                className="form-input"
-              />
-            </div>
+              <div className="form-row">
+                <div className="form-field">
+                  <label>Start Date</label>
+                  <Field
+                    type="date"
+                    name="startDate"
+                    className={`form-input ${errors.startDate && touched.startDate ? 'error' : ''}`}
+                  />
+                  <ErrorMessage name="startDate" component="div" className="error-message" />
+                </div>
 
-            <div className="form-field">
-              <label>End Date</label>
-              <input
-                type="date"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
-                required
-                className="form-input"
-              />
-            </div>
-          </div>
+                <div className="form-field">
+                  <label>End Date</label>
+                  <Field
+                    type="date"
+                    name="endDate"
+                    className={`form-input ${errors.endDate && touched.endDate ? 'error' : ''}`}
+                  />
+                  <ErrorMessage name="endDate" component="div" className="error-message" />
+                </div>
+              </div>
 
-          <div className="form-field">
-            <label>Reason</label>
-            <textarea
-              name="reason"
-              value={formData.reason}
-              onChange={handleChange}
-              required
-              className="form-input"
-              rows="3"
-              placeholder="Please provide a reason for your leave request"
-            />
-          </div>
+              <div className="form-field">
+                <label>Reason</label>
+                <Field
+                  as="textarea"
+                  name="reason"
+                  className={`form-input ${errors.reason && touched.reason ? 'error' : ''}`}
+                  rows="3"
+                  placeholder="Please provide a reason for your leave request"
+                />
+                <ErrorMessage name="reason" component="div" className="error-message" />
+              </div>
 
-          <div className="form-field">
-            <label>Attachment (Optional)</label>
-            <input
-              type="file"
-              name="attachment"
-              onChange={handleChange}
-              className="form-input file-input"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            />
-          </div>
+              <div className="form-field">
+                <label>Attachment (Optional)</label>
+                <input
+                  type="file"
+                  onChange={(event) => {
+                    setFieldValue("attachment", event.currentTarget.files[0]);
+                  }}
+                  className="form-input file-input"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+              </div>
 
-          <div className="form-actions">
-            <button
-              type="button"
-              className="form-btn cancel"
-              onClick={() => setShowForm(false)}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="form-btn submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <i className="fas fa-spinner fa-spin"></i>
-                  Submitting...
-                </>
-              ) : (
-                'Submit Request'
-              )}
-            </button>
-          </div>
-        </form>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="form-btn cancel"
+                  onClick={() => setShowForm(false)}
+                  disabled={loading || isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="form-btn submit"
+                  disabled={loading || isSubmitting}
+                >
+                  {loading || isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i>
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Request'
+                  )}
+                </button>
+              </div>
+            </Form>
+          )}
+        </Formik>
       )}
     </Card>
   );

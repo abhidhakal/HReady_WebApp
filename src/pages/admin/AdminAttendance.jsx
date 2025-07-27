@@ -124,7 +124,7 @@ const AdminAttendance = () => {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>

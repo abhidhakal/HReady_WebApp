@@ -37,7 +37,13 @@ const AuthCheck = ({ children, requiredRole = null }) => {
   }, [requiredRole]);
 
   if (isLoading) {
-    return <div>Checking authentication...</div>;
+    return (
+      <div className="full-screen">
+        <div className="dashboard-container">
+          <div className="loading-spinner">Checking authentication...</div>
+        </div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

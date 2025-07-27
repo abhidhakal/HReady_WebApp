@@ -1,34 +1,38 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import '../styles/Contact.css'
 import Header from '../common/Header';
 
-function Contact() {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        subject: '',
-        message: ''
-    });
+// Validation schema for contact form
+const ContactSchema = Yup.object().shape({
+    name: Yup.string()
+        .required('Name is required')
+        .min(2, 'Name must be at least 2 characters'),
+    email: Yup.string()
+        .email('Please enter a valid email address')
+        .required('Email is required'),
+    subject: Yup.string()
+        .required('Subject is required')
+        .min(5, 'Subject must be at least 5 characters'),
+    message: Yup.string()
+        .required('Message is required')
+        .min(10, 'Message must be at least 10 characters'),
+});
 
+function Contact() {
     const [loading, setLoading] = useState(false);
 
-    const handleInputChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (values, { setSubmitting, resetForm }) => {
         setLoading(true);
         
         // Simulate form submission
         setTimeout(() => {
             setLoading(false);
-            setFormData({ name: '', email: '', subject: '', message: '' });
+            resetForm();
             alert('Thank you for your message! We\'ll get back to you soon.');
+            setSubmitting(false);
         }, 2000);
     };
 
@@ -99,76 +103,86 @@ function Contact() {
                             <h2>Send Us a Message</h2>
                             <p>Fill out the form below and we'll get back to you as soon as possible.</p>
                             
-                            <form className="contact-form" onSubmit={handleSubmit}>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="name">Full Name</label>
-                                        <input
-                                            type="text"
-                                            id="name"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleInputChange}
-                                            placeholder="Enter your full name"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label htmlFor="email">Email Address</label>
-                                        <input
-                                            type="email"
-                                            id="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleInputChange}
-                                            placeholder="Enter your email address"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                                
-                                <div className="form-group">
-                                    <label htmlFor="subject">Subject</label>
-                                    <input
-                                        type="text"
-                                        id="subject"
-                                        name="subject"
-                                        value={formData.subject}
-                                        onChange={handleInputChange}
-                                        placeholder="What's this about?"
-                                        required
-                                    />
-                                </div>
-                                
-                                <div className="form-group">
-                                    <label htmlFor="message">Message</label>
-                                    <textarea
-                                        id="message"
-                                        name="message"
-                                        value={formData.message}
-                                        onChange={handleInputChange}
-                                        placeholder="Tell us more about your inquiry..."
-                                        rows="5"
-                                        required
-                                    ></textarea>
-                                </div>
-                                
-                                <button type="submit" className="submit-btn" disabled={loading}>
-                                    {loading ? (
-                                        <>
-                                            <span>Sending Message...</span>
-                                            <div className="loading-spinner"></div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span>Send Message</span>
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <path d="M22 2H2l8 9.46V19l4-2v-6.54L22 2z"/>
-                                            </svg>
-                                        </>
-                                    )}
-                                </button>
-                            </form>
+                            <Formik
+                                initialValues={{
+                                    name: '',
+                                    email: '',
+                                    subject: '',
+                                    message: ''
+                                }}
+                                validationSchema={ContactSchema}
+                                onSubmit={handleSubmit}
+                            >
+                                {({ isSubmitting, errors, touched }) => (
+                                    <Form className="contact-form">
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <label htmlFor="name">Full Name</label>
+                                                <Field
+                                                    type="text"
+                                                    id="name"
+                                                    name="name"
+                                                    placeholder="Enter your full name"
+                                                    className={errors.name && touched.name ? 'error' : ''}
+                                                />
+                                                <ErrorMessage name="name" component="div" className="error-message" />
+                                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="email">Email Address</label>
+                                                <Field
+                                                    type="email"
+                                                    id="email"
+                                                    name="email"
+                                                    placeholder="Enter your email address"
+                                                    className={errors.email && touched.email ? 'error' : ''}
+                                                />
+                                                <ErrorMessage name="email" component="div" className="error-message" />
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="form-group">
+                                            <label htmlFor="subject">Subject</label>
+                                            <Field
+                                                type="text"
+                                                id="subject"
+                                                name="subject"
+                                                placeholder="What's this about?"
+                                                className={errors.subject && touched.subject ? 'error' : ''}
+                                            />
+                                            <ErrorMessage name="subject" component="div" className="error-message" />
+                                        </div>
+                                        
+                                        <div className="form-group">
+                                            <label htmlFor="message">Message</label>
+                                            <Field
+                                                as="textarea"
+                                                id="message"
+                                                name="message"
+                                                placeholder="Tell us more about your inquiry..."
+                                                rows="5"
+                                                className={errors.message && touched.message ? 'error' : ''}
+                                            />
+                                            <ErrorMessage name="message" component="div" className="error-message" />
+                                        </div>
+                                        
+                                        <button type="submit" className="submit-btn" disabled={loading || isSubmitting}>
+                                            {loading || isSubmitting ? (
+                                                <>
+                                                    <span>Sending Message...</span>
+                                                    <div className="loading-spinner"></div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>Send Message</span>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <path d="M22 2H2l8 9.46V19l4-2v-6.54L22 2z"/>
+                                                    </svg>
+                                                </>
+                                            )}
+                                        </button>
+                                    </Form>
+                                )}
+                            </Formik>
                         </div>
                     </div>
 

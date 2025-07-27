@@ -304,7 +304,7 @@ const ManageTasks = () => {
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
+      <DashboardHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} userRole="admin" />
 
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>

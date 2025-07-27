@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import api from '../../api/axios';
 import DashboardHeader from '../../components/common/DashboardHeader.jsx';
 import './styles/EmployeeProfile.css';
@@ -7,36 +9,27 @@ import Toast from '../../components/common/Toast.jsx';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
 
+// Validation schema for password change
+const PasswordSchema = Yup.object().shape({
+  current: Yup.string()
+    .required('Current password is required'),
+  new: Yup.string()
+    .required('New password is required')
+    .min(6, 'Password must be at least 6 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+  confirm: Yup.string()
+    .required('Please confirm your new password')
+    .oneOf([Yup.ref('new'), null], 'Passwords must match'),
+});
+
 const Card = ({ children }) => (
   <div className="profile-card">{children}</div>
 );
 
 const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
-  const [passwords, setPasswords] = useState({
-    current: '',
-    new: '',
-    confirm: '',
-    showCurrent: false,
-    showNew: false,
-    showConfirm: false,
-  });
-
-  const handleChange = (e) => {
-    setPasswords({ ...passwords, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(passwords);
-    setPasswords({
-      current: '',
-      new: '',
-      confirm: '',
-      showCurrent: false,
-      showNew: false,
-      showConfirm: false,
-    });
-  };
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   if (!open) return null;
 
@@ -53,65 +46,111 @@ const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="password-form">
-          {['current', 'new', 'confirm'].map((field) => (
-            <div className="form-field" key={field}>
-              <label>
-                {field === 'current' ? 'Current Password' : 
-                 field === 'new' ? 'New Password' : 'Confirm New Password'}
-              </label>
-              <div className="password-input-group">
-                <input
-                  type={passwords[`show${field[0].toUpperCase() + field.slice(1)}`] ? 'text' : 'password'}
-                  name={field}
-                  value={passwords[field]}
-                  onChange={handleChange}
-                  required
-                  className="form-input"
-                  placeholder={`Enter ${field === 'current' ? 'current' : 'new'} password`}
-                />
-                <button
-                  type="button"
-                  className="toggle-visibility-btn"
-                  onClick={() =>
-                    setPasswords((prev) => ({
-                      ...prev,
-                      [`show${field[0].toUpperCase() + field.slice(1)}`]:
-                        !prev[`show${field[0].toUpperCase() + field.slice(1)}`],
-                    }))
-                  }
+        <Formik
+          initialValues={{
+            current: '',
+            new: '',
+            confirm: '',
+          }}
+          validationSchema={PasswordSchema}
+          onSubmit={(values, { setSubmitting, resetForm }) => {
+            onSubmit(values);
+            resetForm();
+            setShowCurrent(false);
+            setShowNew(false);
+            setShowConfirm(false);
+            setSubmitting(false);
+          }}
+        >
+          {({ isSubmitting, errors, touched }) => (
+            <Form className="password-form">
+              <div className="form-field">
+                <label>Current Password</label>
+                <div className="password-input-group">
+                  <Field
+                    type={showCurrent ? 'text' : 'password'}
+                    name="current"
+                    placeholder="Enter current password"
+                    className={`form-input ${errors.current && touched.current ? 'error' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    className="toggle-visibility-btn"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                  >
+                    <i className={`fas ${showCurrent ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                  </button>
+                </div>
+                <ErrorMessage name="current" component="div" className="error-message" />
+              </div>
+
+              <div className="form-field">
+                <label>New Password</label>
+                <div className="password-input-group">
+                  <Field
+                    type={showNew ? 'text' : 'password'}
+                    name="new"
+                    placeholder="Enter new password"
+                    className={`form-input ${errors.new && touched.new ? 'error' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    className="toggle-visibility-btn"
+                    onClick={() => setShowNew(!showNew)}
+                  >
+                    <i className={`fas ${showNew ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                  </button>
+                </div>
+                <ErrorMessage name="new" component="div" className="error-message" />
+              </div>
+
+              <div className="form-field">
+                <label>Confirm New Password</label>
+                <div className="password-input-group">
+                  <Field
+                    type={showConfirm ? 'text' : 'password'}
+                    name="confirm"
+                    placeholder="Confirm new password"
+                    className={`form-input ${errors.confirm && touched.confirm ? 'error' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    className="toggle-visibility-btn"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                  >
+                    <i className={`fas ${showConfirm ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                  </button>
+                </div>
+                <ErrorMessage name="confirm" component="div" className="error-message" />
+              </div>
+
+              <div className="form-actions">
+                <button 
+                  type="button" 
+                  className="form-btn cancel"
+                  onClick={onClose}
+                  disabled={loading || isSubmitting}
                 >
-                  <i className={`fas ${passwords[`show${field[0].toUpperCase() + field.slice(1)}`] ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="form-btn submit"
+                  disabled={loading || isSubmitting}
+                >
+                  {loading || isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i>
+                      Changing...
+                    </>
+                  ) : (
+                    'Change Password'
+                  )}
                 </button>
               </div>
-            </div>
-          ))}
-
-          <div className="form-actions">
-            <button 
-              type="button" 
-              className="form-btn cancel"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="form-btn submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <i className="fas fa-spinner fa-spin"></i>
-                  Changing...
-                </>
-              ) : (
-                'Change Password'
-              )}
-            </button>
-          </div>
-        </form>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );
@@ -254,7 +293,7 @@ const EmployeeProfile = () => {
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
+      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} userRole="employee" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>

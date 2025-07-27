@@ -103,7 +103,7 @@ const EmployeeAttendance = () => {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="employee" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>

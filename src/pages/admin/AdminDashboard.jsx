@@ -161,6 +161,12 @@ function AdminDashboard() {
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
   return (
     <div className="full-screen">
       <Toast
@@ -168,7 +174,7 @@ function AdminDashboard() {
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={toggleSidebar} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
 
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -313,40 +319,49 @@ function AdminDashboard() {
                   className="edit-task"
                   onClick={() => navigate(`/admin/${id}/tasks`)}
                 >
-                  View All
+                  View All Tasks
                 </button>
               </div>
-              <table className="task-table">
-                <tbody>
-                  {tasks.length > 0 ? (
-                    tasks.slice(0, 3).map((task) => (
-                      <tr key={task._id}>
-                        <td><strong>Task Name:</strong> {task.title}</td>
-                        <td>
-                          <span className={
-                            `status-label ${
-                              task.status === 'Pending'
-                                ? 'pending'
-                                : task.status === 'In Progress'
-                                ? 'doing'
-                                : 'completed'
-                            }`
-                          }>
-                            {task.status}
-                          </span>
-                        </td>
-                        <td>
-                          <a onClick={() => navigate(`/admin/${id}/tasks`)}>Details</a>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="3" style={{ textAlign: 'center', color: '#666' }}>No tasks available.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              <div className="task-cards-container">
+                {tasks.length > 0 ? (
+                  tasks.slice(0, 6).map((task) => (
+                    <div key={task._id} className="task-card">
+                      <div className="task-card-header">
+                        <h3 className="task-title">{task.title}</h3>
+                        <span className={`task-status ${task.status?.toLowerCase().replace(' ', '-')}`}>
+                          {task.status}
+                        </span>
+                      </div>
+                      {task.description && (
+                        <p className="task-description">
+                          {task.description.length > 80 
+                            ? task.description.slice(0, 80) + '...' 
+                            : task.description
+                          }
+                        </p>
+                      )}
+                      <div className="task-card-footer">
+                        <span className="task-due-date">
+                          <i className="fas fa-calendar-alt"></i>
+                          Due: {formatDate(task.dueDate)}
+                        </span>
+                        <button 
+                          className="task-details-btn"
+                          onClick={() => navigate(`/admin/${id}/tasks`)}
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-tasks-message">
+                    <i className="fas fa-clipboard-list"></i>
+                    <p>No tasks available.</p>
+                    <small>Create new tasks to get started.</small>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="announcement-section">
