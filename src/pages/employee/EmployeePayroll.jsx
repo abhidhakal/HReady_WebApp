@@ -6,9 +6,9 @@ import '../../pages/admin/styles/PayrollDashboard.css';
 import api from '/src/api/api.js';
 import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
-import { secureLogout } from '/src/auth/authService.js';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 // Custom currency formatter for Rs.
 const formatCurrency = (amount, currency = 'Rs.') => {
@@ -53,6 +53,7 @@ const EmployeePayroll = () => {
   const [isAddBank, setIsAddBank] = useState(false); // distinguish add vs update
   
   const navigate = useNavigate();
+  const { getToken } = useAuth();
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -72,7 +73,7 @@ const EmployeePayroll = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
       navigate('/login');
       return;
@@ -89,7 +90,7 @@ const EmployeePayroll = () => {
         setName('Employee');
         setProfilePicture('');
       });
-  }, [navigate]);
+  }, [navigate, getToken]);
 
   useEffect(() => {
     fetchPayrollData();
@@ -98,7 +99,7 @@ const EmployeePayroll = () => {
   const fetchPayrollData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = getToken();
       
       // Get current user info first
       const userRes = await api.get('/employees/me', {
@@ -195,7 +196,7 @@ const EmployeePayroll = () => {
       setLoading(true);
       if (isAddBank) {
         // Get employeeId
-        const token = localStorage.getItem('token');
+        const token = getToken();
         const userRes = await api.get('/employees/me', {
           headers: { Authorization: `Bearer ${token}` }
         });

@@ -5,6 +5,7 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeAnnouncements.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>
@@ -17,6 +18,7 @@ const EmployeeAnnouncements = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { getToken } = useAuth();
 
   const fetchAnnouncements = async () => {
     setLoading(true);
@@ -24,7 +26,7 @@ const EmployeeAnnouncements = () => {
     try {
       const res = await api.get('/announcements', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${getToken()}`,
         },
       });
       setAnnouncements(res.data);

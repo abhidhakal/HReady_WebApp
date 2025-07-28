@@ -1,64 +1,62 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '/src/api/api.js';
-import { secureLogout } from '/src/auth/authService.js';
+import { useAuth } from '/src/hooks/useAuth.js';
+import { useSidebar } from '/src/hooks/useSidebar.js';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../components/styles/DashboardHeader.css';
 
 function DashboardHeader({ username = 'John Doe', onToggleSidebar, userRole = 'employee' }) {
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showTasks, setShowTasks] = useState(false);
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [userName, setUserName] = useState(username);
-  const [userId, setUserId] = useState(null);
-  const userDropdownRef = useRef(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showTasks, setShowTasks] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [userName, setUserName] = useState('');
   const notificationsRef = useRef(null);
   const tasksRef = useRef(null);
-  const navigate = useNavigate();
-  const { id } = useParams();
+  const userDropdownRef = useRef(null);
+  const { getToken, fetchUserData, logout, userRole: authUserRole, userId } = useAuth();
+  const { isOpen: sidebarOpen, toggleSidebar } = useSidebar(false);
 
-  // Helper function to format time ago
   const formatTimeAgo = (date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
     
     if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    
-    return date.toLocaleDateString();
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
-  // Fetch user data
+  // Fetch user data from API
   useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
+    const fetchUserDataFromAPI = async () => {
       try {
-        const endpoint = userRole === 'admin' ? '/admins/me' : '/employees/me';
-        const res = await api.get(endpoint, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setUserName(res.data.name || (userRole === 'admin' ? 'Admin' : 'Employee'));
-        setUserId(res.data._id || id);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        setUserName(userRole === 'admin' ? 'Admin' : 'Employee');
+        const userData = await fetchUserData();
+        if (userData) {
+          setUserName(userData.name || (authUserRole === 'admin' ? 'Admin' : 'Employee'));
+        } else {
+          setUserName(authUserRole === 'admin' ? 'Admin' : 'Employee');
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setUserName(authUserRole === 'admin' ? 'Admin' : 'Employee');
       }
     };
 
-    fetchUserData();
-  }, [userRole, id]);
+    if (authUserRole && id) {
+      fetchUserDataFromAPI();
+    }
+  }, [authUserRole, id, getToken]); // Keep necessary dependencies
 
   // Fetch real data from APIs
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('token');
+      const token = getToken();
       if (!token) return;
 
       try {
@@ -81,7 +79,7 @@ function DashboardHeader({ username = 'John Doe', onToggleSidebar, userRole = 'e
         setNotifications(transformedNotifications);
 
         // Fetch tasks based on user role
-        const tasksEndpoint = userRole === 'admin' ? '/tasks' : '/tasks/my';
+        const tasksEndpoint = authUserRole === 'admin' ? '/tasks' : '/tasks/my';
         const tasksRes = await api.get(tasksEndpoint, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -96,7 +94,7 @@ function DashboardHeader({ username = 'John Doe', onToggleSidebar, userRole = 'e
     };
 
     fetchData();
-  }, [userRole]);
+  }, [authUserRole, getToken]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -117,11 +115,11 @@ function DashboardHeader({ username = 'John Doe', onToggleSidebar, userRole = 'e
   }, []);
 
   const handleLogout = async () => {
-    await secureLogout(navigate);
+    await logout(navigate);
   };
 
   const handleProfileClick = () => {
-    const profilePath = userId ? `/${userRole}/${userId}/profile` : `/${userRole}/profile`;
+    const profilePath = userId ? `/${authUserRole}/${userId}/profile` : `/${authUserRole}/profile`;
     navigate(profilePath);
     setShowUserDropdown(false);
   };
@@ -280,7 +278,7 @@ function DashboardHeader({ username = 'John Doe', onToggleSidebar, userRole = 'e
             <div className="user-dropdown">
               <div className="dropdown-header">
                 <span className="user-name">{userName}</span>
-                <span className="user-role">{userRole}</span>
+                <span className="user-role">{authUserRole}</span>
               </div>
               <div className="dropdown-actions">
                 <button 

@@ -8,6 +8,7 @@ import api from '/src/api/api.js';
 import './styles/EmployeeRequest.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 // Validation schema for request form
 const RequestSchema = Yup.object().shape({
@@ -148,14 +149,14 @@ const EmployeeRequest = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { getToken } = useAuth();
 
   const fetchRequests = async () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await api.get('/requests/my', { 
-        headers: { Authorization: `Bearer ${token}` } 
+      const res = await api.get('/requests/my', {
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setRequests(res.data);
     } catch (err) {
@@ -165,33 +166,32 @@ const EmployeeRequest = () => {
     setLoading(false);
   };
 
-  useEffect(() => { 
-    fetchRequests(); 
+  useEffect(() => {
+    fetchRequests();
   }, []);
 
   const handleSubmitRequest = async (formData) => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const data = new FormData();
-      data.append('title', formData.title);
-      data.append('message', formData.message);
-      data.append('type', formData.type);
-      if (formData.attachment) data.append('attachment', formData.attachment);
-      
-      await api.post('/requests', data, {
-        headers: { 
-          Authorization: `Bearer ${token}`, 
-          'Content-Type': 'multipart/form-data' 
-        }
+      const form = new FormData();
+      form.append('title', formData.title);
+      form.append('message', formData.message);
+      form.append('type', formData.type);
+      if (formData.attachment) {
+        form.append('attachment', formData.attachment);
+      }
+
+      await api.post('/requests', form, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      
-      alert('Request sent successfully');
       fetchRequests();
     } catch (err) {
-      setError('Failed to send request');
-      console.error('Error sending request:', err);
+      setError('Failed to submit request');
+      console.error('Error submitting request:', err);
     }
     setLoading(false);
   };
@@ -294,7 +294,7 @@ const EmployeeRequest = () => {
                   <Card key={request._id}>
                     <div className="request-card-header">
                       <h4 className="request-title">{request.title}</h4>
-                      <span 
+                      <span
                         className="request-status"
                         style={{ backgroundColor: getStatusColor(request.status) }}
                       >
@@ -319,9 +319,9 @@ const EmployeeRequest = () => {
 
                     {request.attachment && (
                       <div className="request-attachment">
-                        <a 
-                          href={request.attachment} 
-                          target="_blank" 
+                        <a
+                          href={request.attachment}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="attachment-link"
                         >

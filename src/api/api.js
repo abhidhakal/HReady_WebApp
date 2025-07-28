@@ -28,11 +28,26 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Handle auth errors
+    // Handle auth errors - only logout for auth-related endpoints or if token is clearly invalid
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Token expired or invalid, redirect to login
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Check if this is an auth-related endpoint
+      const isAuthEndpoint = originalRequest.url.includes('/auth/') || 
+                            originalRequest.url.includes('/login') ||
+                            originalRequest.url.includes('/logout');
+      
+      // Only logout for auth endpoints or if we get a clear "token invalid" message
+      if (isAuthEndpoint || 
+          error.response.data?.message?.toLowerCase().includes('token') ||
+          error.response.data?.message?.toLowerCase().includes('unauthorized') ||
+          error.response.data?.message?.toLowerCase().includes('forbidden')) {
+        console.log('Auth error detected, logging out user');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+      
+      // For other endpoints, just reject the error without logging out
+      console.log('Non-auth 401/403 error, not logging out:', originalRequest.url);
       return Promise.reject(error);
     }
     

@@ -9,9 +9,9 @@ import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import PayrollPaymentModal from '/src/components/payroll/PayrollPaymentModal.jsx';
 import SalaryManagement from '/src/components/payroll/SalaryManagement.jsx';
 import AuthCheck from '/src/components/auth/AuthCheck.jsx';
-import { secureLogout } from '/src/auth/authService.js';
 import Modal from '/src/components/Modal.jsx';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 const PayrollDashboard = () => {
   const { id } = useParams();
@@ -77,6 +77,7 @@ const PayrollDashboard = () => {
   });
   
   const navigate = useNavigate();
+  const { getToken, logout } = useAuth();
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -84,11 +85,7 @@ const PayrollDashboard = () => {
 
   const handleLogoutConfirm = async () => {
     setShowLogoutModal(false);
-    await secureLogout(
-      navigate,
-      () => setToast({ message: 'Logged out successfully', type: 'success' }),
-      (error) => setToast({ message: 'Logout completed with warnings', type: 'warning' })
-    );
+    await logout(navigate);
   };
 
   const handleLogoutCancel = () => {
@@ -98,7 +95,7 @@ const PayrollDashboard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (!token) {
           setIsAuthenticated(false);
           setAuthLoading(false);
@@ -148,7 +145,7 @@ const PayrollDashboard = () => {
       setDashboardLoading(true);
       
       // Check if user is authenticated
-      const token = localStorage.getItem('token');
+      const token = getToken();
       if (!token) {
         setToast({ message: 'Please log in to access payroll data', type: 'error' });
         navigate('/login');

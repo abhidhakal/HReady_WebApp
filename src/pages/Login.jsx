@@ -1,11 +1,12 @@
 import '/src/pages/styles/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import Toast from '/src/components/Toast.jsx';
 import api, { checkApiHealth } from '/src/api/api.js';
+import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
 
 // Validation schema
 const LoginSchema = Yup.object().shape({
@@ -20,42 +21,29 @@ const LoginSchema = Yup.object().shape({
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState({ message: '', type: '' });
   const [attempts, setAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTime, setLockoutTime] = useState(null);
   const navigate = useNavigate();
+  const { isAuthenticated, userRole, userId, checkTokenValidity, login } = useAuth();
+  const { toast, showToast, showSuccess, showError, showInfo, hideToast } = useToast();
 
   // Check for existing session on component mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
-        
-        if (decoded.exp > currentTime) {
-          // Token is still valid, redirect to appropriate dashboard
-          if (decoded.role === 'admin') {
-            navigate(`/admin/${decoded.id}`);
-          } else if (decoded.role === 'employee') {
-            navigate(`/employee/${decoded.id}`);
-          }
-        } else {
-          // Token expired, clear it
-          localStorage.clear();
-        }
-      } catch (error) {
-        // Invalid token, clear it
-        localStorage.clear();
+    if (isAuthenticated && userRole && userId) {
+      // Token is still valid, redirect to appropriate dashboard
+      if (userRole === 'admin') {
+        navigate(`/admin/${userId}`);
+      } else if (userRole === 'employee') {
+        navigate(`/employee/${userId}`);
       }
     }
-  }, [navigate]);
+  }, [isAuthenticated, userRole, userId, navigate]);
 
   // Handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
     setLoading(true);
-    setToast({ message: 'Signing in...', type: 'info' });
+    showInfo('Signing in...');
 
     try {
       // Check if API is ready first (for slow Render deployments)
@@ -65,73 +53,62 @@ function Login() {
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
 
-      const res = await api.post('/auth/login', {
-        email: values.email.trim().toLowerCase(),
-        password: values.password
-      });
+      // Use useAuth login function
+      const result = await login(values.email, values.password, navigate);
+      
+      if (result.success) {
+        const data = result.data;
 
-      const data = res.data;
+        // Clear any previous error states
+        setAttempts(0);
+        setIsLocked(false);
+        setLockoutTime(null);
 
-      // Clear any previous error states
-      setAttempts(0);
-      setIsLocked(false);
-      setLockoutTime(null);
+        showSuccess('Login successful! Redirecting...');
 
-      // Store authentication data
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data._id);
-      localStorage.setItem('role', data.role);
-      localStorage.setItem('userName', data.name);
+        // Redirect after a short delay
+        setTimeout(() => {
+          if (data.role === 'admin') {
+            navigate(`/admin/${data._id}`);
+          } else if (data.role === 'employee') {
+            navigate(`/employee/${data._id}`);
+          }
+        }, 1500);
+      } else {
+        // Handle login error
+        const error = result.error;
+        console.error('Login error:', error);
+        
+        const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+        const statusCode = error.response?.status;
 
-      setToast({ message: 'Login successful! Redirecting...', type: 'success' });
-
-      // Redirect after a short delay
-      setTimeout(() => {
-        if (data.role === 'admin') {
-          navigate(`/admin/${data._id}`);
-        } else if (data.role === 'employee') {
-          navigate(`/employee/${data._id}`);
+        // Handle different error scenarios
+        if (statusCode === 423) {
+          // Account locked
+          setIsLocked(true);
+          const retryAfter = error.response?.data?.retryAfter || 900; // 15 minutes default
+          setLockoutTime(new Date(Date.now() + retryAfter * 1000));
+          showError('Account temporarily locked due to too many failed attempts. Please try again later.');
+        } else if (statusCode === 429) {
+          // Rate limited
+          const retryAfter = error.response?.data?.retryAfter || 900;
+          setLockoutTime(new Date(Date.now() + retryAfter * 1000));
+          showError('Too many login attempts. Please wait before trying again.');
+        } else if (statusCode === 401) {
+          // Invalid credentials
+          setAttempts(prev => prev + 1);
+          showError(errorMessage);
+        } else if (statusCode === 403) {
+          // Access denied (suspicious request)
+          showError('Access denied. Please check your request and try again.');
+        } else {
+          // Other errors
+          showError(errorMessage);
         }
-      }, 1500);
-
+      }
     } catch (error) {
       console.error('Login error:', error);
-      
-      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
-      const statusCode = error.response?.status;
-
-      // Handle different error scenarios
-      if (statusCode === 423) {
-        // Account locked
-        setIsLocked(true);
-        const retryAfter = error.response?.data?.retryAfter || 900; // 15 minutes default
-        setLockoutTime(new Date(Date.now() + retryAfter * 1000));
-        setToast({ 
-          message: 'Account temporarily locked due to too many failed attempts. Please try again later.', 
-          type: 'error' 
-        });
-      } else if (statusCode === 429) {
-        // Rate limited
-        const retryAfter = error.response?.data?.retryAfter || 900;
-        setLockoutTime(new Date(Date.now() + retryAfter * 1000));
-        setToast({ 
-          message: 'Too many login attempts. Please wait before trying again.', 
-          type: 'error' 
-        });
-      } else if (statusCode === 401) {
-        // Invalid credentials
-        setAttempts(prev => prev + 1);
-        setToast({ message: errorMessage, type: 'error' });
-      } else if (statusCode === 403) {
-        // Access denied (suspicious request)
-        setToast({ 
-          message: 'Access denied. Please check your request and try again.', 
-          type: 'error' 
-        });
-      } else {
-        // Other errors
-        setToast({ message: errorMessage, type: 'error' });
-      }
+      showError('Login failed. Please try again.');
     } finally {
       setLoading(false);
       setSubmitting(false);
@@ -159,7 +136,7 @@ function Login() {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => setToast({ message: '', type: '' })}
+        onClose={hideToast}
       />
       
       <div className="login-container">

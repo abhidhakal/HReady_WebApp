@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '/src/api/api.js';
-import '/src/pages/admin/styles/AdminAttendance.css';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
-// import logo from '../../assets/primary_icon.webp';
+import './styles/AdminAttendance.css';
+import api from '/src/api/api.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+import { useAuth } from '/src/hooks/useAuth.js';
+import { useSidebar } from '../../hooks/useSidebar';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TextField from '@mui/material/TextField';
-import { useSidebar } from '../../hooks/useSidebar';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -63,9 +65,10 @@ const AdminAttendance = () => {
     return today;
   });
   const navigate = useNavigate();
+  const { getToken } = useAuth();
 
   const fetchData = async () => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
       navigate('/login');
       return;
@@ -109,7 +112,7 @@ const AdminAttendance = () => {
   const handleCheckIn = async () => {
     try {
       await api.post('/attendance/checkin', {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setTodayStatus('Checked In');
       fetchData();
@@ -121,7 +124,7 @@ const AdminAttendance = () => {
   const handleCheckOut = async () => {
     try {
       await api.put('/attendance/checkout', { date: new Date() }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setTodayStatus('Checked Out');
       fetchData();

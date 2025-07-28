@@ -3,13 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '../../pages/admin/styles/Dashboard.css';
 import api from '/src/api/api.js';
+import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
-import { secureLogout } from '/src/auth/authService.js';
+import { useAuth } from '/src/hooks/useAuth.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 
-function EmployeeDashboard() {
+const EmployeeDashboard = () => {
   const { id } = useParams();
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [name, setName] = useState('Employee');
@@ -21,6 +22,7 @@ function EmployeeDashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { getToken, fetchUserData, logout } = useAuth();
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
@@ -46,7 +48,7 @@ function EmployeeDashboard() {
 
   const handleLogoutConfirm = async () => {
     setShowLogoutModal(false);
-    await secureLogout(navigate);
+    await logout(navigate);
   };
 
   const handleLogoutCancel = () => {
@@ -55,7 +57,7 @@ function EmployeeDashboard() {
 
   useEffect(() => {
     setLoading(true);
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
       navigate('/login');
       return;
@@ -100,13 +102,13 @@ function EmployeeDashboard() {
     };
 
     Promise.all([fetchEmployee(), fetchAttendance()]).finally(() => setLoading(false));
-  }, [navigate]);
+  }, [navigate, getToken]);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
         const res = await api.get('/announcements', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${getToken()}` }
         });
         setAnnouncements(res.data);
       } catch (err) {
@@ -114,13 +116,13 @@ function EmployeeDashboard() {
       }
     };
     fetchAnnouncements();
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const res = await api.get('/tasks/my', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${getToken()}` }
         });
         setTasks(res.data);
       } catch (err) {
@@ -128,7 +130,7 @@ function EmployeeDashboard() {
       }
     };
     fetchTasks();
-  }, []);
+  }, [getToken]);
 
   const formatDate = (dateString) => {
     if (!dateString) return null;
@@ -167,10 +169,76 @@ function EmployeeDashboard() {
 
         <div className="main-content">
           {loading ? (
-            <div className="dashboard-skeletons">
-              {[1,2,3].map(i => (
-                <Skeleton key={i} variant="rectangular" width={320} height={160} style={{ margin: 16 }} />
-              ))}
+            <div className="dashboard-content">
+              {/* Welcome Banner Skeleton */}
+              <div className="welcome-banner">
+                <div className="banner-left">
+                  <Skeleton variant="circular" width={80} height={80} style={{ marginRight: 16 }} />
+                  <Skeleton variant="text" width={200} height={32} />
+                </div>
+                <div className="banner-middle">
+                  <Skeleton variant="text" width={300} height={24} />
+                  <Skeleton variant="text" width={250} height={16} />
+                </div>
+                <div className="banner-right">
+                  <Skeleton variant="rectangular" width={150} height={40} />
+                </div>
+              </div>
+
+              {/* Info Cards Skeleton */}
+              <div className="info-cards">
+                {[1,2,3,4].map(i => (
+                  <div className="info-card" key={i}>
+                    <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 12 }} />
+                    <Skeleton variant="rectangular" width={80} height={32} />
+                    <Skeleton variant="text" width={40} height={16} style={{ marginTop: 12 }} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Tasks Section Skeleton */}
+              <div className="other-section">
+                <div className="task-section">
+                  <div className="task-header">
+                    <Skeleton variant="text" width={120} height={28} />
+                    <Skeleton variant="rectangular" width={100} height={32} />
+                  </div>
+                  <div className="task-cards-container">
+                    {[1,2,3].map(i => (
+                      <div className="task-card" key={i}>
+                        <div className="task-card-header">
+                          <Skeleton variant="text" width={150} height={24} />
+                          <Skeleton variant="rectangular" width={80} height={24} />
+                        </div>
+                        <Skeleton variant="text" width="100%" height={16} />
+                        <Skeleton variant="text" width="80%" height={16} />
+                        <div className="task-card-footer">
+                          <Skeleton variant="text" width={120} height={16} />
+                          <Skeleton variant="rectangular" width={100} height={32} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Announcements Section Skeleton */}
+                <div className="announcement-section">
+                  <div className="announcement-header">
+                    <Skeleton variant="text" width={150} height={28} />
+                    <Skeleton variant="rectangular" width={80} height={32} />
+                  </div>
+                  <div className="announcement-box-cards scrollable-announcements">
+                    {[1,2,3].map(i => (
+                      <div className="announcement-card" key={i}>
+                        <Skeleton variant="text" width={180} height={24} />
+                        <Skeleton variant="text" width="100%" height={16} />
+                        <Skeleton variant="text" width="90%" height={16} />
+                        <Skeleton variant="text" width={120} height={14} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="dashboard-content">
@@ -213,26 +281,14 @@ function EmployeeDashboard() {
               </div>
 
               {/* Info Cards Section */}
-              {loading ? (
-                <div className="info-cards">
-                  {[1,2,3,4].map(i => (
-                    <div className="info-card" key={i}>
-                      <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 12 }} />
-                      <Skeleton variant="rectangular" width={80} height={32} />
-                      <Skeleton variant="text" width={40} height={16} style={{ marginTop: 12 }} />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="info-cards">
-                  {/* Place your real info cards here, each with className="info-card" */}
-                  {/* Example: */}
-                  <div className="info-card overview-card">...</div>
-                  <div className="info-card position-card">...</div>
-                  <div className="info-card leaves-card">...</div>
-                  <div className="info-card pending-tasks-card">...</div>
-                </div>
-              )}
+              <div className="info-cards">
+                {/* Place your real info cards here, each with className="info-card" */}
+                {/* Example: */}
+                <div className="info-card overview-card">...</div>
+                <div className="info-card position-card">...</div>
+                <div className="info-card leaves-card">...</div>
+                <div className="info-card pending-tasks-card">...</div>
+              </div>
 
               <div className="other-section">
                 <div className="task-section">

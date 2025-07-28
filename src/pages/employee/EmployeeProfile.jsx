@@ -6,6 +6,8 @@ import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeProfile.css';
 import Toast from '/src/components/Toast.jsx';
+import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
@@ -159,7 +161,7 @@ const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
 
 const EmployeeProfile = () => {
   const { id } = useParams();
-  const [toast, setToast] = useState({ message: '', type: '' });
+  const { toast, showToast, showSuccess, showError, hideToast } = useToast();
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [profile, setProfile] = useState({
     name: '',
@@ -173,8 +175,7 @@ const EmployeeProfile = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-
-  const token = localStorage.getItem('token');
+  const { getToken } = useAuth();
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
@@ -198,7 +199,7 @@ const EmployeeProfile = () => {
     setLoading(true);
     try {
       const res = await api.get('/employees/me', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setProfile({
         name: res.data.name,
@@ -209,7 +210,7 @@ const EmployeeProfile = () => {
       });
     } catch (err) {
       console.error('Error fetching profile:', err);
-      setToast({ message: 'Failed to fetch profile', type: 'error' });
+      showError('Failed to fetch profile');
     }
     setLoading(false);
   };
@@ -227,7 +228,7 @@ const EmployeeProfile = () => {
     if (file) {
       const maxSize = 2 * 1024 * 1024;
       if (file.size > maxSize) {
-        setToast({ message: 'File is too large. Maximum size is 2 MB.', type: 'error' });
+        showError('File is too large. Maximum size is 2 MB.');
         return;
       }
 
@@ -238,15 +239,15 @@ const EmployeeProfile = () => {
       try {
         await api.put('/employees/upload-profile-picture', formData, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${getToken()}`,
             'Content-Type': 'multipart/form-data',
           },
         });
-        setToast({ message: 'Profile picture updated successfully.', type: 'success' });
+        showSuccess('Profile picture updated successfully.');
         fetchProfile();
       } catch (err) {
         console.error('Error uploading profile picture:', err);
-        setToast({ message: 'Failed to upload picture.', type: 'error' });
+        showError('Failed to upload picture.');
       } finally {
         setUploading(false);
       }
@@ -256,19 +257,36 @@ const EmployeeProfile = () => {
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
-      await api.put('/employees/me', {
+      const response = await api.put('/employees/me', {
         name: profile.name,
         email: profile.email,
         contactNo: profile.contactNo,
       }, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setEditing(false);
-      setToast({ message: 'Profile updated successfully.', type: 'success' });
+      showSuccess('Profile updated successfully.');
       fetchProfile();
     } catch (err) {
       console.error('Error updating profile:', err);
-      setToast({ message: 'Failed to update profile. Please try again.', type: 'error' });
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      // Handle different types of errors
+      if (err.response?.status === 400) {
+        // Validation error from backend
+        const errorMessage = err.response.data?.message || 'Invalid data provided. Please check your input.';
+        showError(errorMessage);
+      } else if (err.response?.status === 401 || err.response?.status === 403) {
+        // Auth error - this will trigger the interceptor logout
+        showError('Authentication failed. Please log in again.');
+      } else if (err.response?.status >= 500) {
+        // Server error
+        showError('Server error. Please try again later.');
+      } else {
+        // Network or other errors
+        showError('Failed to update profile. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -276,7 +294,7 @@ const EmployeeProfile = () => {
 
   const handleChangePassword = async (passwords) => {
     if (passwords.new !== passwords.confirm) {
-      setToast({ message: 'New passwords do not match.', type: 'error' });
+      showError('New passwords do not match.');
       return;
     }
     try {
@@ -285,15 +303,29 @@ const EmployeeProfile = () => {
         currentPassword: passwords.current,
         newPassword: passwords.new,
       }, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setShowPasswordModal(false);
-      setToast({ message: 'Password changed successfully.', type: 'success' });
+      showSuccess('Password changed successfully.');
     } catch (err) {
       console.error('Error changing password:', err);
-      setToast({ message: 'Failed to change password.', type: 'error' });
+      showError('Failed to change password.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (!window.confirm('Are you sure you want to deactivate your account? This action cannot be undone.')) return;
+    try {
+      await api.delete('/employees/me', {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      localStorage.clear();
+      navigate('/login');
+    } catch (err) {
+      console.error('Error deactivating account:', err);
+      showError('Failed to deactivate account.');
     }
   };
 
@@ -302,7 +334,7 @@ const EmployeeProfile = () => {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => setToast({ message: '', type: '' })}
+        onClose={hideToast}
       />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="employee" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -466,6 +498,13 @@ const EmployeeProfile = () => {
                       >
                         <i className="fas fa-lock"></i>
                         Change Password
+                      </button>
+                      <button
+                        className="profile-btn deactivate"
+                        onClick={handleDeactivate}
+                      >
+                        <i className="fas fa-user-times"></i>
+                        Deactivate Account
                       </button>
                     </div>
                   )}

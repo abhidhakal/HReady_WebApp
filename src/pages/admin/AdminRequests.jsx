@@ -6,6 +6,7 @@ import api from '/src/api/api.js';
 import './styles/AdminRequests.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 const StatusChip = ({ status }) => {
   const getStatusColor = (status) => {
@@ -55,13 +56,13 @@ function AdminRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionState, setActionState] = useState({}); // { [requestId]: { mode: 'approve'|'reject'|null, comment: '' } }
+  const { getToken } = useAuth();
 
   const fetchRequests = async () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await api.get('/requests', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/requests', { headers: { Authorization: `Bearer ${getToken()}` } });
       setRequests(res.data);
     } catch (err) {
       setError('Failed to fetch requests');
@@ -90,10 +91,9 @@ function AdminRequests() {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
       const comment = actionState[id]?.comment || '';
       await api.patch(`/requests/${id}/status`, { status, adminComment: comment }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${getToken()}` }
       });
       setActionState(s => ({ ...s, [id]: { mode: null, comment: '' } }));
       fetchRequests();

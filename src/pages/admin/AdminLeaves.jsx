@@ -11,6 +11,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TextField } from '@mui/material';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 const StatusChip = ({ status }) => {
   const getStatusColor = (status) => {
@@ -65,14 +66,14 @@ function AdminLeaves() {
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const token = localStorage.getItem('token');
+  const { getToken } = useAuth();
 
   const fetchLeaves = async () => {
     setLoading(true);
     setError('');
     try {
       const res = await api.get('/leaves/all', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setLeaves(res.data);
     } catch (err) {
@@ -91,7 +92,7 @@ function AdminLeaves() {
 
     try {
       await api.put(`/leaves/${leaveId}/status`, { status }, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       fetchLeaves();
     } catch (err) {
@@ -115,7 +116,7 @@ function AdminLeaves() {
 
       await api.post('/leaves/admin', payload, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
           'Content-Type': 'multipart/form-data',
         },
       });

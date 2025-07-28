@@ -412,3 +412,22 @@
     right: -10px;
   }
 }
+
+/* Remove focus outlines from all buttons */
+.notification-btn:focus,
+.tasks-btn:focus,
+.user-btn:focus,
+.close-btn:focus,
+.dropdown-item:focus {
+  outline: none;
+}
+
+/* Alternative: Add a subtle focus style if needed */
+.notification-btn:focus-visible,
+.tasks-btn:focus-visible,
+.user-btn:focus-visible,
+.close-btn:focus-visible,
+.dropdown-item:focus-visible {
+  outline: 2px solid #ddd;
+  outline-offset: 2px;
+}

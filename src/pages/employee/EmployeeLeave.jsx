@@ -11,6 +11,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TextField from '@mui/material/TextField';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 // import logo from '../../assets/primary_icon.webp';
 
 // Validation schema for leave form
@@ -194,8 +195,9 @@ const EmployeeLeaves = () => {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { getToken } = useAuth();
 
-  const token = localStorage.getItem('token');
+  const token = getToken();
 
   const fetchLeaves = async () => {
     setLoading(true);

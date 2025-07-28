@@ -7,6 +7,7 @@ import '/src/pages/employee/styles/EmployeeAttendance.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -46,9 +47,10 @@ const EmployeeAttendance = () => {
   const [todayStatus, setTodayStatus] = useState('Not Checked In');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { getToken } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
       navigate('/login');
       return;
@@ -79,12 +81,12 @@ const EmployeeAttendance = () => {
     };
 
     fetchAttendance();
-  }, [navigate]);
+  }, [navigate, getToken]);
 
   const handleCheckIn = async () => {
     try {
       await api.post('/attendance/checkin', {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setTodayStatus('Checked In');
       window.location.reload();
@@ -96,7 +98,7 @@ const EmployeeAttendance = () => {
   const handleCheckOut = async () => {
     try {
       await api.put('/attendance/checkout', { date: new Date() }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       setTodayStatus('Checked Out');
       window.location.reload();

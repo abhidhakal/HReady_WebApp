@@ -7,6 +7,7 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/ManageAnnouncements.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>
@@ -152,8 +153,9 @@ const ManageAnnouncements = () => {
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const navigate = useNavigate();
+  const { getToken } = useAuth();
 
-  const token = localStorage.getItem('token');
+  const token = getToken();
 
   const fetchAnnouncements = async () => {
     setLoading(true);

@@ -5,6 +5,7 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeTasks.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 // import logo from '../../assets/primary_icon.webp';
 
 const Card = ({ children }) => (
@@ -75,8 +76,9 @@ const EmployeeTasks = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { getToken } = useAuth();
 
-  const token = localStorage.getItem('token');
+  const token = getToken();
 
   const fetchTasks = async () => {
     setLoading(true);

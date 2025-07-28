@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Formik, Form } from 'formik';
-import api from '/src/api/api.js';
-import '/src/pages/admin/styles/ManageEmployees.css';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import api from '/src/api/api.js';
+import './styles/ManageEmployees.css';
+import Toast from '/src/components/Toast.jsx';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -204,8 +207,9 @@ const ManageEmployees = () => {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
+  const { getToken } = useAuth();
 
-  const token = localStorage.getItem('token');
+  const token = getToken();
   const navigate = useNavigate();
 
   const fetchEmployees = async () => {

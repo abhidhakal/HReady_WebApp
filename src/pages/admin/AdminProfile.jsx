@@ -6,6 +6,8 @@ import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/AdminProfile.css';
 import Toast from '/src/components/Toast.jsx';
+import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
 
@@ -158,7 +160,6 @@ const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
 
 const AdminProfile = () => {
   const { id } = useParams();
-  const [toast, setToast] = useState({ message: '', type: '' });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState({
     name: '',
@@ -172,25 +173,25 @@ const AdminProfile = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-
-  const token = localStorage.getItem('token');
+  const { getToken, fetchUserData } = useAuth();
+  const { toast, showToast, showSuccess, showError } = useToast();
 
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admins/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProfile({
-        name: res.data.name,
-        email: res.data.email,
-        contactNo: res.data.contactNo || '',
-        profilePicture: res.data.profilePicture || '',
-        role: res.data.role || 'Admin',
-      });
+      const userData = await fetchUserData();
+      if (userData) {
+        setProfile({
+          name: userData.name,
+          email: userData.email,
+          contactNo: userData.contactNo || '',
+          profilePicture: userData.profilePicture || '',
+          role: userData.role || 'Admin',
+        });
+      }
     } catch (err) {
       console.error('Error fetching profile:', err);
-      setToast({ message: 'Failed to fetch profile', type: 'error' });
+      showError('Failed to fetch profile');
     }
     setLoading(false);
   };
@@ -226,7 +227,7 @@ const AdminProfile = () => {
     if (file) {
       const maxSize = 2 * 1024 * 1024;
       if (file.size > maxSize) {
-        setToast({ message: 'File is too large. Maximum size is 2 MB.', type: 'error' });
+        showError('File is too large. Maximum size is 2 MB.');
         return;
       }
 
@@ -245,18 +246,18 @@ const AdminProfile = () => {
       try {
         const response = await api.put('/admins/upload-profile-picture', formData, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${getToken()}`,
             'Content-Type': 'multipart/form-data',
           },
         });
         
         console.log('Frontend: Upload successful:', response.data);
-        setToast({ message: 'Profile picture updated successfully.', type: 'success' });
+        showSuccess('Profile picture updated successfully.');
         fetchProfile();
       } catch (err) {
         console.error('Frontend: Error uploading profile picture:', err);
         console.error('Frontend: Error response:', err.response?.data);
-        setToast({ message: 'Failed to upload picture.', type: 'error' });
+        showError('Failed to upload picture.');
       } finally {
         setUploading(false);
       }
@@ -274,15 +275,15 @@ const AdminProfile = () => {
           contactNo: profile.contactNo,
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${getToken()}` },
         }
       );
       setEditing(false);
-      setToast({ message: 'Profile updated successfully.', type: 'success' });
+      showSuccess('Profile updated successfully.');
       fetchProfile();
     } catch (err) {
       console.error('Error updating profile:', err);
-      setToast({ message: 'Failed to update profile. Please try again.', type: 'error' });
+      showError('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -290,7 +291,7 @@ const AdminProfile = () => {
 
   const handleChangePassword = async (passwords) => {
     if (passwords.new !== passwords.confirm) {
-      setToast({ message: 'New passwords do not match.', type: 'error' });
+      showError('New passwords do not match.');
       return;
     }
     try {
@@ -302,14 +303,14 @@ const AdminProfile = () => {
           newPassword: passwords.new,
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${getToken()}` },
         }
       );
       setShowPasswordModal(false);
-      setToast({ message: 'Password changed successfully.', type: 'success' });
+      showSuccess('Password changed successfully.');
     } catch (err) {
       console.error('Error changing password:', err);
-      setToast({ message: 'Failed to change password.', type: 'error' });
+      showError('Failed to change password.');
     } finally {
       setLoading(false);
     }
@@ -319,13 +320,13 @@ const AdminProfile = () => {
     if (!window.confirm('Are you sure you want to deactivate your account? This action cannot be undone.')) return;
     try {
       await api.delete('/admins/me', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       localStorage.clear();
       navigate('/login');
     } catch (err) {
       console.error('Error deactivating account:', err);
-      setToast({ message: 'Failed to deactivate account.', type: 'error' });
+      showError('Failed to deactivate account.');
     }
   };
 
@@ -334,7 +335,7 @@ const AdminProfile = () => {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => setToast({ message: '', type: '' })}
+        onClose={() => showToast({ message: '', type: '' })}
       />
       <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} userRole="admin" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>

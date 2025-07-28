@@ -6,7 +6,7 @@ import api from '/src/api/api.js';
 import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 // import logo from '../../assets/primary_icon.webp';
-import { secureLogout } from '/src/auth/authService.js';
+import { useAuth } from '/src/hooks/useAuth.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
 
@@ -29,6 +29,7 @@ function AdminDashboard() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const { getToken, fetchUserData, logout } = useAuth();
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
@@ -54,7 +55,7 @@ function AdminDashboard() {
 
   const handleLogoutConfirm = async () => {
     setShowLogoutModal(false);
-    await secureLogout(
+    await logout(
       navigate,
       () => setToast({ message: 'Logged out successfully', type: 'success' }),
       (error) => setToast({ message: 'Logout completed with warnings', type: 'warning' })
@@ -66,27 +67,31 @@ function AdminDashboard() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
       navigate('/login');
       return;
     }
 
-    api.get('/admins/me', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => {
-        setName(res.data.name || 'Admin');
-        setProfilePicture(res.data.profilePicture || '');
-      })
-      .catch(() => {
+    const fetchAdminData = async () => {
+      try {
+        const userData = await fetchUserData();
+        if (userData) {
+          setName(userData.name || 'Admin');
+          setProfilePicture(userData.profilePicture || '');
+        }
+      } catch (error) {
+        console.error('Error fetching admin data:', error);
         setName('Admin');
         setProfilePicture('');
-      });
-  }, [navigate]);
+      }
+    };
+
+    fetchAdminData();
+  }, [navigate, getToken, fetchUserData]); // Add fetchUserData back to dependencies
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) return;
 
     api.get('/attendance/me', {
@@ -100,21 +105,21 @@ function AdminDashboard() {
       .catch(err => {
         if (err.response?.status === 404) setAttendanceStatus('Not Done');
       });
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     api.get('/announcements', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      headers: { Authorization: `Bearer ${getToken()}` }
     })
       .then(res => setAnnouncements(res.data))
       .catch(() => {});
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     const fetchEmployeesAndOverview = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         const res = await api.get('/employees', {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -138,12 +143,12 @@ function AdminDashboard() {
     };
 
     fetchEmployeesAndOverview();
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     const fetchPendingLeaveRequests = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         const res = await api.get('/leaves/all', {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -159,15 +164,15 @@ function AdminDashboard() {
     };
 
     fetchPendingLeaveRequests();
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     api.get('/tasks', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      headers: { Authorization: `Bearer ${getToken()}` }
     })
       .then(res => setTasks(res.data))
       .catch(() => {});
-  }, []);
+  }, [getToken]);
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 

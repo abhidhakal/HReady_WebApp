@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Formik, Form } from 'formik';
-import api from '/src/api/api.js';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
-import '../../pages/admin/styles/ManageTasks.css';
-// import logo from '../../assets/primary_icon.webp';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import TextField from '@mui/material/TextField';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import api from '/src/api/api.js';
+import './styles/ManageTasks.css';
 import Toast from '/src/components/Toast.jsx';
-import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useAuth } from '/src/hooks/useAuth.js';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -189,7 +185,8 @@ const ManageTasks = () => {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
 
-  const token = localStorage.getItem('token');
+  const { getToken } = useAuth();
+  const token = getToken();
   const navigate = useNavigate();
 
   // Fetch employees
