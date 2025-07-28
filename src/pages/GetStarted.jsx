@@ -158,13 +158,6 @@ function GetStarted() {
               </Link>
             </div>
           </div>
-          <div className="hero-image">
-            <img 
-              src="/assets/images/get-started-hero.png" 
-              alt="HReady setup process illustration"
-              loading="lazy"
-            />
-          </div>
         </section>
 
         {/* How It Works Section */}

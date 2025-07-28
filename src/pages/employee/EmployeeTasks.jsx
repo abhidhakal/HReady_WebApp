@@ -4,6 +4,7 @@ import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeTasks.css';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 // import logo from '../../assets/primary_icon.webp';
 
 const Card = ({ children }) => (
@@ -70,7 +71,7 @@ const StatusChip = ({ status, onStatusChange, taskId }) => {
 const EmployeeTasks = () => {
   const { id } = useParams();
   const [tasks, setTasks] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -127,7 +128,7 @@ const EmployeeTasks = () => {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} userRole="employee" />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="employee" />
 
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>

@@ -6,6 +6,7 @@ import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/ManageAnnouncements.css';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>
@@ -149,7 +150,7 @@ const ManageAnnouncements = () => {
   const [error, setError] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
@@ -239,7 +240,7 @@ const ManageAnnouncements = () => {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>

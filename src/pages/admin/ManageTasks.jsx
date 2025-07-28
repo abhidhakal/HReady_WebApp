@@ -12,6 +12,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Toast from '/src/components/Toast.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -182,7 +183,7 @@ const ManageTasks = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
@@ -304,7 +305,7 @@ const ManageTasks = () => {
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} userRole="admin" />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
 
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>

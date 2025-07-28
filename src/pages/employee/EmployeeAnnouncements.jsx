@@ -4,6 +4,7 @@ import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeAnnouncements.css';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>
@@ -11,7 +12,7 @@ const Card = ({ children }) => (
 
 const EmployeeAnnouncements = () => {
   const { id } = useParams();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,7 +53,7 @@ const EmployeeAnnouncements = () => {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>

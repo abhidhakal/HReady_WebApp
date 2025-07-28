@@ -8,6 +8,7 @@ import './styles/EmployeeProfile.css';
 import Toast from '/src/components/Toast.jsx';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 // Validation schema for password change
 const PasswordSchema = Yup.object().shape({
@@ -159,7 +160,7 @@ const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
 const EmployeeProfile = () => {
   const { id } = useParams();
   const [toast, setToast] = useState({ message: '', type: '' });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -293,7 +294,7 @@ const EmployeeProfile = () => {
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} userRole="employee" />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="employee" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>

@@ -8,6 +8,7 @@ import './styles/AdminProfile.css';
 import Toast from '/src/components/Toast.jsx';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 // Validation schema for password change
 const PasswordSchema = Yup.object().shape({
@@ -159,7 +160,7 @@ const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
 const AdminProfile = () => {
   const { id } = useParams();
   const [toast, setToast] = useState({ message: '', type: '' });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -181,6 +182,7 @@ const AdminProfile = () => {
       const res = await api.get('/admins/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log('AdminProfile data received:', res.data);
       setProfile({
         name: res.data.name,
         email: res.data.email,
@@ -188,6 +190,7 @@ const AdminProfile = () => {
         profilePicture: res.data.profilePicture || '',
         role: res.data.role || 'Admin',
       });
+      console.log('Profile picture set to:', res.data.profilePicture || '');
     } catch (err) {
       console.error('Error fetching profile:', err);
       setToast({ message: 'Failed to fetch profile', type: 'error' });
@@ -200,10 +203,23 @@ const AdminProfile = () => {
   }, []);
 
   const resolveProfilePicture = (picture) => {
-    if (!picture) return '/assets/images/profile.svg';
+    console.log('AdminProfile resolveProfilePicture called with:', picture);
+    if (!picture) {
+      console.log('No picture, returning default');
+      return '/assets/images/profile.svg';
+    }
     const base = getApiBaseUrl().replace(/\/api$/, '');
-    if (picture.startsWith('/uploads')) return `${base}/api${picture}`;
-    if (picture.startsWith('http')) return picture;
+    console.log('API base URL:', base);
+    if (picture.startsWith('/uploads')) {
+      const fullUrl = `${base}/api${picture}`;
+      console.log('Upload path, returning:', fullUrl);
+      return fullUrl;
+    }
+    if (picture.startsWith('http')) {
+      console.log('HTTP URL, returning as-is:', picture);
+      return picture;
+    }
+    console.log('Unknown format, returning default');
     return '/assets/images/profile.svg';
   };
 
@@ -314,7 +330,7 @@ const AdminProfile = () => {
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} userRole="admin" />
+      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
@@ -370,6 +386,11 @@ const AdminProfile = () => {
                         src={resolveProfilePicture(profile.profilePicture)}
                         alt="Profile"
                         className="profile-avatar"
+                        onLoad={() => console.log('AdminProfile image loaded successfully')}
+                        onError={(e) => {
+                          console.error('AdminProfile image failed to load:', e.target.src);
+                          console.error('Error details:', e);
+                        }}
                       />
                       {editing && (
                         <>

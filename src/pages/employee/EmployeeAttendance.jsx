@@ -6,6 +6,7 @@ import '/src/pages/employee/styles/EmployeeAttendance.css';
 // import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -40,12 +41,11 @@ const Card = ({ children, style }) => (
 
 const EmployeeAttendance = () => {
   const { id } = useParams();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [attendanceRecord, setAttendanceRecord] = useState(null);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
+  const [myRecord, setMyRecord] = useState(null);
   const [todayStatus, setTodayStatus] = useState('Not Checked In');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -55,12 +55,12 @@ const EmployeeAttendance = () => {
     }
 
     const fetchAttendance = async () => {
+      setLoading(true);
       try {
         const res = await api.get('/attendance/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setAttendanceRecord(res.data);
-
+        setMyRecord(res.data);
         if (res.data.check_in_time && !res.data.check_out_time) {
           setTodayStatus('Checked In');
         } else if (res.data.check_in_time && res.data.check_out_time) {
@@ -69,9 +69,13 @@ const EmployeeAttendance = () => {
           setTodayStatus('Not Checked In');
         }
       } catch (err) {
-        console.error('Error fetching attendance:', err);
-        setAttendanceRecord(null);
+        if (err.response && err.response.status === 404) {
+          setMyRecord(null); // No record for today
+        } else {
+          console.error('Error fetching attendance:', err);
+        }
       }
+      setLoading(false);
     };
 
     fetchAttendance();
@@ -107,7 +111,7 @@ const EmployeeAttendance = () => {
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
-          <li><img src="/assets/images/primary_icon.webp" alt="Logo" /></li>
+            <li><img src="/assets/images/primary_icon.webp" alt="Logo" /></li>
             <li><a onClick={() => navigate(`/employee/${id}`)}>Dashboard</a></li>
             <li><a className="nav-dashboard" onClick={() => navigate(`/employee/${id}/attendance`)}>Attendance</a></li>
             <li><a onClick={() => navigate(`/employee/${id}/payroll`)}>My Payroll</a></li>
@@ -129,10 +133,9 @@ const EmployeeAttendance = () => {
             </li>
           </ul>
         </nav>
-
         <div className="main-content attendance-page" style={{ maxWidth: 600, margin: '0 auto' }}>
           <h2 style={{ marginBottom: 24 }}>My Attendance</h2>
-          {!attendanceRecord ? (
+          {loading ? (
             <Card>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <Skeleton variant="text" width="60%" height={24} />
@@ -147,32 +150,32 @@ const EmployeeAttendance = () => {
                 <span className="attendance-header-title">Today</span>
                 <StatusChip status={todayStatus} />
               </div>
-              {attendanceRecord ? (
+              {myRecord ? (
                 <div className="attendance-details">
                   <div className="attendance-date">
                     <span className="attendance-date-icon"><i className="fas fa-calendar-alt"></i></span>
-                    <span className="attendance-date-text">{new Date(attendanceRecord.date).toLocaleDateString()}</span>
+                    <span className="attendance-date-text">{new Date(myRecord.date).toLocaleDateString()}</span>
                   </div>
                   <div className="attendance-check-in">
                     <span className="attendance-check-in-icon"><i className="fas fa-sign-in-alt"></i></span>
                     <span className="attendance-check-in-label">Check In:</span>&nbsp;
-                    <span className="attendance-check-in-time">{attendanceRecord.check_in_time ? new Date(attendanceRecord.check_in_time).toLocaleTimeString() : '-'}</span>
+                    <span className="attendance-check-in-time">{myRecord.check_in_time ? new Date(myRecord.check_in_time).toLocaleTimeString() : '-'}</span>
                   </div>
                   <div className="attendance-check-out">
                     <span className="attendance-check-out-icon"><i className="fas fa-sign-out-alt"></i></span>
                     <span className="attendance-check-out-label">Check Out:</span>&nbsp;
-                    <span className="attendance-check-out-time">{attendanceRecord.check_out_time ? new Date(attendanceRecord.check_out_time).toLocaleTimeString() : '-'}</span>
+                    <span className="attendance-check-out-time">{myRecord.check_out_time ? new Date(myRecord.check_out_time).toLocaleTimeString() : '-'}</span>
                   </div>
                   <div className="attendance-total-hours">
                     <span className="attendance-total-hours-icon"><i className="fas fa-clock"></i></span>
                     <span className="attendance-total-hours-label">Total Hours:</span>&nbsp;
-                    <span className="attendance-total-hours-value">{attendanceRecord.total_hours ? attendanceRecord.total_hours.toFixed(2) : '-'}</span>
+                    <span className="attendance-total-hours-value">{myRecord.total_hours ? myRecord.total_hours.toFixed(2) : '-'}</span>
                   </div>
                 </div>
               ) : (
                 <div className="attendance-empty-state">
                   <span className="attendance-empty-state-icon"><i className="fas fa-info-circle"></i></span>
-                  No record for today.
+                  No attendance record for today.
                 </div>
               )}
               <div className="attendance-actions">

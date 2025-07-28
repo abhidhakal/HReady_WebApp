@@ -7,6 +7,7 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import api from '/src/api/api.js';
 import './styles/EmployeeRequest.css';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 // Validation schema for request form
 const RequestSchema = Yup.object().shape({
@@ -143,7 +144,7 @@ const RequestForm = ({ onSubmit, loading }) => {
 const EmployeeRequest = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -221,7 +222,7 @@ const EmployeeRequest = () => {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>

@@ -6,6 +6,7 @@ import '/src/pages/admin/styles/ManageEmployees.css';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -202,7 +203,7 @@ const ManageEmployees = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
 
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
@@ -279,7 +280,7 @@ const ManageEmployees = () => {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
+      <DashboardHeader onToggleSidebar={toggleSidebar} />
 
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>

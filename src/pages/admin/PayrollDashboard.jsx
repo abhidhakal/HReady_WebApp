@@ -11,6 +11,7 @@ import SalaryManagement from '/src/components/payroll/SalaryManagement.jsx';
 import AuthCheck from '/src/components/auth/AuthCheck.jsx';
 import { secureLogout } from '/src/auth/authService.js';
 import Modal from '/src/components/Modal.jsx';
+import { useSidebar } from '../../hooks/useSidebar';
 
 const PayrollDashboard = () => {
   const { id } = useParams();
@@ -30,7 +31,7 @@ const PayrollDashboard = () => {
   const [employees, setEmployees] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [name, setName] = useState('Admin');
   const [profilePicture, setProfilePicture] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -369,8 +370,6 @@ const PayrollDashboard = () => {
       return amount;
     }
   };
-
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   // Payroll details modal
   const openPayrollModal = (payroll) => {

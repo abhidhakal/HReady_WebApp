@@ -6,6 +6,11 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 // import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import TextField from '@mui/material/TextField';
+import { useSidebar } from '../../hooks/useSidebar';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -48,13 +53,16 @@ const Card = ({ children, style }) => (
 
 const AdminAttendance = () => {
   const { id } = useParams();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [myRecord, setMyRecord] = useState(null);
   const [todayStatus, setTodayStatus] = useState('Not Checked In');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return today;
+  });
   const navigate = useNavigate();
-
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   const fetchData = async () => {
     const token = localStorage.getItem('token');
@@ -121,6 +129,13 @@ const AdminAttendance = () => {
       console.error('Error during check-out:', err);
     }
   };
+
+  // Filter records by selected date
+  const filteredRecords = attendanceRecords.filter(record => {
+    const recordDate = new Date(record.date);
+    recordDate.setHours(0,0,0,0);
+    return recordDate.getTime() === selectedDate.getTime();
+  });
 
   return (
     <div className="full-screen">
@@ -222,10 +237,20 @@ const AdminAttendance = () => {
           </Card>
 
           <Card>
-            <div className="attendance-records-title">Employee Attendance Records</div>
-            {attendanceRecords.length > 0 ? (
+            <div className="attendance-records-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <span>Employee Attendance Records</span>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Select Date"
+                  value={selectedDate}
+                  onChange={date => date && setSelectedDate(date)}
+                  renderInput={params => <TextField {...params} size="small" style={{ minWidth: 140 }} />}
+                />
+              </LocalizationProvider>
+            </div>
+            {filteredRecords.length > 0 ? (
               <div className="attendance-records-container">
-                {attendanceRecords.map(record => (
+                {filteredRecords.map(record => (
                   <div key={record._id} className="attendance-list-item">
                     <Avatar name={record.user?.name || 'N/A'} />
                     <div className="attendance-info-main">
@@ -247,7 +272,7 @@ const AdminAttendance = () => {
             ) : (
               <div className="attendance-empty-state">
                 <span className="attendance-empty-icon"><i className="fas fa-users-slash"></i></span>
-                No employee attendance records found.
+                No employee attendance records found for this date.
               </div>
             )}
           </Card>

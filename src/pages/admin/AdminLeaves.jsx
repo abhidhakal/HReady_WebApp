@@ -6,6 +6,11 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import api from '/src/api/api.js';
 import './styles/AdminLeaves.css';
 import Skeleton from '@mui/material/Skeleton';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TextField } from '@mui/material';
+import { useSidebar } from '../../hooks/useSidebar';
 
 const StatusChip = ({ status }) => {
   const getStatusColor = (status) => {
@@ -53,7 +58,7 @@ const Card = ({ children }) => (
 function AdminLeaves() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [leaves, setLeaves] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -137,7 +142,7 @@ function AdminLeaves() {
 
   return (
     <div className="full-screen">
-      <DashboardHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
+      <DashboardHeader onToggleSidebar={() => toggleSidebar()} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
@@ -203,7 +208,7 @@ function AdminLeaves() {
                 validationSchema={AdminLeaveSchema}
                 onSubmit={handleSubmit}
               >
-                {({ isSubmitting, errors, touched, setFieldValue }) => (
+                {({ isSubmitting, errors, touched, setFieldValue, values }) => (
                   <Form className="leave-form">
                     <div className="form-grid">
                       <div className="form-field">
@@ -225,21 +230,31 @@ function AdminLeaves() {
 
                       <div className="form-field">
                         <label>Start Date</label>
-                        <Field
-                          type="date"
-                          name="startDate"
-                          className={`form-input ${errors.startDate && touched.startDate ? 'error' : ''}`}
-                        />
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                          <DatePicker
+                            label="Start Date"
+                            value={values.startDate ? new Date(values.startDate) : null}
+                            onChange={date => setFieldValue('startDate', date ? date.toISOString().split('T')[0] : '')}
+                            renderInput={params => (
+                              <TextField {...params} className={`form-input ${errors.startDate && touched.startDate ? 'error' : ''}`} />
+                            )}
+                          />
+                        </LocalizationProvider>
                         <ErrorMessage name="startDate" component="div" className="error-message" />
                       </div>
 
                       <div className="form-field">
                         <label>End Date</label>
-                        <Field
-                          type="date"
-                          name="endDate"
-                          className={`form-input ${errors.endDate && touched.endDate ? 'error' : ''}`}
-                        />
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                          <DatePicker
+                            label="End Date"
+                            value={values.endDate ? new Date(values.endDate) : null}
+                            onChange={date => setFieldValue('endDate', date ? date.toISOString().split('T')[0] : '')}
+                            renderInput={params => (
+                              <TextField {...params} className={`form-input ${errors.endDate && touched.endDate ? 'error' : ''}`} />
+                            )}
+                          />
+                        </LocalizationProvider>
                         <ErrorMessage name="endDate" component="div" className="error-message" />
                       </div>
 

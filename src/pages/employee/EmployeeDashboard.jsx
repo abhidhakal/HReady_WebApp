@@ -7,10 +7,11 @@ import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import { secureLogout } from '/src/auth/authService.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 function EmployeeDashboard() {
   const { id } = useParams();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [name, setName] = useState('Employee');
   const [position, setPosition] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
@@ -118,17 +119,6 @@ function EmployeeDashboard() {
     };
     fetchTasks();
   }, []);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(prev => !prev);
-  };
-
-  // Calculate pending tasks data
-  const pendingTasks = tasks.filter(task => task.status?.toLowerCase() === 'pending');
-  const pendingCount = pendingTasks.length;
-  const totalTasks = tasks.length;
-  const nextTask = pendingTasks.length > 0 ? pendingTasks[0] : null;
-  const progressValue = totalTasks > 0 ? (totalTasks - pendingCount) / totalTasks : 0;
 
   const formatDate = (dateString) => {
     if (!dateString) return null;

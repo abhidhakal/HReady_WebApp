@@ -8,6 +8,7 @@ import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import { secureLogout } from '/src/auth/authService.js';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 
 // Custom currency formatter for Rs.
 const formatCurrency = (amount, currency = 'Rs.') => {
@@ -36,7 +37,7 @@ const EmployeePayroll = () => {
   const [bankAccount, setBankAccount] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [name, setName] = useState('Employee');
   const [profilePicture, setProfilePicture] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -158,8 +159,6 @@ const EmployeePayroll = () => {
       default: return '#95a5a6';
     }
   };
-
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   // When opening modal, prefill form
   const openBankModal = (isAdd = false) => {
