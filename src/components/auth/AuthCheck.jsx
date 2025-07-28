@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../../api/axios';
+import api from '/src/api/api.js';
 
 const AuthCheck = ({ children, requiredRole = null }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

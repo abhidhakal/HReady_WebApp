@@ -1,4 +1,4 @@
-@import '../../../variables.css';
+@import '/src/assets/variables.css';
 
 /* Main content layout - matching other pages */
 .main-content-leaves {

@@ -1,6 +1,6 @@
 import React from 'react';
 import '../styles/Services.css';
-import Header from '../common/Header';
+import Header from '/src/layouts/Header.jsx';
 
 function Services() {
     const services = [

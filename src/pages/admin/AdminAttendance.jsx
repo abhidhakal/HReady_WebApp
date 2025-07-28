@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../../api/axios';
+import api from '/src/api/api.js';
 import '/src/pages/admin/styles/AdminAttendance.css';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
+import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 // import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';

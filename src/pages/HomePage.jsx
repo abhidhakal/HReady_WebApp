@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Header from '/src/components/common/Header.jsx';
+import Header from '/src/layouts/Header.jsx';
 import '/src/pages/styles/HomePage.css';
-import Footer from '../components/common/Footer';
+import Footer from '/src/layouts/Footer.jsx';
 
 function HomePage() {
   const [isLoaded, setIsLoaded] = useState(false);

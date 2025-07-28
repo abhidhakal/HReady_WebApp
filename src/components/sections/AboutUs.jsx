@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/AboutUs.css'
-import Header from '../common/Header';
+import Header from '/src/layouts/Header.jsx';
 
 function AboutUs() {
     const values = [

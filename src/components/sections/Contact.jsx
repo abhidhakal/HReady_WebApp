@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import '../styles/Contact.css'
-import Header from '../common/Header';
+import Header from '/src/layouts/Header.jsx';
 
 // Validation schema for contact form
 const ContactSchema = Yup.object().shape({

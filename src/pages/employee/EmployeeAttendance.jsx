@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../../api/axios';
-import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import api from '/src/api/api.js';
+import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '/src/pages/employee/styles/EmployeeAttendance.css';
 // import logo from '../../assets/primary_icon.webp';
 import '@fortawesome/fontawesome-free/css/all.min.css';

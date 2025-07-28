@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form } from 'formik';
-import api from '../../api/axios';
+import api from '/src/api/api.js';
 import '/src/pages/admin/styles/ManageEmployees.css';
-import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
 

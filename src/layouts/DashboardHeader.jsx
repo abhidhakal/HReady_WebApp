@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import api from '../../api/axios';
-import { secureLogout } from '../../utils/authUtils';
-import '../styles/DashboardHeader.css';
+import api from '/src/api/api.js';
+import { secureLogout } from '/src/auth/authService.js';
+import '../components/styles/DashboardHeader.css';
 
 function DashboardHeader({ username = 'John Doe', onToggleSidebar, userRole = 'employee' }) {
   const [showUserDropdown, setShowUserDropdown] = useState(false);

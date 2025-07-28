@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../api/axios';
-import Toast from '../common/Toast';
+import api from '/src/api/api.js';
+import Toast from '/src/components/Toast.jsx';
 
 const SalaryManagement = () => {
   const [salaries, setSalaries] = useState([]);

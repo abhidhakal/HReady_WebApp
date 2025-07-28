@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import Toast from '../components/common/Toast';
-import api, { checkApiHealth } from '../api/axios';
+import Toast from '/src/components/Toast.jsx';
+import api, { checkApiHealth } from '/src/api/api.js';
 
 // Validation schema
 const LoginSchema = Yup.object().shape({

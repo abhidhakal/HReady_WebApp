@@ -1,4 +1,4 @@
-@import './variables.css';
+@import '/src/assets/variables.css';
 
 :root {
   font-family: Poppins, Avenir, Helvetica, Arial, sans-serif;

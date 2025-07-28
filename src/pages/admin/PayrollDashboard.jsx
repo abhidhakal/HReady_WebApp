@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '/src/pages/admin/styles/Dashboard.css';
 import './styles/PayrollDashboard.css';
-import api from '../../api/axios';
-import Toast from '../../components/common/Toast';
-import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
-import PayrollPaymentModal from '../../components/payroll/PayrollPaymentModal';
-import SalaryManagement from '../../components/payroll/SalaryManagement';
-import AuthCheck from '../../components/common/AuthCheck';
-import { secureLogout } from '../../utils/authUtils';
-import Modal from '../../components/common/Modal';
+import api from '/src/api/api.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+import PayrollPaymentModal from '/src/components/payroll/PayrollPaymentModal.jsx';
+import SalaryManagement from '/src/components/payroll/SalaryManagement.jsx';
+import AuthCheck from '/src/components/auth/AuthCheck.jsx';
+import { secureLogout } from '/src/auth/authService.js';
+import Modal from '/src/components/Modal.jsx';
 
 const PayrollDashboard = () => {
   const { id } = useParams();

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "../components/common/Header";
-import Footer from "../components/common/Footer";
+import Header from "/src/layouts/Header.jsx";
+import Footer from "/src/layouts/Footer.jsx";
 import "/src/pages/styles/GetStarted.css";
 
 function GetStarted() {

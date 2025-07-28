@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import Toast from '../components/common/Toast.jsx';
+import Toast from '/src/components/Toast.jsx';
 
 describe('Toast', () => {
   it('renders message and close button', () => {

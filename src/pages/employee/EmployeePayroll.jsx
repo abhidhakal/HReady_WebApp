@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '../../pages/admin/styles/Dashboard.css';
 import '../../pages/admin/styles/PayrollDashboard.css';
-import api from '../../api/axios';
-import Toast from '../../components/common/Toast';
-import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
-import { secureLogout } from '../../utils/authUtils';
+import api from '/src/api/api.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+import { secureLogout } from '/src/auth/authService.js';
 import Skeleton from '@mui/material/Skeleton';
 
 // Custom currency formatter for Rs.

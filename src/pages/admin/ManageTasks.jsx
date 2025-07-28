@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form } from 'formik';
-import api from '../../api/axios';
-import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import api from '/src/api/api.js';
+import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '../../pages/admin/styles/ManageTasks.css';
 // import logo from '../../assets/primary_icon.webp';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import TextField from '@mui/material/TextField';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import Toast from '../../components/common/Toast.jsx';
+import Toast from '/src/components/Toast.jsx';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
 

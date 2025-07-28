@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardHeader from '../../components/common/DashboardHeader.jsx';
+import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '../../pages/admin/styles/Dashboard.css';
-import api from '../../api/axios';
-import Toast from '../../components/common/Toast';
-import LogoutConfirmModal from '../../components/common/LogoutConfirmModal';
+import api from '/src/api/api.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 // import logo from '../../assets/primary_icon.webp';
-import { secureLogout } from '../../utils/authUtils';
+import { secureLogout } from '/src/auth/authService.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
 

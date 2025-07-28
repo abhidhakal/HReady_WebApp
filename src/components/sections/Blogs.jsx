@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Blogs.css'
-import Header from '../common/Header';
+import Header from '/src/layouts/Header.jsx';
 
 function Blogs() {
     const [searchTerm, setSearchTerm] = useState('');

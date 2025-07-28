@@ -1,4 +1,4 @@
-import api from '../api/axios';
+import api from '/src/api/api.js';
 
 /**
  * Enhanced logout function with server-side token invalidation

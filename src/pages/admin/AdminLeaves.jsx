@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import DashboardHeader from '/src/components/common/DashboardHeader.jsx';
-import api from '../../api/axios';
+import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
+import api from '/src/api/api.js';
 import './styles/AdminLeaves.css';
 import Skeleton from '@mui/material/Skeleton';
 
