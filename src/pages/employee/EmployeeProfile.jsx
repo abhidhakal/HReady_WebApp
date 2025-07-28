@@ -178,9 +178,19 @@ const EmployeeProfile = () => {
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
-    const base = getApiBaseUrl().replace(/\/api$/, '');
-    if (picture.startsWith('/uploads')) return `${base}/api${picture}`;
+    
+    // If it's already a full URL (Cloudinary), return it directly
     if (picture.startsWith('http')) return picture;
+    
+    // If it's a local path (legacy), try to construct the full URL
+    if (picture.startsWith('/uploads')) {
+      const base = getApiBaseUrl().replace(/\/api$/, '');
+      const apiPath = `${base}/api${picture}`;
+      const directPath = `${base}${picture}`;
+      console.log('Legacy path detected, trying:', apiPath);
+      return apiPath;
+    }
+    
     return '/assets/images/profile.svg';
   };
 

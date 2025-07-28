@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '../../pages/admin/styles/Dashboard.css';
@@ -9,88 +9,42 @@ import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import { secureLogout } from '/src/auth/authService.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
-import { useSidebar } from '../../hooks/useSidebar';
-import { useApi } from '../../hooks/useApi';
 
 function AdminDashboard() {
   const { id } = useParams();
-  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
+  const [employeeCount, setEmployeeCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Admin');
   const [profilePicture, setProfilePicture] = useState('');
+  const [announcements, setAnnouncements] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const [toast, setToast] = useState({ message: '', type: '' });
-  const [employeeCount, setEmployeeCount] = useState(0);
-  const [todayOverview, setTodayOverview] = useState({ active: 0, onLeave: 0, absent: 0 });
   const [pendingLeaveRequests, setPendingLeaveRequests] = useState(0);
+  const [todayOverview, setTodayOverview] = useState({
+    active: 0,
+    onLeave: 0,
+    absent: 0
+  });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
-  // Derived loading state from useApi hooks
-  const loading = employeesLoading || leavesLoading || announcementsLoading || tasksLoading;
-
-  const token = localStorage.getItem('token');
-  const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
-
-  // useApi hooks for admin dashboard data
-  const { data: announcements, loading: announcementsLoading, error: announcementsError } = useApi({
-    url: '/announcements',
-    headers
-  });
-  const { data: employees, loading: employeesLoading, error: employeesError } = useApi({
-    url: '/employees',
-    headers
-  });
-  const { data: leaves, loading: leavesLoading, error: leavesError } = useApi({
-    url: '/leaves/all',
-    headers
-  });
-  const { data: tasks, loading: tasksLoading, error: tasksError } = useApi({
-    url: '/tasks',
-    headers
-  });
-
-  // Set employeeCount and todayOverview when employees data changes
-  useEffect(() => {
-    if (employees && Array.isArray(employees)) {
-      setEmployeeCount(employees.length);
-      let active = 0, onLeave = 0, absent = 0;
-      employees.forEach(emp => {
-        if (emp.status?.toLowerCase() === 'active') active++;
-        else if (emp.status?.toLowerCase() === 'on leave') onLeave++;
-        else if (emp.status?.toLowerCase() === 'absent') absent++;
-      });
-      setTodayOverview({ active, onLeave, absent });
-    }
-  }, [employees]);
-
-  // Set pendingLeaveRequests when leaves data changes
-  useEffect(() => {
-    if (leaves && Array.isArray(leaves)) {
-      const pendingCount = leaves.filter(leave => leave.status?.toLowerCase() === 'pending').length;
-      setPendingLeaveRequests(pendingCount);
-    }
-  }, [leaves]);
-
-  // Remove old useEffect and state for announcements, employees, leaves, tasks
-  // ... existing code ...
+  const [loading, setLoading] = useState(true);
 
   const resolveProfilePicture = (picture) => {
-    console.log('resolveProfilePicture called with:', picture);
-    if (!picture) {
-      console.log('No picture, returning default');
-      return '/assets/images/profile.svg';
-    }
-    const base = getApiBaseUrl().replace(/\/api$/, '');
-    console.log('API base URL:', base);
+    if (!picture) return '/assets/images/profile.svg';
+    
+    // If it's already a full URL (Cloudinary), return it directly
+    if (picture.startsWith('http')) return picture;
+    
+    // If it's a local path (legacy), try to construct the full URL
     if (picture.startsWith('/uploads')) {
-      const fullUrl = `${base}/api${picture}`;
-      console.log('Upload path, returning:', fullUrl);
-      return fullUrl;
+      const base = getApiBaseUrl().replace(/\/api$/, '');
+      const apiPath = `${base}/api${picture}`;
+      const directPath = `${base}${picture}`;
+      console.log('Legacy path detected, trying:', apiPath);
+      return apiPath;
     }
-    if (picture.startsWith('http')) {
-      console.log('HTTP URL, returning as-is:', picture);
-      return picture;
-    }
-    console.log('Unknown format, returning default');
+    
     return '/assets/images/profile.svg';
   };
 
@@ -122,10 +76,8 @@ function AdminDashboard() {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
-        console.log('Admin data received:', res.data);
         setName(res.data.name || 'Admin');
         setProfilePicture(res.data.profilePicture || '');
-        console.log('Profile picture set to:', res.data.profilePicture || '');
       })
       .catch(() => {
         setName('Admin');
@@ -149,6 +101,75 @@ function AdminDashboard() {
         if (err.response?.status === 404) setAttendanceStatus('Not Done');
       });
   }, []);
+
+  useEffect(() => {
+    api.get('/announcements', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => setAnnouncements(res.data))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const fetchEmployeesAndOverview = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await api.get('/employees', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const employees = res.data;
+        setEmployeeCount(employees.length);
+        
+        // Calculate today's overview
+        let active = 0, onLeave = 0, absent = 0;
+        employees.forEach(emp => {
+          if (emp.status?.toLowerCase() === 'active') active++;
+          else if (emp.status?.toLowerCase() === 'on leave') onLeave++;
+          else if (emp.status?.toLowerCase() === 'absent') absent++;
+        });
+        
+        setTodayOverview({ active, onLeave, absent });
+      } catch (err) {
+        console.error('Error fetching employees:', err);
+      }
+      setLoading(false);
+    };
+
+    fetchEmployeesAndOverview();
+  }, []);
+
+  useEffect(() => {
+    const fetchPendingLeaveRequests = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await api.get('/leaves/all', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const pendingCount = res.data.filter(leave => 
+          leave.status?.toLowerCase() === 'pending'
+        ).length;
+        
+        setPendingLeaveRequests(pendingCount);
+      } catch (err) {
+        console.error('Error fetching leave requests:', err);
+      }
+    };
+
+    fetchPendingLeaveRequests();
+  }, []);
+
+  useEffect(() => {
+    api.get('/tasks', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => setTasks(res.data))
+      .catch(() => {});
+  }, []);
+
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -196,10 +217,16 @@ function AdminDashboard() {
                 <img
                   src={resolveProfilePicture(profilePicture)}
                   alt="Admin Profile"
-                  onLoad={() => console.log('Profile image loaded successfully')}
                   onError={(e) => {
-                    console.error('Profile image failed to load:', e.target.src);
-                    console.error('Error details:', e);
+                    console.log('Profile image failed to load:', e.target.src);
+                    // Try direct path if API path failed
+                    if (e.target.src.includes('/api/uploads')) {
+                      const directPath = e.target.src.replace('/api/uploads', '/uploads');
+                      console.log('Trying direct path:', directPath);
+                      e.target.src = directPath;
+                    } else {
+                      e.target.src = '/assets/images/profile.svg';
+                    }
                   }}
                 />
               </div>
@@ -317,7 +344,7 @@ function AdminDashboard() {
                 </button>
               </div>
               <div className="task-cards-container">
-                {(Array.isArray(tasks) && tasks.length > 0) ? (
+                {tasks.length > 0 ? (
                   tasks.slice(0, 6).map((task) => (
                     <div key={task._id} className="task-card">
                       <div className="task-card-header">
@@ -369,7 +396,7 @@ function AdminDashboard() {
                 </button>
               </div>
               <div className="announcement-box-cards scrollable-announcements">
-                {(Array.isArray(announcements) && announcements.length > 0) ? (
+                {announcements.length > 0 ? (
                   announcements.map((ann) => (
                     <div className="announcement-card" key={ann._id}>
                       <h3>{ann.title}</h3>

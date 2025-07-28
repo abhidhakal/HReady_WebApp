@@ -8,7 +8,6 @@ import './styles/AdminProfile.css';
 import Toast from '/src/components/Toast.jsx';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
-import { useSidebar } from '../../hooks/useSidebar';
 
 // Validation schema for password change
 const PasswordSchema = Yup.object().shape({
@@ -160,7 +159,7 @@ const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
 const AdminProfile = () => {
   const { id } = useParams();
   const [toast, setToast] = useState({ message: '', type: '' });
-  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -182,7 +181,6 @@ const AdminProfile = () => {
       const res = await api.get('/admins/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('AdminProfile data received:', res.data);
       setProfile({
         name: res.data.name,
         email: res.data.email,
@@ -190,7 +188,6 @@ const AdminProfile = () => {
         profilePicture: res.data.profilePicture || '',
         role: res.data.role || 'Admin',
       });
-      console.log('Profile picture set to:', res.data.profilePicture || '');
     } catch (err) {
       console.error('Error fetching profile:', err);
       setToast({ message: 'Failed to fetch profile', type: 'error' });
@@ -203,23 +200,20 @@ const AdminProfile = () => {
   }, []);
 
   const resolveProfilePicture = (picture) => {
-    console.log('AdminProfile resolveProfilePicture called with:', picture);
-    if (!picture) {
-      console.log('No picture, returning default');
-      return '/assets/images/profile.svg';
-    }
-    const base = getApiBaseUrl().replace(/\/api$/, '');
-    console.log('API base URL:', base);
+    if (!picture) return '/assets/images/profile.svg';
+    
+    // If it's already a full URL (Cloudinary), return it directly
+    if (picture.startsWith('http')) return picture;
+    
+    // If it's a local path (legacy), try to construct the full URL
     if (picture.startsWith('/uploads')) {
-      const fullUrl = `${base}/api${picture}`;
-      console.log('Upload path, returning:', fullUrl);
-      return fullUrl;
+      const base = getApiBaseUrl().replace(/\/api$/, '');
+      const apiPath = `${base}/api${picture}`;
+      const directPath = `${base}${picture}`;
+      console.log('Legacy path detected, trying:', apiPath);
+      return apiPath;
     }
-    if (picture.startsWith('http')) {
-      console.log('HTTP URL, returning as-is:', picture);
-      return picture;
-    }
-    console.log('Unknown format, returning default');
+    
     return '/assets/images/profile.svg';
   };
 
@@ -236,20 +230,32 @@ const AdminProfile = () => {
         return;
       }
 
+      console.log('Frontend: File selected:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
       setUploading(true);
       const formData = new FormData();
       formData.append('profilePicture', file);
+      
+      console.log('Frontend: FormData created, sending to backend...');
+      
       try {
-        await api.put('/admins/upload-profile-picture', formData, {
+        const response = await api.put('/admins/upload-profile-picture', formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
         });
+        
+        console.log('Frontend: Upload successful:', response.data);
         setToast({ message: 'Profile picture updated successfully.', type: 'success' });
         fetchProfile();
       } catch (err) {
-        console.error('Error uploading profile picture:', err);
+        console.error('Frontend: Error uploading profile picture:', err);
+        console.error('Frontend: Error response:', err.response?.data);
         setToast({ message: 'Failed to upload picture.', type: 'error' });
       } finally {
         setUploading(false);
@@ -330,7 +336,7 @@ const AdminProfile = () => {
         type={toast.type}
         onClose={() => setToast({ message: '', type: '' })}
       />
-      <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
+      <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} userRole="admin" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <ul>
@@ -386,10 +392,16 @@ const AdminProfile = () => {
                         src={resolveProfilePicture(profile.profilePicture)}
                         alt="Profile"
                         className="profile-avatar"
-                        onLoad={() => console.log('AdminProfile image loaded successfully')}
                         onError={(e) => {
-                          console.error('AdminProfile image failed to load:', e.target.src);
-                          console.error('Error details:', e);
+                          console.log('Profile image failed to load:', e.target.src);
+                          // Try direct path if API path failed
+                          if (e.target.src.includes('/api/uploads')) {
+                            const directPath = e.target.src.replace('/api/uploads', '/uploads');
+                            console.log('Trying direct path:', directPath);
+                            e.target.src = directPath;
+                          } else {
+                            e.target.src = '/assets/images/profile.svg';
+                          }
                         }}
                       />
                       {editing && (
