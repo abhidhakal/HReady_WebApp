@@ -9,6 +9,13 @@ import Toast from '/src/components/Toast.jsx';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import TextField from '@mui/material/TextField';
+// Import services
+import { getTasks, createTask, updateTask, deleteTask, getAllEmployees } from '/src/services/index.js';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -177,15 +184,15 @@ const TaskDialog = ({ open, onClose, onSubmit, initialValues, editing, loading, 
 const ManageTasks = () => {
   const { id } = useParams();
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
-  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
-  const [toast, setToast] = useState({ message: '', type: '' });
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const { getToken } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
+
   const token = getToken();
   const navigate = useNavigate();
 
@@ -193,25 +200,29 @@ const ManageTasks = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const res = await api.get('/employees', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setEmployees(res.data);
+        const result = await getAllEmployees();
+        if (result.success) {
+          setEmployees(result.data);
+        } else {
+          console.error('Error fetching employees:', result.error);
+        }
       } catch (err) {
         console.error('Error fetching employees:', err);
       }
     };
     fetchEmployees();
-  }, [token]);
+  }, []);
 
   // Fetch tasks
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/tasks', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTasks(res.data);
+      const result = await getTasks(true); // true for admin
+      if (result.success) {
+        setTasks(result.data);
+      } else {
+        console.error('Error fetching tasks:', result.error);
+      }
     } catch (err) {
       console.error('Error fetching tasks:', err);
     }
@@ -220,7 +231,7 @@ const ManageTasks = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, [token]);
+  }, []);
 
   const handleEdit = (task) => {
     setEditingTask(task);
@@ -230,14 +241,17 @@ const ManageTasks = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
     try {
-      await api.delete(`/tasks/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setToast({ message: 'Task deleted.', type: 'success' });
-      fetchTasks();
+      const result = await deleteTask(id);
+      if (result.success) {
+        showSuccess('Task deleted successfully');
+        fetchTasks();
+      } else {
+        showError('Failed to delete task');
+        console.error('Error deleting task:', result.error);
+      }
     } catch (err) {
+      showError('Failed to delete task');
       console.error('Error deleting task:', err);
-      setToast({ message: 'Failed to delete task.', type: 'error' });
     }
   };
 
@@ -268,27 +282,37 @@ const ManageTasks = () => {
     }
 
     try {
+      let result;
+      
       if (editingTask && editingTask._id) {
-        await api.put(`/tasks/${editingTask._id}`, cleanedData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setToast({ message: 'Task updated successfully.', type: 'success' });
+        result = await updateTask(editingTask._id, cleanedData);
+        if (result.success) {
+          showSuccess('Task updated successfully');
+        } else {
+          showError('Failed to update task');
+          console.error('Error updating task:', result.error);
+        }
       } else {
-        await api.post('/tasks', cleanedData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setToast({ message: 'Task created successfully.', type: 'success' });
+        result = await createTask(cleanedData);
+        if (result.success) {
+          showSuccess('Task created successfully');
+        } else {
+          showError('Failed to create task');
+          console.error('Error creating task:', result.error);
+        }
       }
-      fetchTasks();
-      setDialogOpen(false);
-      setEditingTask(null);
-      resetForm();
+      
+      if (result.success) {
+        fetchTasks();
+        setDialogOpen(false);
+        setEditingTask(null);
+        resetForm();
+      }
     } catch (err) {
+      showError('Failed to save task');
       console.error('Error saving task:', err);
       if (err.response) {
-        setToast({ message: err.response.data.message, type: 'error' });
-      } else {
-        setToast({ message: 'Failed to save task. Please try again.', type: 'error' });
+        console.error('Server response:', err.response.data);
       }
     } finally {
       setDialogLoading(false);
@@ -300,7 +324,7 @@ const ManageTasks = () => {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => setToast({ message: '', type: '' })}
+        onClose={hideToast}
       />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
 

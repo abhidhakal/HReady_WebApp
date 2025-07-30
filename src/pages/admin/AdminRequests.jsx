@@ -7,6 +7,9 @@ import './styles/AdminRequests.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+// Import services
+import { getRequests, updateRequestStatus } from '/src/services/index.js';
 
 const StatusChip = ({ status }) => {
   const getStatusColor = (status) => {
@@ -57,15 +60,23 @@ function AdminRequests() {
   const [error, setError] = useState('');
   const [actionState, setActionState] = useState({}); // { [requestId]: { mode: 'approve'|'reject'|null, comment: '' } }
   const { getToken } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   const fetchRequests = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get('/requests', { headers: { Authorization: `Bearer ${getToken()}` } });
-      setRequests(res.data);
+      const result = await getRequests(true); // true for admin
+      if (result.success) {
+        setRequests(result.data);
+      } else {
+        setError('Failed to fetch requests');
+        showError('Failed to fetch requests');
+        console.error('Error fetching requests:', result.error);
+      }
     } catch (err) {
       setError('Failed to fetch requests');
+      showError('Failed to fetch requests');
       console.error('Error fetching requests:', err);
     }
     setLoading(false);
@@ -92,13 +103,20 @@ function AdminRequests() {
     setError('');
     try {
       const comment = actionState[id]?.comment || '';
-      await api.patch(`/requests/${id}/status`, { status, adminComment: comment }, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      setActionState(s => ({ ...s, [id]: { mode: null, comment: '' } }));
-      fetchRequests();
+      const result = await updateRequestStatus(id, status, comment);
+      
+      if (result.success) {
+        showSuccess(`Request ${status} successfully`);
+        setActionState(s => ({ ...s, [id]: { mode: null, comment: '' } }));
+        fetchRequests();
+      } else {
+        setError('Failed to update request');
+        showError('Failed to update request');
+        console.error('Error updating request:', result.error);
+      }
     } catch (err) {
       setError('Failed to update request');
+      showError('Failed to update request');
       console.error('Error updating request:', err);
     }
     setLoading(false);

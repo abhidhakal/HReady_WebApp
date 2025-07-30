@@ -12,6 +12,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TextField } from '@mui/material';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+// Import services
+import { getAllLeaves, updateLeaveStatus, createLeaveForEmployee } from '/src/services/index.js';
 
 const StatusChip = ({ status }) => {
   const getStatusColor = (status) => {
@@ -67,17 +70,23 @@ function AdminLeaves() {
   const [error, setError] = useState('');
 
   const { getToken } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   const fetchLeaves = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get('/leaves/all', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setLeaves(res.data);
+      const result = await getAllLeaves();
+      if (result.success) {
+        setLeaves(result.data);
+      } else {
+        setError('Failed to fetch leave requests');
+        showError('Failed to fetch leave requests');
+        console.error('Error fetching leaves:', result.error);
+      }
     } catch (err) {
       setError('Failed to fetch leave requests');
+      showError('Failed to fetch leave requests');
       console.error('Error fetching leaves:', err);
     }
     setLoading(false);
@@ -91,43 +100,37 @@ function AdminLeaves() {
     if (!window.confirm(`Are you sure you want to ${status.toLowerCase()} this leave?`)) return;
 
     try {
-      await api.put(`/leaves/${leaveId}/status`, { status }, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      fetchLeaves();
+      const result = await updateLeaveStatus(leaveId, status);
+      if (result.success) {
+        showSuccess(`Leave ${status} successfully`);
+        fetchLeaves();
+      } else {
+        showError('Failed to update leave status');
+        console.error(`Error updating leave status:`, result.error);
+      }
     } catch (err) {
+      showError('Failed to update leave status');
       console.error(`Error updating leave status:`, err);
-      alert('Failed to update leave status.');
     }
   };
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setFormLoading(true);
     try {
-      const payload = new FormData();
-      payload.append('leaveType', values.leaveType);
-      payload.append('startDate', values.startDate);
-      payload.append('endDate', values.endDate);
-      payload.append('reason', values.reason);
-      payload.append('halfDay', values.halfDay);
-      if (values.attachment) {
-        payload.append('attachment', values.attachment);
+      const result = await createLeaveForEmployee(values);
+      
+      if (result.success) {
+        showSuccess('Leave created successfully');
+        resetForm();
+        setShowForm(false);
+        fetchLeaves();
+      } else {
+        showError('Error creating leave');
+        console.error('Error submitting leave:', result.error);
       }
-
-      await api.post('/leaves/admin', payload, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      alert('Leave created successfully.');
-      resetForm();
-      setShowForm(false);
-      fetchLeaves();
     } catch (err) {
+      showError('Error creating leave');
       console.error('Error submitting leave:', err);
-      alert('Error creating leave.');
     }
     setFormLoading(false);
     setSubmitting(false);

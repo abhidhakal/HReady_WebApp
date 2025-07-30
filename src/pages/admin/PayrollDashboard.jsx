@@ -12,6 +12,15 @@ import AuthCheck from '/src/components/auth/AuthCheck.jsx';
 import Modal from '/src/components/Modal.jsx';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+// Import services
+import { 
+  getPayrollStats, 
+  getAllPayrolls, 
+  getAllSalaries, 
+  generatePayroll 
+} from '/src/services/index.js';
+import { getAllEmployees } from '/src/services/admin/employeeService.js';
 
 const PayrollDashboard = () => {
   const { id } = useParams();
@@ -154,24 +163,45 @@ const PayrollDashboard = () => {
 
       console.log('Token found:', token ? 'Yes' : 'No');
       
-      const [statsRes, payrollsRes, salariesRes, employeesRes] = await Promise.all([
-        api.get('/payrolls/stats'),
-        api.get('/payrolls'),
-        api.get('/salaries'),
-        api.get('/employees')
+      // Use services instead of direct API calls
+      const [statsResult, payrollsResult, salariesResult, employeesResult] = await Promise.all([
+        getPayrollStats(),
+        getAllPayrolls(),
+        getAllSalaries(),
+        getAllEmployees()
       ]);
 
-      setStats(statsRes.data);
-      setPayrolls(payrollsRes.data);
-      setSalaries(salariesRes.data);
-      setEmployees(employeesRes.data);
+      if (statsResult.success) {
+        setStats(statsResult.data);
+      } else {
+        console.error('Failed to fetch payroll stats:', statsResult.error);
+      }
+
+      if (payrollsResult.success) {
+        setPayrolls(payrollsResult.data);
+      } else {
+        console.error('Failed to fetch payrolls:', payrollsResult.error);
+      }
+
+      if (salariesResult.success) {
+        setSalaries(salariesResult.data);
+      } else {
+        console.error('Failed to fetch salaries:', salariesResult.error);
+      }
+
+      if (employeesResult.success) {
+        setEmployees(employeesResult.data);
+      } else {
+        console.error('Failed to fetch employees:', employeesResult.error);
+      }
+
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       if (error.response?.status === 403) {
         setToast({ message: 'Access denied. Please log in as admin.', type: 'error' });
         navigate('/login');
       } else {
-      setToast({ message: 'Failed to load dashboard data', type: 'error' });
+        setToast({ message: 'Failed to load dashboard data', type: 'error' });
       }
     } finally {
       setDashboardLoading(false);
@@ -217,15 +247,21 @@ const PayrollDashboard = () => {
   const generatePayroll = async () => {
     try {
       setPayrollGenerating(true);
-      const res = await api.post('/payrolls/generate', {
-        month: selectedMonth,
-        year: selectedYear
-      });
-      setToast({ message: 'Payroll generated successfully!', type: 'success' });
-      fetchDashboardData(); // Refresh data
-      if (res.data.skippedEmployees && res.data.skippedEmployees.length > 0) {
-        setSkippedEmployees(res.data.skippedEmployees);
-        setShowSkippedModal(true);
+      const result = await generatePayroll(selectedMonth, selectedYear);
+      
+      if (result.success) {
+        setToast({ message: 'Payroll generated successfully!', type: 'success' });
+        fetchDashboardData(); // Refresh data
+        if (result.data.skippedEmployees && result.data.skippedEmployees.length > 0) {
+          setSkippedEmployees(result.data.skippedEmployees);
+          setShowSkippedModal(true);
+        }
+      } else {
+        setToast({ 
+          message: result.error?.message || 'Failed to generate payroll', 
+          type: 'error' 
+        });
+        console.error('Error generating payroll:', result.error);
       }
     } catch (error) {
       console.error('Error generating payroll:', error);

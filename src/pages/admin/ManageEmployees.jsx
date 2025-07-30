@@ -10,6 +10,8 @@ import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { useToast } from '/src/hooks/useToast.js';
+// Import services
+import { getAllEmployees, createEmployee, updateEmployee, deleteEmployee } from '/src/services/index.js';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -208,6 +210,7 @@ const ManageEmployees = () => {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const { getToken } = useAuth();
+  const { showToast, showSuccess, showError } = useToast();
 
   const token = getToken();
   const navigate = useNavigate();
@@ -215,11 +218,15 @@ const ManageEmployees = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/employees', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEmployees(res.data);
+      const result = await getAllEmployees();
+      if (result.success) {
+        setEmployees(result.data);
+      } else {
+        showError('Failed to fetch employees');
+        console.error('Error fetching employees:', result.error);
+      }
     } catch (err) {
+      showError('Failed to fetch employees');
       console.error('Error fetching employees:', err);
     }
     setLoading(false);
@@ -236,12 +243,18 @@ const ManageEmployees = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this employee?')) return;
+    
     try {
-      await api.delete(`/employees/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchEmployees();
+      const result = await deleteEmployee(id);
+      if (result.success) {
+        showSuccess('Employee deleted successfully');
+        fetchEmployees();
+      } else {
+        showError('Failed to delete employee');
+        console.error('Error deleting employee:', result.error);
+      }
     } catch (err) {
+      showError('Failed to delete employee');
       console.error('Error deleting employee:', err);
     }
   };
@@ -259,20 +272,34 @@ const ManageEmployees = () => {
   const handleDialogSubmit = async (values, { resetForm }) => {
     setDialogLoading(true);
     try {
+      let result;
+      
       if (editingEmployee && editingEmployee._id) {
-        await api.put(`/employees/${editingEmployee._id}`, values, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        result = await updateEmployee(editingEmployee._id, values);
+        if (result.success) {
+          showSuccess('Employee updated successfully');
+        } else {
+          showError('Failed to update employee');
+          console.error('Error updating employee:', result.error);
+        }
       } else {
-        await api.post('/employees', values, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        result = await createEmployee(values);
+        if (result.success) {
+          showSuccess('Employee created successfully');
+        } else {
+          showError('Failed to create employee');
+          console.error('Error creating employee:', result.error);
+        }
       }
-      fetchEmployees();
-      setDialogOpen(false);
-      setEditingEmployee(null);
-      resetForm();
+      
+      if (result.success) {
+        fetchEmployees();
+        setDialogOpen(false);
+        setEditingEmployee(null);
+        resetForm();
+      }
     } catch (err) {
+      showError('Failed to save employee');
       console.error('Error saving employee:', err);
       if (err.response) {
         console.error('Server said:', err.response.data);

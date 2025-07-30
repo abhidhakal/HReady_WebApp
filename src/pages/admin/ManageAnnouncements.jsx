@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
+import api from '/src/api/api.js';
 import './styles/ManageAnnouncements.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+// Import services
+import { getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '/src/services/index.js';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>
@@ -148,25 +151,31 @@ const ManageAnnouncements = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
-  const [error, setError] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [error, setError] = useState('');
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
-  const navigate = useNavigate();
   const { getToken } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   const token = getToken();
+  const navigate = useNavigate();
 
   const fetchAnnouncements = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get('/announcements', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAnnouncements(res.data);
+      const result = await getAnnouncements();
+      if (result.success) {
+        setAnnouncements(result.data);
+      } else {
+        setError('Failed to fetch announcements');
+        showError('Failed to fetch announcements');
+        console.error('Error fetching announcements:', result.error);
+      }
     } catch (err) {
       setError('Failed to fetch announcements');
+      showError('Failed to fetch announcements');
       console.error('Error fetching announcements:', err);
     }
     setLoading(false);
@@ -179,21 +188,34 @@ const ManageAnnouncements = () => {
   const handleSubmit = async (formData) => {
     setFormLoading(true);
     try {
+      let result;
+      
       if (editingAnnouncement) {
-        await api.put(`/announcements/${editingAnnouncement._id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        result = await updateAnnouncement(editingAnnouncement._id, formData);
+        if (result.success) {
+          showSuccess('Announcement updated successfully');
+        } else {
+          showError('Failed to update announcement');
+          console.error('Error saving announcement:', result.error);
+        }
       } else {
-        await api.post('/announcements', formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        result = await createAnnouncement(formData);
+        if (result.success) {
+          showSuccess('Announcement created successfully');
+        } else {
+          showError('Failed to create announcement');
+          console.error('Error saving announcement:', result.error);
+        }
       }
-      setDialogOpen(false);
-      setEditingAnnouncement(null);
-      fetchAnnouncements();
+      
+      if (result.success) {
+        setDialogOpen(false);
+        setEditingAnnouncement(null);
+        fetchAnnouncements();
+      }
     } catch (err) {
+      showError('Failed to save announcement');
       console.error('Error saving announcement:', err);
-      alert('Failed to save announcement');
     }
     setFormLoading(false);
   };
@@ -207,13 +229,17 @@ const ManageAnnouncements = () => {
     if (!window.confirm('Are you sure you want to delete this announcement?')) return;
     
     try {
-      await api.delete(`/announcements/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchAnnouncements();
+      const result = await deleteAnnouncement(id);
+      if (result.success) {
+        showSuccess('Announcement deleted successfully');
+        fetchAnnouncements();
+      } else {
+        showError('Failed to delete announcement');
+        console.error('Error deleting announcement:', result.error);
+      }
     } catch (err) {
+      showError('Failed to delete announcement');
       console.error('Error deleting announcement:', err);
-      alert('Failed to delete announcement');
     }
   };
 

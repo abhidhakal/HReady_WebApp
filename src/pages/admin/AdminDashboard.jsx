@@ -9,17 +9,25 @@ import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
+import { useToast } from '/src/hooks/useToast.js';
+// Import services
+import { 
+  getAdminAttendance, 
+  getAnnouncements, 
+  getAllEmployees, 
+  getAllLeaves, 
+  getTasks 
+} from '/src/services/index.js';
 
 function AdminDashboard() {
   const { id } = useParams();
   const [employeeCount, setEmployeeCount] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [name, setName] = useState('Admin');
   const [profilePicture, setProfilePicture] = useState('');
   const [announcements, setAnnouncements] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
-  const [toast, setToast] = useState({ message: '', type: '' });
   const [pendingLeaveRequests, setPendingLeaveRequests] = useState(0);
   const [todayOverview, setTodayOverview] = useState({
     active: 0,
@@ -30,6 +38,8 @@ function AdminDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const { getToken, fetchUserData, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
@@ -57,8 +67,8 @@ function AdminDashboard() {
     setShowLogoutModal(false);
     await logout(
       navigate,
-      () => setToast({ message: 'Logged out successfully', type: 'success' }),
-      (error) => setToast({ message: 'Logout completed with warnings', type: 'warning' })
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
     );
   };
 
@@ -94,48 +104,56 @@ function AdminDashboard() {
     const token = getToken();
     if (!token) return;
 
-    api.get('/attendance/me', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => {
-        if (res.data?.check_out_time) setAttendanceStatus('Checked Out');
-        else if (res.data?.check_in_time) setAttendanceStatus('Checked In');
-        else setAttendanceStatus('Not Done');
-      })
-      .catch(err => {
+    const fetchAttendanceStatus = async () => {
+      try {
+        const result = await getAdminAttendance();
+        if (result.success) {
+          if (result.data?.check_out_time) setAttendanceStatus('Checked Out');
+          else if (result.data?.check_in_time) setAttendanceStatus('Checked In');
+          else setAttendanceStatus('Not Done');
+        }
+      } catch (err) {
         if (err.response?.status === 404) setAttendanceStatus('Not Done');
-      });
+      }
+    };
+
+    fetchAttendanceStatus();
   }, [getToken]);
 
   useEffect(() => {
-    api.get('/announcements', {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    })
-      .then(res => setAnnouncements(res.data))
-      .catch(() => {});
+    const fetchAnnouncements = async () => {
+      try {
+        const result = await getAnnouncements();
+        if (result.success) {
+          setAnnouncements(result.data);
+        }
+      } catch (err) {
+        console.error('Error fetching announcements:', err);
+      }
+    };
+
+    fetchAnnouncements();
   }, [getToken]);
 
   useEffect(() => {
     const fetchEmployeesAndOverview = async () => {
       setLoading(true);
       try {
-        const token = getToken();
-        const res = await api.get('/employees', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const employees = res.data;
-        setEmployeeCount(employees.length);
-        
-        // Calculate today's overview
-        let active = 0, onLeave = 0, absent = 0;
-        employees.forEach(emp => {
-          if (emp.status?.toLowerCase() === 'active') active++;
-          else if (emp.status?.toLowerCase() === 'on leave') onLeave++;
-          else if (emp.status?.toLowerCase() === 'absent') absent++;
-        });
-        
-        setTodayOverview({ active, onLeave, absent });
+        const result = await getAllEmployees();
+        if (result.success) {
+          const employees = result.data;
+          setEmployeeCount(employees.length);
+          
+          // Calculate today's overview
+          let active = 0, onLeave = 0, absent = 0;
+          employees.forEach(emp => {
+            if (emp.status?.toLowerCase() === 'active') active++;
+            else if (emp.status?.toLowerCase() === 'on leave') onLeave++;
+            else if (emp.status?.toLowerCase() === 'absent') absent++;
+          });
+          
+          setTodayOverview({ active, onLeave, absent });
+        }
       } catch (err) {
         console.error('Error fetching employees:', err);
       }
@@ -148,16 +166,14 @@ function AdminDashboard() {
   useEffect(() => {
     const fetchPendingLeaveRequests = async () => {
       try {
-        const token = getToken();
-        const res = await api.get('/leaves/all', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const pendingCount = res.data.filter(leave => 
-          leave.status?.toLowerCase() === 'pending'
-        ).length;
-        
-        setPendingLeaveRequests(pendingCount);
+        const result = await getAllLeaves();
+        if (result.success) {
+          const pendingCount = result.data.filter(leave => 
+            leave.status?.toLowerCase() === 'pending'
+          ).length;
+          
+          setPendingLeaveRequests(pendingCount);
+        }
       } catch (err) {
         console.error('Error fetching leave requests:', err);
       }
@@ -167,14 +183,19 @@ function AdminDashboard() {
   }, [getToken]);
 
   useEffect(() => {
-    api.get('/tasks', {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    })
-      .then(res => setTasks(res.data))
-      .catch(() => {});
-  }, [getToken]);
+    const fetchTasks = async () => {
+      try {
+        const result = await getTasks(true); // true for admin
+        if (result.success) {
+          setTasks(result.data);
+        }
+      } catch (err) {
+        console.error('Error fetching tasks:', err);
+      }
+    };
 
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+    fetchTasks();
+  }, [getToken]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -187,7 +208,7 @@ function AdminDashboard() {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => setToast({ message: '', type: '' })}
+        onClose={() => hideToast()}
       />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
 

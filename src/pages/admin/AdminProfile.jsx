@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
+import api from '/src/api/api.js';
 import './styles/AdminProfile.css';
 import Toast from '/src/components/Toast.jsx';
+import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { useToast } from '/src/hooks/useToast.js';
-import { getApiBaseUrl } from '../../utils/env';
+import { getApiBaseUrl } from '/src/utils/env.js';
+// Import services
+import { getAdminProfile, updateAdminProfile, uploadAdminProfilePicture, changeAdminPassword, deleteAdminAccount } from '/src/services/index.js';
 import Skeleton from '@mui/material/Skeleton';
 
 // Validation schema for password change
@@ -160,13 +163,12 @@ const PasswordModal = ({ open, onClose, onSubmit, loading }) => {
 
 const AdminProfile = () => {
   const { id } = useParams();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState({
     name: '',
     email: '',
     contactNo: '',
     profilePicture: '',
-    role: 'admin',
+    role: 'Admin',
   });
   const [editing, setEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -174,13 +176,15 @@ const AdminProfile = () => {
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
   const { getToken, fetchUserData } = useAuth();
-  const { toast, showToast, showSuccess, showError } = useToast();
+  const { toast, showToast, showSuccess, showError, hideToast } = useToast();
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
 
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const userData = await fetchUserData();
-      if (userData) {
+      const result = await getAdminProfile();
+      if (result.success) {
+        const userData = result.data;
         setProfile({
           name: userData.name,
           email: userData.email,
@@ -188,6 +192,9 @@ const AdminProfile = () => {
           profilePicture: userData.profilePicture || '',
           role: userData.role || 'Admin',
         });
+      } else {
+        showError('Failed to fetch profile');
+        console.error('Error fetching profile:', result.error);
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -238,26 +245,20 @@ const AdminProfile = () => {
       });
 
       setUploading(true);
-      const formData = new FormData();
-      formData.append('profilePicture', file);
-      
-      console.log('Frontend: FormData created, sending to backend...');
       
       try {
-        const response = await api.put('/admins/upload-profile-picture', formData, {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        
-        console.log('Frontend: Upload successful:', response.data);
-        showSuccess('Profile picture updated successfully.');
-        fetchProfile();
+        const result = await uploadAdminProfilePicture(file);
+        if (result.success) {
+          console.log('Frontend: Upload successful:', result.data);
+          showSuccess('Profile picture updated successfully');
+          fetchProfile();
+        } else {
+          showError('Failed to upload picture');
+          console.error('Frontend: Error uploading profile picture:', result.error);
+        }
       } catch (err) {
         console.error('Frontend: Error uploading profile picture:', err);
-        console.error('Frontend: Error response:', err.response?.data);
-        showError('Failed to upload picture.');
+        showError('Failed to upload picture');
       } finally {
         setUploading(false);
       }
@@ -267,20 +268,20 @@ const AdminProfile = () => {
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
-      await api.put(
-        '/admins/me',
-        {
-          name: profile.name,
-          email: profile.email,
-          contactNo: profile.contactNo,
-        },
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        }
-      );
-      setEditing(false);
-      showSuccess('Profile updated successfully.');
-      fetchProfile();
+      const result = await updateAdminProfile({
+        name: profile.name,
+        email: profile.email,
+        contactNo: profile.contactNo,
+      });
+      
+      if (result.success) {
+        setEditing(false);
+        showSuccess('Profile updated successfully');
+        fetchProfile();
+      } else {
+        showError('Failed to update profile');
+        console.error('Error updating profile:', result.error);
+      }
     } catch (err) {
       console.error('Error updating profile:', err);
       showError('Failed to update profile. Please try again.');
@@ -296,18 +297,15 @@ const AdminProfile = () => {
     }
     try {
       setLoading(true);
-      await api.put(
-        '/admins/change-password',
-        {
-          currentPassword: passwords.current,
-          newPassword: passwords.new,
-        },
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        }
-      );
-      setShowPasswordModal(false);
-      showSuccess('Password changed successfully.');
+      const result = await changeAdminPassword(passwords.current, passwords.new);
+      
+      if (result.success) {
+        setShowPasswordModal(false);
+        showSuccess('Password changed successfully');
+      } else {
+        showError('Failed to change password');
+        console.error('Error changing password:', result.error);
+      }
     } catch (err) {
       console.error('Error changing password:', err);
       showError('Failed to change password.');
@@ -319,11 +317,14 @@ const AdminProfile = () => {
   const handleDeactivate = async () => {
     if (!window.confirm('Are you sure you want to deactivate your account? This action cannot be undone.')) return;
     try {
-      await api.delete('/admins/me', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      localStorage.clear();
-      navigate('/login');
+      const result = await deleteAdminAccount();
+      if (result.success) {
+        localStorage.clear();
+        navigate('/login');
+      } else {
+        showError('Failed to deactivate account');
+        console.error('Error deactivating account:', result.error);
+      }
     } catch (err) {
       console.error('Error deactivating account:', err);
       showError('Failed to deactivate account.');

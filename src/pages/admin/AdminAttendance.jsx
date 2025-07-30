@@ -7,12 +7,15 @@ import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { useSidebar } from '../../hooks/useSidebar';
+import { useToast } from '/src/hooks/useToast.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TextField from '@mui/material/TextField';
+// Import services
+import { getAllAttendance, getAdminAttendance, adminCheckIn, adminCheckOut } from '/src/services/index.js';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -55,17 +58,17 @@ const Card = ({ children, style }) => (
 
 const AdminAttendance = () => {
   const { id } = useParams();
-  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [myRecord, setMyRecord] = useState(null);
   const [todayStatus, setTodayStatus] = useState('Not Checked In');
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    return today;
-  });
-  const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const { getToken } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
+
+  const token = getToken();
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     const token = getToken();
@@ -74,35 +77,45 @@ const AdminAttendance = () => {
       return;
     }
 
+    setLoading(true);
     try {
       // All records for employees
-      const resAll = await api.get('/attendance/all', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAttendanceRecords(resAll.data);
+      const allResult = await getAllAttendance();
+      if (allResult.success) {
+        setAttendanceRecords(allResult.data);
+      } else {
+        showError('Failed to fetch attendance records');
+        console.error('Error fetching all attendance:', allResult.error);
+        setAttendanceRecords([]);
+      }
     } catch (err) {
+      showError('Failed to fetch attendance records');
       console.error('Error fetching all attendance:', err);
       setAttendanceRecords([]);
     }
 
     try {
       // My own attendance record for today
-      const resMine = await api.get('/attendance/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMyRecord(resMine.data);
+      const myResult = await getAdminAttendance();
+      if (myResult.success) {
+        setMyRecord(myResult.data);
 
-      if (resMine.data.check_in_time && !resMine.data.check_out_time) {
-        setTodayStatus('Checked In');
-      } else if (resMine.data.check_in_time && resMine.data.check_out_time) {
-        setTodayStatus('Checked Out');
+        if (myResult.data.check_in_time && !myResult.data.check_out_time) {
+          setTodayStatus('Checked In');
+        } else if (myResult.data.check_in_time && myResult.data.check_out_time) {
+          setTodayStatus('Checked Out');
+        } else {
+          setTodayStatus('Not Checked In');
+        }
       } else {
-        setTodayStatus('Not Checked In');
+        console.error('Error fetching my attendance:', myResult.error);
+        setMyRecord(null);
       }
     } catch (err) {
       console.error('Error fetching my attendance:', err);
       setMyRecord(null);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -111,24 +124,34 @@ const AdminAttendance = () => {
 
   const handleCheckIn = async () => {
     try {
-      await api.post('/attendance/checkin', {}, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setTodayStatus('Checked In');
-      fetchData();
+      const result = await adminCheckIn();
+      if (result.success) {
+        showSuccess('Check-in successful');
+        setTodayStatus('Checked In');
+        fetchData();
+      } else {
+        showError('Failed to check in');
+        console.error('Error during check-in:', result.error);
+      }
     } catch (err) {
+      showError('Failed to check in');
       console.error('Error during check-in:', err);
     }
   };
 
   const handleCheckOut = async () => {
     try {
-      await api.put('/attendance/checkout', { date: new Date() }, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setTodayStatus('Checked Out');
-      fetchData();
+      const result = await adminCheckOut();
+      if (result.success) {
+        showSuccess('Check-out successful');
+        setTodayStatus('Checked Out');
+        fetchData();
+      } else {
+        showError('Failed to check out');
+        console.error('Error during check-out:', result.error);
+      }
     } catch (err) {
+      showError('Failed to check out');
       console.error('Error during check-out:', err);
     }
   };
@@ -142,6 +165,11 @@ const AdminAttendance = () => {
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -173,7 +201,7 @@ const AdminAttendance = () => {
         <div className="main-content attendance-page">
           <h2 className="attendance-page-title">Attendance Management</h2>
 
-          {attendanceRecords.length === 0 && !myRecord ? (
+          {loading && attendanceRecords.length === 0 && !myRecord ? (
             <div style={{ margin: '32px 0' }}>
               {[1,2,3].map(i => (
                 <Card key={i}>
