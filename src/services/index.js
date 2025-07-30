@@ -17,6 +17,7 @@ export * from './admin/profileService.js';
 export * from './employee/attendanceService.js';
 export * from './employee/leaveService.js';
 export * from './employee/profileService.js';
+export * from './employee/payrollService.js';
 
 // Shared services
 export * from './shared/announcementService.js';

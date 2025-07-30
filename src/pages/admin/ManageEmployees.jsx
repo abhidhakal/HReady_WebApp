@@ -6,6 +6,7 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import api from '/src/api/api.js';
 import './styles/ManageEmployees.css';
 import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
@@ -208,8 +209,9 @@ const ManageEmployees = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
-  const { getToken } = useAuth();
+  const { getToken, logout } = useAuth();
   const { showToast, showSuccess, showError } = useToast();
 
   const token = getToken();
@@ -235,6 +237,23 @@ const ManageEmployees = () => {
   useEffect(() => {
     fetchEmployees();
   }, []);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
 
   const handleEdit = (employee) => {
     setEditingEmployee(employee);
@@ -329,10 +348,7 @@ const ManageEmployees = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -353,9 +369,17 @@ const ManageEmployees = () => {
                   <div className="employee-list-item">
                     <Skeleton variant="circular" width={40} height={40} style={{ marginRight: 16 }} />
                     <div style={{ flex: 1 }}>
-                      <Skeleton variant="text" width="60%" height={24} />
-                      <Skeleton variant="text" width="40%" height={18} />
-                      <Skeleton variant="text" width="80%" height={18} />
+                      <Skeleton variant="text" width="60%" height={24} style={{ marginBottom: 8 }} />
+                      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                        <Skeleton variant="text" width={120} height={18} />
+                        <Skeleton variant="text" width={100} height={18} />
+                        <Skeleton variant="text" width={100} height={18} />
+                        <Skeleton variant="text" width={120} height={18} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Skeleton variant="circular" width={32} height={32} />
+                      <Skeleton variant="circular" width={32} height={32} />
                     </div>
                   </div>
                 </Card>
@@ -421,6 +445,12 @@ const ManageEmployees = () => {
         }}
         editing={!!editingEmployee}
         loading={dialogLoading}
+      />
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
       />
     </div>
   );

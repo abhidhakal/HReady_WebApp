@@ -8,6 +8,8 @@ import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { useToast } from '/src/hooks/useToast.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 // Import services
 import { getRequests, updateRequestStatus } from '/src/services/index.js';
 
@@ -59,8 +61,9 @@ function AdminRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionState, setActionState] = useState({}); // { [requestId]: { mode: 'approve'|'reject'|null, comment: '' } }
-  const { getToken } = useAuth();
-  const { showSuccess, showError } = useToast();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { getToken, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -128,8 +131,30 @@ function AdminRequests() {
     }
   };
 
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}> 
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -147,10 +172,7 @@ function AdminRequests() {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -285,6 +307,11 @@ function AdminRequests() {
           )}
         </div>
       </div>
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 }

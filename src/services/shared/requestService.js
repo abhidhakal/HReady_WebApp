@@ -16,6 +16,16 @@ export const getRequests = async (isAdmin = false) => {
   }
 };
 
+// Get my requests (employee)
+export const getMyRequests = async () => {
+  try {
+    const response = await api.get('/requests/my');
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
 // Get request by ID
 export const getRequestById = async (requestId) => {
   try {
@@ -46,10 +56,22 @@ export const submitRequest = async (requestData) => {
   }
 };
 
+// Create request (employee only)
+export const createRequest = async (formData) => {
+  try {
+    const response = await api.post('/requests', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
 // Update request status (admin only - matches AdminRequests.jsx)
 export const updateRequestStatus = async (requestId, status, adminComment = '') => {
   try {
-    const response = await api.patch(`/requests/${requestId}/status`, { 
+    const response = await api.put(`/requests/${requestId}/status`, { 
       status, 
       adminComment 
     });

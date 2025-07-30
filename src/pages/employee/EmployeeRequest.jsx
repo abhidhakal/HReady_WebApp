@@ -4,11 +4,15 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 // import logo from '../../assets/primary_icon.webp';
-import api from '/src/api/api.js';
 import './styles/EmployeeRequest.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+// Import services
+import { getMyRequests, createRequest } from '/src/services/index.js';
 
 // Validation schema for request form
 const RequestSchema = Yup.object().shape({
@@ -148,19 +152,22 @@ const EmployeeRequest = () => {
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { getToken } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { getToken, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const fetchRequests = async () => {
     setLoading(true);
-    setError('');
     try {
-      const res = await api.get('/requests/my', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setRequests(res.data);
+      const result = await getMyRequests();
+      if (result.success) {
+        setRequests(result.data);
+      } else {
+        showError('Failed to fetch requests');
+        console.error('Error fetching requests:', result.error);
+      }
     } catch (err) {
-      setError('Failed to fetch requests');
+      showError('Failed to fetch requests');
       console.error('Error fetching requests:', err);
     }
     setLoading(false);
@@ -172,7 +179,6 @@ const EmployeeRequest = () => {
 
   const handleSubmitRequest = async (formData) => {
     setLoading(true);
-    setError('');
     try {
       const form = new FormData();
       form.append('title', formData.title);
@@ -182,18 +188,36 @@ const EmployeeRequest = () => {
         form.append('attachment', formData.attachment);
       }
 
-      await api.post('/requests', form, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      fetchRequests();
+      const result = await createRequest(form);
+      if (result.success) {
+        showSuccess('Request submitted successfully');
+        fetchRequests();
+      } else {
+        showError('Failed to submit request');
+        console.error('Error submitting request:', result.error);
+      }
     } catch (err) {
-      setError('Failed to submit request');
+      showError('Failed to submit request');
       console.error('Error submitting request:', err);
     }
     setLoading(false);
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   const getStatusColor = (status) => {
@@ -222,6 +246,11 @@ const EmployeeRequest = () => {
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -238,10 +267,7 @@ const EmployeeRequest = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -254,12 +280,7 @@ const EmployeeRequest = () => {
             <h2>Requests & Reports</h2>
           </div>
 
-          {error && (
-            <div className="requests-error">
-              <i className="fas fa-exclamation-triangle"></i>
-              {error}
-            </div>
-          )}
+
 
           <RequestForm onSubmit={handleSubmitRequest} loading={loading} />
 
@@ -270,11 +291,23 @@ const EmployeeRequest = () => {
               <div className="requests-loading-container">
                 {[1, 2, 3, 4].map(i => (
                   <Card key={i}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <Skeleton variant="text" width="60%" height={24} />
-                      <Skeleton variant="text" width="30%" height={18} />
-                      <Skeleton variant="text" width="80%" height={18} />
-                      <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                    <div style={{ padding: 16, border: '1px solid #e1e5e9', borderRadius: 8, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <Skeleton variant="text" width={120} height={24} />
+                        <Skeleton variant="rectangular" width={80} height={24} style={{ borderRadius: 12 }} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <Skeleton variant="text" width={80} height={16} style={{ marginBottom: 4 }} />
+                          <Skeleton variant="text" width={100} height={18} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <Skeleton variant="text" width={80} height={16} style={{ marginBottom: 4 }} />
+                          <Skeleton variant="text" width={100} height={18} />
+                        </div>
+                      </div>
+                      <Skeleton variant="text" width="100%" height={16} style={{ marginBottom: 8 }} />
+                      <Skeleton variant="text" width="80%" height={16} />
                     </div>
                   </Card>
                 ))}
@@ -347,6 +380,11 @@ const EmployeeRequest = () => {
           </div>
         </div>
       </div>
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 };

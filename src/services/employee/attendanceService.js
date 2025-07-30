@@ -8,7 +8,7 @@ import api from '/src/api/api.js';
 // Check in
 export const checkIn = async () => {
   try {
-    const response = await api.post('/attendance/check-in');
+    const response = await api.post('/attendance/checkin');
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error };
@@ -18,7 +18,7 @@ export const checkIn = async () => {
 // Check out
 export const checkOut = async () => {
   try {
-    const response = await api.post('/attendance/check-out');
+    const response = await api.put('/attendance/checkout', { date: new Date() });
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error };

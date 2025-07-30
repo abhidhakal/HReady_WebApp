@@ -9,6 +9,8 @@ import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { useToast } from '/src/hooks/useToast.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 // Import services
 import { getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '/src/services/index.js';
 
@@ -152,11 +154,13 @@ const ManageAnnouncements = () => {
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogLoading, setDialogLoading] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [error, setError] = useState('');
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
-  const { getToken } = useAuth();
-  const { showSuccess, showError } = useToast();
+  const { getToken, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const token = getToken();
   const navigate = useNavigate();
@@ -253,6 +257,23 @@ const ManageAnnouncements = () => {
     setEditingAnnouncement(null);
   };
 
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
   const getAudienceColor = (audience) => {
     switch (audience) {
       case 'all':
@@ -268,6 +289,11 @@ const ManageAnnouncements = () => {
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -285,10 +311,7 @@ const ManageAnnouncements = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -410,6 +433,12 @@ const ManageAnnouncements = () => {
         initialData={editingAnnouncement}
         editing={!!editingAnnouncement}
         loading={formLoading}
+      />
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
       />
     </div>
   );

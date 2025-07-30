@@ -26,12 +26,9 @@ export const updateMyProfile = async (profileData) => {
 };
 
 // Upload profile picture
-export const uploadProfilePicture = async (file) => {
+export const uploadProfilePicture = async (formData) => {
   try {
-    const formData = new FormData();
-    formData.append('profilePicture', file);
-    
-    const response = await api.put('/employees/me/profile-picture', formData, {
+    const response = await api.put('/employees/upload-profile-picture', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return { success: true, data: response.data };
@@ -41,12 +38,9 @@ export const uploadProfilePicture = async (file) => {
 };
 
 // Change password
-export const changePassword = async (currentPassword, newPassword) => {
+export const changePassword = async (passwordData) => {
   try {
-    const response = await api.put('/employees/me/change-password', {
-      currentPassword,
-      newPassword
-    });
+    const response = await api.put('/employees/me/change-password', passwordData);
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error };
@@ -57,6 +51,16 @@ export const changePassword = async (currentPassword, newPassword) => {
 export const getProfileStats = async () => {
   try {
     const response = await api.get('/employees/me/stats');
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
+// Deactivate account
+export const deactivateAccount = async () => {
+  try {
+    const response = await api.delete('/employees/me');
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error };

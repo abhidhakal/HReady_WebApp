@@ -8,7 +8,7 @@ import api from '/src/api/api.js';
 // Get my leaves
 export const getMyLeaves = async (filters = {}) => {
   try {
-    const response = await api.get('/leaves/my', { params: filters });
+    const response = await api.get('/leaves', { params: filters });
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error };
@@ -27,6 +27,16 @@ export const getMyLeaveById = async (leaveId) => {
 
 // Apply for leave
 export const applyForLeave = async (leaveData) => {
+  try {
+    const response = await api.post('/leaves', leaveData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
+// Request leave (alias for applyForLeave)
+export const requestLeave = async (leaveData) => {
   try {
     const response = await api.post('/leaves', leaveData);
     return { success: true, data: response.data };

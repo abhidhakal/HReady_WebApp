@@ -6,6 +6,7 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import api from '/src/api/api.js';
 import './styles/ManageTasks.css';
 import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
@@ -189,8 +190,9 @@ const ManageTasks = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
-  const { getToken } = useAuth();
+  const { getToken, logout } = useAuth();
   const { toast, showSuccess, showError, hideToast } = useToast();
 
   const token = getToken();
@@ -232,6 +234,23 @@ const ManageTasks = () => {
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
 
   const handleEdit = (task) => {
     setEditingTask(task);
@@ -344,10 +363,7 @@ const ManageTasks = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -445,6 +461,12 @@ const ManageTasks = () => {
         editing={!!editingTask}
         loading={dialogLoading}
         employees={employees}
+      />
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
       />
     </div>
   );

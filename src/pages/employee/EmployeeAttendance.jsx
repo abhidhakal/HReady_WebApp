@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '/src/pages/employee/styles/EmployeeAttendance.css';
 // import logo from '../../assets/primary_icon.webp';
@@ -8,6 +7,11 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+// Import services
+import { getMyAttendance, checkIn, checkOut } from '/src/services/index.js';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -46,8 +50,10 @@ const EmployeeAttendance = () => {
   const [myRecord, setMyRecord] = useState(null);
   const [todayStatus, setTodayStatus] = useState('Not Checked In');
   const [loading, setLoading] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { getToken, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   useEffect(() => {
     const token = getToken();
@@ -59,56 +65,94 @@ const EmployeeAttendance = () => {
     const fetchAttendance = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/attendance/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMyRecord(res.data);
-        if (res.data.check_in_time && !res.data.check_out_time) {
-          setTodayStatus('Checked In');
-        } else if (res.data.check_in_time && res.data.check_out_time) {
-          setTodayStatus('Checked Out');
+        const result = await getMyAttendance();
+        if (result.success) {
+          setMyRecord(result.data);
+          if (result.data.check_in_time && !result.data.check_out_time) {
+            setTodayStatus('Checked In');
+          } else if (result.data.check_in_time && result.data.check_out_time) {
+            setTodayStatus('Checked Out');
+          } else {
+            setTodayStatus('Not Checked In');
+          }
         } else {
-          setTodayStatus('Not Checked In');
+          if (result.error?.response?.status === 404) {
+            setMyRecord(null); // No record for today
+          } else {
+            showError('Failed to fetch attendance data');
+            console.error('Error fetching attendance:', result.error);
+          }
         }
       } catch (err) {
-        if (err.response && err.response.status === 404) {
-          setMyRecord(null); // No record for today
-        } else {
-          console.error('Error fetching attendance:', err);
-        }
+        console.error('Error fetching attendance:', err);
+        showError('Failed to fetch attendance data');
       }
       setLoading(false);
     };
 
     fetchAttendance();
-  }, [navigate, getToken]);
+  }, [navigate, getToken, showError]);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
 
   const handleCheckIn = async () => {
     try {
-      await api.post('/attendance/checkin', {}, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setTodayStatus('Checked In');
-      window.location.reload();
+      const result = await checkIn();
+      if (result.success) {
+        showSuccess('Check-in successful');
+        setTodayStatus('Checked In');
+        // Refresh the page to update the data
+        window.location.reload();
+      } else {
+        showError('Failed to check in');
+        console.error('Error during check-in:', result.error);
+      }
     } catch (err) {
+      showError('Failed to check in');
       console.error('Error during check-in:', err);
     }
   };
 
   const handleCheckOut = async () => {
     try {
-      await api.put('/attendance/checkout', { date: new Date() }, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setTodayStatus('Checked Out');
-      window.location.reload();
+      const result = await checkOut();
+      if (result.success) {
+        showSuccess('Check-out successful');
+        setTodayStatus('Checked Out');
+        // Refresh the page to update the data
+        window.location.reload();
+      } else {
+        showError('Failed to check out');
+        console.error('Error during check-out:', result.error);
+      }
     } catch (err) {
+      showError('Failed to check out');
       console.error('Error during check-out:', err);
     }
   };
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="employee" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -125,10 +169,7 @@ const EmployeeAttendance = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -139,11 +180,13 @@ const EmployeeAttendance = () => {
           <h2 style={{ marginBottom: 24 }}>My Attendance</h2>
           {loading ? (
             <Card>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <Skeleton variant="text" width="60%" height={24} />
-                <Skeleton variant="text" width="40%" height={18} />
-                <Skeleton variant="text" width="80%" height={18} />
-                <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+              <div style={{ padding: 16, border: '1px solid #e1e5e9', borderRadius: 8, marginBottom: 12 }}>
+                <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 12 }} />
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                  <Skeleton variant="circular" width={48} height={48} style={{ marginRight: 16 }} />
+                  <Skeleton variant="text" width={80} height={32} />
+                </div>
+                <Skeleton variant="text" width={40} height={16} style={{ marginTop: 12 }} />
               </div>
             </Card>
           ) : (
@@ -200,6 +243,12 @@ const EmployeeAttendance = () => {
           )}
         </div>
       </div>
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 };

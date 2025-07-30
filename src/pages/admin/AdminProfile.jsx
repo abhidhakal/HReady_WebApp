@@ -6,13 +6,14 @@ import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import api from '/src/api/api.js';
 import './styles/AdminProfile.css';
 import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { useToast } from '/src/hooks/useToast.js';
 import { getApiBaseUrl } from '/src/utils/env.js';
 // Import services
 import { getAdminProfile, updateAdminProfile, uploadAdminProfilePicture, changeAdminPassword, deleteAdminAccount } from '/src/services/index.js';
-import Skeleton from '@mui/material/Skeleton';
 
 // Validation schema for password change
 const PasswordSchema = Yup.object().shape({
@@ -175,9 +176,10 @@ const AdminProfile = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-  const { getToken, fetchUserData } = useAuth();
+  const { getToken, fetchUserData, logout } = useAuth();
   const { toast, showToast, showSuccess, showError, hideToast } = useToast();
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -331,6 +333,23 @@ const AdminProfile = () => {
     }
   };
 
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
   return (
     <div className="full-screen">
       <Toast
@@ -355,10 +374,7 @@ const AdminProfile = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -564,6 +580,11 @@ const AdminProfile = () => {
         onClose={() => setShowPasswordModal(false)}
         onSubmit={handleChangePassword}
         loading={loading}
+      />
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
       />
     </div>
   );

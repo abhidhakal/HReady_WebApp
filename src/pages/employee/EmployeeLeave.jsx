@@ -4,7 +4,6 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeLeaves.css';
-import api from '/src/api/api.js';
 import Skeleton from '@mui/material/Skeleton';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -12,6 +11,11 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TextField from '@mui/material/TextField';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+// Import services
+import { getMyLeaves, requestLeave } from '/src/services/index.js';
 // import logo from '../../assets/primary_icon.webp';
 
 // Validation schema for leave form
@@ -194,21 +198,22 @@ const EmployeeLeaves = () => {
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { getToken } = useAuth();
-
-  const token = getToken();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { getToken, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const fetchLeaves = async () => {
     setLoading(true);
-    setError('');
     try {
-      const res = await api.get('/leaves', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setLeaves(res.data);
+      const result = await getMyLeaves();
+      if (result.success) {
+        setLeaves(result.data);
+      } else {
+        showError('Failed to fetch leave records');
+        console.error('Error fetching leaves:', result.error);
+      }
     } catch (err) {
-      setError('Failed to fetch leave records');
+      showError('Failed to fetch leave records');
       console.error('Error fetching leaves:', err);
     }
     setLoading(false);
@@ -221,30 +226,36 @@ const EmployeeLeaves = () => {
   const handleSubmitLeave = async (formData) => {
     setLoading(true);
     try {
-      const payload = new FormData();
-      payload.append('leaveType', formData.leaveType);
-      payload.append('startDate', formData.startDate);
-      payload.append('endDate', formData.endDate);
-      payload.append('reason', formData.reason);
-      payload.append('halfDay', formData.halfDay);
-      if (formData.attachment) {
-        payload.append('attachment', formData.attachment);
+      const result = await requestLeave(formData);
+      if (result.success) {
+        showSuccess('Leave requested successfully');
+        fetchLeaves();
+      } else {
+        showError('Failed to submit leave request');
+        console.error('Error submitting leave:', result.error);
       }
-
-      await api.post('/leaves', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      alert('Leave requested successfully');
-      fetchLeaves();
     } catch (err) {
+      showError('Failed to submit leave request');
       console.error('Error submitting leave:', err);
-      alert('Error submitting leave request');
     }
     setLoading(false);
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   const getStatusColor = (status) => {
@@ -270,6 +281,11 @@ const EmployeeLeaves = () => {
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -286,10 +302,7 @@ const EmployeeLeaves = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -302,12 +315,7 @@ const EmployeeLeaves = () => {
             <h2>Leave Management</h2>
           </div>
 
-          {error && (
-            <div className="leaves-error">
-              <i className="fas fa-exclamation-triangle"></i>
-              {error}
-            </div>
-          )}
+
 
           <LeaveForm onSubmit={handleSubmitLeave} loading={loading} />
 
@@ -318,11 +326,23 @@ const EmployeeLeaves = () => {
               <div className="leaves-loading-container">
                 {[1, 2, 3, 4].map(i => (
                   <Card key={i}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <Skeleton variant="text" width="60%" height={24} />
-                      <Skeleton variant="text" width="40%" height={18} />
-                      <Skeleton variant="text" width="80%" height={18} />
-                      <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                    <div style={{ padding: 16, border: '1px solid #e1e5e9', borderRadius: 8, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <Skeleton variant="text" width={120} height={24} />
+                        <Skeleton variant="rectangular" width={80} height={24} style={{ borderRadius: 12 }} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <Skeleton variant="text" width={80} height={16} style={{ marginBottom: 4 }} />
+                          <Skeleton variant="text" width={100} height={18} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <Skeleton variant="text" width={80} height={16} style={{ marginBottom: 4 }} />
+                          <Skeleton variant="text" width={100} height={18} />
+                        </div>
+                      </div>
+                      <Skeleton variant="text" width="100%" height={16} style={{ marginBottom: 8 }} />
+                      <Skeleton variant="text" width="80%" height={16} />
                     </div>
                   </Card>
                 ))}
@@ -393,6 +413,11 @@ const EmployeeLeaves = () => {
           </div>
         </div>
       </div>
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 };

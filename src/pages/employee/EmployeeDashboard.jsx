@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '../../pages/admin/styles/Dashboard.css';
-import api from '/src/api/api.js';
 import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { getApiBaseUrl } from '../../utils/env';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
+
+import { useToast } from '/src/hooks/useToast.js';
+// Import services
+import { getMyProfile, getMyAttendance, getAnnouncements, getTasks } from '/src/services/index.js';
 
 const EmployeeDashboard = () => {
   const { id } = useParams();
@@ -23,6 +26,7 @@ const EmployeeDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { getToken, fetchUserData, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
@@ -48,7 +52,11 @@ const EmployeeDashboard = () => {
 
   const handleLogoutConfirm = async () => {
     setShowLogoutModal(false);
-    await logout(navigate);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
   };
 
   const handleLogoutCancel = () => {
@@ -65,26 +73,27 @@ const EmployeeDashboard = () => {
 
     const fetchEmployee = async () => {
       try {
-        const res = await api.get('/employees/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setName(res.data.name || 'Employee');
-        setPosition(res.data.position || 'Employee');
-        setProfilePicture(res.data.profilePicture || '');
+        const result = await getMyProfile();
+        if (result.success) {
+          setName(result.data.name || 'Employee');
+          setPosition(result.data.position || 'Employee');
+          setProfilePicture(result.data.profilePicture || '');
+        } else {
+          showError(result.error || 'Failed to fetch employee profile');
+        }
       } catch (err) {
         console.error('Error fetching employee:', err);
+        showError('Error fetching employee profile');
       }
     };
 
     const fetchAttendance = async () => {
       try {
-        const res = await api.get('/attendance/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.data) {
-          if (res.data.check_out_time) {
+        const result = await getMyAttendance();
+        if (result.success && result.data) {
+          if (result.data.check_out_time) {
             setAttendanceStatus('Checked Out');
-          } else if (res.data.check_in_time) {
+          } else if (result.data.check_in_time) {
             setAttendanceStatus('Checked In');
           } else {
             setAttendanceStatus('Not Done');
@@ -93,44 +102,47 @@ const EmployeeDashboard = () => {
           setAttendanceStatus('Not Done');
         }
       } catch (err) {
-        if (err.response && err.response.status === 404) {
-          setAttendanceStatus('Not Done');
-        } else {
-          console.error('Error fetching attendance:', err);
-        }
+        console.error('Error fetching attendance:', err);
+        showError('Error fetching attendance status');
       }
     };
 
     Promise.all([fetchEmployee(), fetchAttendance()]).finally(() => setLoading(false));
-  }, [navigate, getToken]);
+  }, [navigate, getToken, showError]);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const res = await api.get('/announcements', {
-          headers: { Authorization: `Bearer ${getToken()}` }
-        });
-        setAnnouncements(res.data);
+        const result = await getAnnouncements();
+        if (result.success) {
+          setAnnouncements(result.data);
+        } else {
+          showError(result.error || 'Failed to fetch announcements');
+        }
       } catch (err) {
         console.error('Error fetching announcements:', err);
+        showError('Error fetching announcements');
       }
     };
     fetchAnnouncements();
-  }, [getToken]);
+  }, [getToken, showError]);
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await api.get('/tasks/my', {
-          headers: { Authorization: `Bearer ${getToken()}` }
-        });
-        setTasks(res.data);
+        const result = await getTasks();
+        if (result.success) {
+          setTasks(result.data);
+        } else {
+          showError(result.error || 'Failed to fetch tasks');
+        }
       } catch (err) {
         console.error('Error fetching tasks:', err);
+        showError('Error fetching tasks');
       }
     };
     fetchTasks();
-  }, [getToken]);
+  }, [getToken, showError]);
 
   const formatDate = (dateString) => {
     if (!dateString) return null;
@@ -143,6 +155,11 @@ const EmployeeDashboard = () => {
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="employee" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -171,73 +188,29 @@ const EmployeeDashboard = () => {
           {loading ? (
             <div className="dashboard-content">
               {/* Welcome Banner Skeleton */}
-              <div className="welcome-banner">
-                <div className="banner-left">
-                  <Skeleton variant="circular" width={80} height={80} style={{ marginRight: 16 }} />
-                  <Skeleton variant="text" width={200} height={32} />
-                </div>
-                <div className="banner-middle">
-                  <Skeleton variant="text" width={300} height={24} />
-                  <Skeleton variant="text" width={250} height={16} />
-                </div>
-                <div className="banner-right">
-                  <Skeleton variant="rectangular" width={150} height={40} />
+              <div style={{ padding: 20, border: '1px solid #e1e5e9', borderRadius: 12, marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                  <Skeleton variant="circular" width={60} height={60} style={{ marginRight: 16 }} />
+                  <div style={{ flex: 1 }}>
+                    <Skeleton variant="text" width={200} height={28} style={{ marginBottom: 8 }} />
+                    <Skeleton variant="text" width={150} height={16} />
+                  </div>
+                  <Skeleton variant="rectangular" width={120} height={36} style={{ borderRadius: 6 }} />
                 </div>
               </div>
 
               {/* Info Cards Skeleton */}
               <div className="info-cards">
-                {[1,2,3,4].map(i => (
-                  <div className="info-card" key={i}>
+                {[1, 2, 3, 4].map(i => (
+                  <div className="info-card" key={i} style={{ padding: 20, border: '1px solid #e1e5e9', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                     <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 12 }} />
-                    <Skeleton variant="rectangular" width={80} height={32} />
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                      <Skeleton variant="circular" width={48} height={48} style={{ marginRight: 16 }} />
+                      <Skeleton variant="text" width={80} height={32} />
+                    </div>
                     <Skeleton variant="text" width={40} height={16} style={{ marginTop: 12 }} />
                   </div>
                 ))}
-              </div>
-
-              {/* Tasks Section Skeleton */}
-              <div className="other-section">
-                <div className="task-section">
-                  <div className="task-header">
-                    <Skeleton variant="text" width={120} height={28} />
-                    <Skeleton variant="rectangular" width={100} height={32} />
-                  </div>
-                  <div className="task-cards-container">
-                    {[1,2,3].map(i => (
-                      <div className="task-card" key={i}>
-                        <div className="task-card-header">
-                          <Skeleton variant="text" width={150} height={24} />
-                          <Skeleton variant="rectangular" width={80} height={24} />
-                        </div>
-                        <Skeleton variant="text" width="100%" height={16} />
-                        <Skeleton variant="text" width="80%" height={16} />
-                        <div className="task-card-footer">
-                          <Skeleton variant="text" width={120} height={16} />
-                          <Skeleton variant="rectangular" width={100} height={32} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Announcements Section Skeleton */}
-                <div className="announcement-section">
-                  <div className="announcement-header">
-                    <Skeleton variant="text" width={150} height={28} />
-                    <Skeleton variant="rectangular" width={80} height={32} />
-                  </div>
-                  <div className="announcement-box-cards scrollable-announcements">
-                    {[1,2,3].map(i => (
-                      <div className="announcement-card" key={i}>
-                        <Skeleton variant="text" width={180} height={24} />
-                        <Skeleton variant="text" width="100%" height={16} />
-                        <Skeleton variant="text" width="90%" height={16} />
-                        <Skeleton variant="text" width={120} height={14} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
           ) : (
@@ -282,12 +255,74 @@ const EmployeeDashboard = () => {
 
               {/* Info Cards Section */}
               <div className="info-cards">
-                {/* Place your real info cards here, each with className="info-card" */}
-                {/* Example: */}
-                <div className="info-card overview-card">...</div>
-                <div className="info-card position-card">...</div>
-                <div className="info-card leaves-card">...</div>
-                <div className="info-card pending-tasks-card">...</div>
+                <div className="info-card position-card">
+                  <h2>Position</h2>
+                  <div className="position-content">
+                    <div className="position-header">
+                      <i className="fas fa-briefcase"></i>
+                      <span className="position-value">{position}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="info-card payroll-card-nav">
+                  <h2>My Payroll</h2>
+                  <div className="payroll-content-nav">
+                    <button 
+                      className="view-payroll-btn"
+                      onClick={() => navigate(`/employee/${id}/payroll`)}
+                    >
+                      Go to Payroll
+                    </button>
+                  </div>
+                </div>
+                <div className="info-card leaves-card">
+                  <h2>Leave Days Left</h2>
+                  <div className="leaves-content">
+                    <div className="leaves-header">
+                      <i className="fas fa-calendar-alt"></i>
+                      <span className="leaves-count">15</span>
+                    </div>
+                    <button 
+                      className="request-leave-btn"
+                      onClick={() => navigate(`/employee/${id}/leave`)}
+                    >
+                      Request Leave
+                    </button>
+                  </div>
+                </div>
+                <div className="info-card pending-tasks-card">
+                  <h2>Pending Tasks</h2>
+                  <div className="pending-tasks-content">
+                    <div className="pending-tasks-header">
+                      <i className="fas fa-exclamation-triangle"></i>
+                      <span className="pending-count">{tasks.filter(task => task.status?.toLowerCase() === 'pending').length}</span>
+                      {tasks.length > 0 && (
+                        <div className="progress-container">
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill" 
+                              style={{ width: `${((tasks.length - tasks.filter(task => task.status?.toLowerCase() === 'pending').length) / tasks.length) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {tasks.filter(task => task.status?.toLowerCase() === 'pending').length > 0 && (
+                      <div className="next-task-info">
+                        <p className="next-task-title">Title: {tasks.filter(task => task.status?.toLowerCase() === 'pending')[0]?.title}</p>
+                        {tasks.filter(task => task.status?.toLowerCase() === 'pending')[0]?.dueDate && (
+                          <p className="next-task-due">Due: {formatDate(tasks.filter(task => task.status?.toLowerCase() === 'pending')[0]?.dueDate)}</p>
+                        )}
+                      </div>
+                    )}
+                    <button 
+                      className="view-tasks-btn"
+                      onClick={() => navigate(`/employee/${id}/tasks`)}
+                    >
+                      View All
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="other-section">

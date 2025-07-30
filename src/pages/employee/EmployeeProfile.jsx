@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeProfile.css';
 import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+import Skeleton from '@mui/material/Skeleton';
+import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
 import { useToast } from '/src/hooks/useToast.js';
 import { getApiBaseUrl } from '../../utils/env';
-import Skeleton from '@mui/material/Skeleton';
-import { useSidebar } from '../../hooks/useSidebar';
+// Import services
+import { getMyProfile, updateMyProfile, uploadProfilePicture, changePassword, deactivateAccount } from '/src/services/index.js';
 
 // Validation schema for password change
 const PasswordSchema = Yup.object().shape({
@@ -175,7 +177,8 @@ const EmployeeProfile = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { getToken, logout } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const resolveProfilePicture = (picture) => {
     if (!picture) return '/assets/images/profile.svg';
@@ -198,16 +201,19 @@ const EmployeeProfile = () => {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/employees/me', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setProfile({
-        name: res.data.name,
-        email: res.data.email,
-        contactNo: res.data.contactNo || '',
-        profilePicture: res.data.profilePicture || '',
-        role: res.data.role || 'employee',
-      });
+      const result = await getMyProfile();
+      if (result.success) {
+        setProfile({
+          name: result.data.name,
+          email: result.data.email,
+          contactNo: result.data.contactNo || '',
+          profilePicture: result.data.profilePicture || '',
+          role: result.data.role || 'employee',
+        });
+      } else {
+        showError('Failed to fetch profile');
+        console.error('Error fetching profile:', result.error);
+      }
     } catch (err) {
       console.error('Error fetching profile:', err);
       showError('Failed to fetch profile');
@@ -237,14 +243,14 @@ const EmployeeProfile = () => {
       formData.append('profilePicture', file);
 
       try {
-        await api.put('/employees/upload-profile-picture', formData, {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        showSuccess('Profile picture updated successfully.');
-        fetchProfile();
+        const result = await uploadProfilePicture(formData);
+        if (result.success) {
+          showSuccess('Profile picture updated successfully.');
+          fetchProfile();
+        } else {
+          showError('Failed to upload picture.');
+          console.error('Error uploading profile picture:', result.error);
+        }
       } catch (err) {
         console.error('Error uploading profile picture:', err);
         showError('Failed to upload picture.');
@@ -257,36 +263,22 @@ const EmployeeProfile = () => {
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.put('/employees/me', {
+      const result = await updateMyProfile({
         name: profile.name,
         email: profile.email,
         contactNo: profile.contactNo,
-      }, {
-        headers: { Authorization: `Bearer ${getToken()}` },
       });
-      setEditing(false);
-      showSuccess('Profile updated successfully.');
-      fetchProfile();
+      if (result.success) {
+        setEditing(false);
+        showSuccess('Profile updated successfully.');
+        fetchProfile();
+      } else {
+        showError('Failed to update profile');
+        console.error('Error updating profile:', result.error);
+      }
     } catch (err) {
       console.error('Error updating profile:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      
-      // Handle different types of errors
-      if (err.response?.status === 400) {
-        // Validation error from backend
-        const errorMessage = err.response.data?.message || 'Invalid data provided. Please check your input.';
-        showError(errorMessage);
-      } else if (err.response?.status === 401 || err.response?.status === 403) {
-        // Auth error - this will trigger the interceptor logout
-        showError('Authentication failed. Please log in again.');
-      } else if (err.response?.status >= 500) {
-        // Server error
-        showError('Server error. Please try again later.');
-      } else {
-        // Network or other errors
-        showError('Failed to update profile. Please try again.');
-      }
+      showError('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -299,14 +291,17 @@ const EmployeeProfile = () => {
     }
     try {
       setLoading(true);
-      await api.put('/employees/change-password', {
+      const result = await changePassword({
         currentPassword: passwords.current,
         newPassword: passwords.new,
-      }, {
-        headers: { Authorization: `Bearer ${getToken()}` },
       });
-      setShowPasswordModal(false);
-      showSuccess('Password changed successfully.');
+      if (result.success) {
+        setShowPasswordModal(false);
+        showSuccess('Password changed successfully.');
+      } else {
+        showError('Failed to change password.');
+        console.error('Error changing password:', result.error);
+      }
     } catch (err) {
       console.error('Error changing password:', err);
       showError('Failed to change password.');
@@ -318,15 +313,35 @@ const EmployeeProfile = () => {
   const handleDeactivate = async () => {
     if (!window.confirm('Are you sure you want to deactivate your account? This action cannot be undone.')) return;
     try {
-      await api.delete('/employees/me', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      localStorage.clear();
-      navigate('/login');
+      const result = await deactivateAccount();
+      if (result.success) {
+        localStorage.clear();
+        navigate('/login');
+      } else {
+        showError('Failed to deactivate account.');
+        console.error('Error deactivating account:', result.error);
+      }
     } catch (err) {
       console.error('Error deactivating account:', err);
       showError('Failed to deactivate account.');
     }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   return (
@@ -352,10 +367,7 @@ const EmployeeProfile = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -367,17 +379,23 @@ const EmployeeProfile = () => {
           {loading && !editing ? (
             <div className="profile-loading-container">
               <Card>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-                  <Skeleton variant="circular" width={80} height={80} />
-                  <div>
-                    <Skeleton variant="text" width={180} height={32} />
-                    <Skeleton variant="text" width={220} height={24} />
-                    <Skeleton variant="text" width={120} height={20} />
+                <div style={{ padding: 20, border: '1px solid #e1e5e9', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
+                    <Skeleton variant="circular" width={80} height={80} style={{ marginRight: 24 }} />
+                    <div style={{ flex: 1 }}>
+                      <Skeleton variant="text" width={180} height={32} style={{ marginBottom: 8 }} />
+                      <Skeleton variant="text" width={220} height={24} style={{ marginBottom: 8 }} />
+                      <Skeleton variant="text" width={120} height={20} />
+                    </div>
                   </div>
-                </div>
-                <div style={{ marginTop: 32 }}>
-                  <Skeleton variant="rectangular" width="100%" height={60} style={{ marginBottom: 16 }} />
-                  <Skeleton variant="rectangular" width="100%" height={40} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 8 }} />
+                    <Skeleton variant="rectangular" width="100%" height={40} style={{ borderRadius: 6 }} />
+                    <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 8 }} />
+                    <Skeleton variant="rectangular" width="100%" height={40} style={{ borderRadius: 6 }} />
+                    <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 8 }} />
+                    <Skeleton variant="rectangular" width="100%" height={40} style={{ borderRadius: 6 }} />
+                  </div>
                 </div>
               </Card>
             </div>
@@ -546,6 +564,11 @@ const EmployeeProfile = () => {
         onClose={() => setShowPasswordModal(false)}
         onSubmit={handleChangePassword}
         loading={loading}
+      />
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
       />
     </div>
   );

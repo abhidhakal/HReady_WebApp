@@ -15,7 +15,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TextField from '@mui/material/TextField';
 // Import services
-import { getAllAttendance, getAdminAttendance, adminCheckIn, adminCheckOut } from '/src/services/index.js';
+import { getAllAttendance, getAdminAttendance, adminCheckIn, adminCheckOut, getAllEmployees } from '/src/services/index.js';
 
 const statusColor = status => {
   switch ((status || '').toLowerCase()) {
@@ -59,12 +59,14 @@ const Card = ({ children, style }) => (
 const AdminAttendance = () => {
   const { id } = useParams();
   const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [allEmployees, setAllEmployees] = useState([]);
   const [myRecord, setMyRecord] = useState(null);
   const [todayStatus, setTodayStatus] = useState('Not Checked In');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
-  const { getToken } = useAuth();
+  const { getToken, logout } = useAuth();
   const { toast, showSuccess, showError, hideToast } = useToast();
 
   const token = getToken();
@@ -79,19 +81,29 @@ const AdminAttendance = () => {
 
     setLoading(true);
     try {
-      // All records for employees
-      const allResult = await getAllAttendance();
-      if (allResult.success) {
-        setAttendanceRecords(allResult.data);
+      // Fetch all employees first
+      const employeesResult = await getAllEmployees();
+      if (employeesResult.success) {
+        setAllEmployees(employeesResult.data);
+      } else {
+        console.error('Error fetching employees:', employeesResult.error);
+        setAllEmployees([]);
+      }
+
+      // Fetch today's attendance records
+      const attendanceResult = await getAllAttendance();
+      if (attendanceResult.success) {
+        setAttendanceRecords(attendanceResult.data);
       } else {
         showError('Failed to fetch attendance records');
-        console.error('Error fetching all attendance:', allResult.error);
+        console.error('Error fetching all attendance:', attendanceResult.error);
         setAttendanceRecords([]);
       }
     } catch (err) {
-      showError('Failed to fetch attendance records');
-      console.error('Error fetching all attendance:', err);
+      showError('Failed to fetch data');
+      console.error('Error fetching data:', err);
       setAttendanceRecords([]);
+      setAllEmployees([]);
     }
 
     try {
@@ -121,6 +133,23 @@ const AdminAttendance = () => {
   useEffect(() => {
     fetchData();
   }, [navigate]);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
 
   const handleCheckIn = async () => {
     try {
@@ -156,12 +185,84 @@ const AdminAttendance = () => {
     }
   };
 
-  // Filter records by selected date
-  const filteredRecords = attendanceRecords.filter(record => {
-    const recordDate = new Date(record.date);
-    recordDate.setHours(0,0,0,0);
-    return recordDate.getTime() === selectedDate.getTime();
-  });
+  // Create complete attendance view for selected date
+  const getCompleteAttendanceView = () => {
+    const selectedDateStr = selectedDate.toISOString().split('T')[0];
+    
+    // Get attendance records for selected date
+    const dateAttendanceRecords = attendanceRecords.filter(record => {
+      if (!record.date) return false;
+      
+      // Try different date formats and handle timezone issues
+      let recordDate;
+      try {
+        recordDate = new Date(record.date);
+        // Reset time to start of day for comparison
+        recordDate.setHours(0, 0, 0, 0);
+        
+        const selectedDateStart = new Date(selectedDate);
+        selectedDateStart.setHours(0, 0, 0, 0);
+        
+
+        
+        return recordDate.getTime() === selectedDateStart.getTime();
+      } catch (error) {
+        console.error('Error parsing date:', record.date, error);
+        return false;
+      }
+    });
+
+
+
+    // Create complete attendance view
+    const completeAttendanceView = allEmployees.map(employee => {
+      // Try multiple ways to match employee with attendance record
+      const attendanceRecord = dateAttendanceRecords.find(record => {
+        // Check if record has user object with _id
+        if (record.user && record.user._id === employee._id) {
+          return true;
+        }
+        // Check if record has employeeId field
+        if (record.employeeId === employee._id) {
+          return true;
+        }
+        // Check if record has userId field
+        if (record.userId === employee._id) {
+          return true;
+        }
+        // Check if record has user field as string ID
+        if (record.user === employee._id) {
+          return true;
+        }
+        return false;
+      });
+      
+      if (attendanceRecord) {
+        // Employee has attendance record - present
+        return {
+          ...attendanceRecord,
+          user: employee,
+          status: attendanceRecord.check_out_time ? 'Checked Out' : 
+                  attendanceRecord.check_in_time ? 'Checked In' : 'Present'
+        };
+      } else {
+        // Employee has no attendance record - absent
+        return {
+          _id: `absent-${employee._id}`,
+          user: employee,
+          date: selectedDateStr,
+          check_in_time: null,
+          check_out_time: null,
+          total_hours: 0,
+          status: 'Absent'
+        };
+      }
+    });
+
+    return completeAttendanceView;
+  };
+
+  const completeAttendanceView = getCompleteAttendanceView();
 
   return (
     <div className="full-screen">
@@ -187,10 +288,7 @@ const AdminAttendance = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -203,13 +301,21 @@ const AdminAttendance = () => {
 
           {loading && attendanceRecords.length === 0 && !myRecord ? (
             <div style={{ margin: '32px 0' }}>
-              {[1,2,3].map(i => (
-                <Card key={i}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <Skeleton variant="text" width="60%" height={24} />
-                    <Skeleton variant="text" width="40%" height={18} />
-                    <Skeleton variant="text" width="80%" height={18} />
-                    <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+              {/* Attendance Records Skeleton */}
+              {[1, 2, 3, 4, 5].map(i => (
+                <Card key={i} style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                      <Skeleton variant="circular" width={40} height={40} style={{ marginRight: 16 }} />
+                      <div style={{ flex: 1 }}>
+                        <Skeleton variant="text" width="60%" height={24} style={{ marginBottom: 8 }} />
+                        <Skeleton variant="text" width="40%" height={18} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <Skeleton variant="text" width={80} height={20} />
+                      <Skeleton variant="rectangular" width={100} height={32} style={{ borderRadius: 16 }} />
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -279,9 +385,9 @@ const AdminAttendance = () => {
                 />
               </LocalizationProvider>
             </div>
-            {filteredRecords.length > 0 ? (
+            {completeAttendanceView.length > 0 ? (
               <div className="attendance-records-container">
-                {filteredRecords.map(record => (
+                {completeAttendanceView.map(record => (
                   <div key={record._id} className="attendance-list-item">
                     <Avatar name={record.user?.name || 'N/A'} />
                     <div className="attendance-info-main">
@@ -303,12 +409,18 @@ const AdminAttendance = () => {
             ) : (
               <div className="attendance-empty-state">
                 <span className="attendance-empty-icon"><i className="fas fa-users-slash"></i></span>
-                No employee attendance records found for this date.
+                No employees found.
               </div>
             )}
           </Card>
         </div>
       </div>
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 };

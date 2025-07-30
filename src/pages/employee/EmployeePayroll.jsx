@@ -3,12 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import '../../pages/admin/styles/Dashboard.css';
 import '../../pages/admin/styles/PayrollDashboard.css';
-import api from '/src/api/api.js';
 import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+import api from '/src/api/api.js';
+// Import services
+import { getMyPayrollHistory, getMySalary, getMyBankAccount, updateMyBankAccount, createMyBankAccount, downloadPayslip } from '/src/services/index.js';
 
 // Custom currency formatter for Rs.
 const formatCurrency = (amount, currency = 'Rs.') => {
@@ -31,7 +34,6 @@ const EmployeePayroll = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState({ message: '', type: '' });
   const [payrolls, setPayrolls] = useState([]);
   const [salary, setSalary] = useState(null);
   const [bankAccount, setBankAccount] = useState(null);
@@ -54,6 +56,7 @@ const EmployeePayroll = () => {
   
   const navigate = useNavigate();
   const { getToken } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -63,8 +66,8 @@ const EmployeePayroll = () => {
     setShowLogoutModal(false);
     await secureLogout(
       navigate,
-      () => setToast({ message: 'Logged out successfully', type: 'success' }),
-      (error) => setToast({ message: 'Logout completed with warnings', type: 'warning' })
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
     );
   };
 
@@ -79,6 +82,8 @@ const EmployeePayroll = () => {
       return;
     }
 
+    // This will be handled by the profile service later
+    // For now, keeping the direct API call for user info
     api.get('/employees/me', {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -86,9 +91,11 @@ const EmployeePayroll = () => {
         setName(res.data.name || 'Employee');
         setProfilePicture(res.data.profilePicture || '');
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error('Error fetching user info:', error);
         setName('Employee');
         setProfilePicture('');
+        showError('Failed to load user information');
       });
   }, [navigate, getToken]);
 
@@ -99,44 +106,52 @@ const EmployeePayroll = () => {
   const fetchPayrollData = async () => {
     try {
       setLoading(true);
-      const token = getToken();
       
-      // Get current user info first
-      const userRes = await api.get('/employees/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const employeeId = userRes.data._id;
-      
-      const [payrollsRes, salaryRes, bankRes] = await Promise.all([
-        api.get(`/payrolls/employee/${employeeId}/history`),
-        api.get(`/salaries/employee/${employeeId}`),
-        api.get(`/bank-accounts/employee/${employeeId}`)
+      // Use services instead of direct API calls
+      const [payrollsResult, salaryResult, bankResult] = await Promise.all([
+        getMyPayrollHistory(),
+        getMySalary(),
+        getMyBankAccount()
       ]);
 
-      setPayrolls(payrollsRes.data);
-      setSalary(salaryRes.data);
+      if (payrollsResult.success) {
+        setPayrolls(payrollsResult.data);
+      } else {
+        showError('Failed to load payroll history');
+        console.error('Error fetching payrolls:', payrollsResult.error);
+      }
+
+      if (salaryResult.success) {
+        setSalary(salaryResult.data);
+      } else {
+        showError('Failed to load salary information');
+        console.error('Error fetching salary:', salaryResult.error);
+      }
+
+      if (bankResult.success) {
       // Fix: set bankAccount to the default or first account if array
       setBankAccount(
-        Array.isArray(bankRes.data)
-          ? bankRes.data.find(acc => acc.isDefault) || bankRes.data[0] || null
-          : bankRes.data
-      );
+          Array.isArray(bankResult.data)
+            ? bankResult.data.find(acc => acc.isDefault) || bankResult.data[0] || null
+            : bankResult.data
+        );
+      } else {
+        showError('Failed to load bank account information');
+        console.error('Error fetching bank account:', bankResult.error);
+      }
     } catch (error) {
       console.error('Error fetching payroll data:', error);
-      setToast({ message: 'Failed to load payroll data', type: 'error' });
+      showError('Failed to load payroll data');
     } finally {
       setLoading(false);
     }
   };
 
-  const downloadPayslip = async (payrollId) => {
+  const handleDownloadPayslip = async (payrollId) => {
     try {
-      const response = await api.get(`/payrolls/${payrollId}/payslip`, {
-        responseType: 'blob'
-      });
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const result = await downloadPayslip(payrollId);
+      if (result.success) {
+        const url = window.URL.createObjectURL(new Blob([result.data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `payslip-${payrollId}.pdf`);
@@ -144,10 +159,14 @@ const EmployeePayroll = () => {
       link.click();
       link.remove();
       
-      setToast({ message: 'Payslip downloaded successfully!', type: 'success' });
+        showSuccess('Payslip downloaded successfully!');
+      } else {
+        showError('Failed to download payslip');
+        console.error('Error downloading payslip:', result.error);
+      }
     } catch (error) {
       console.error('Error downloading payslip:', error);
-      setToast({ message: 'Failed to download payslip', type: 'error' });
+      showError('Failed to download payslip');
     }
   };
 
@@ -195,22 +214,27 @@ const EmployeePayroll = () => {
     try {
       setLoading(true);
       if (isAddBank) {
-        // Get employeeId
-        const token = getToken();
-        const userRes = await api.get('/employees/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const employeeId = userRes.data._id;
-        await api.post('/bank-accounts', { ...bankForm, employeeId });
-        setToast({ message: 'Bank information added!', type: 'success' });
+        const result = await createMyBankAccount(bankForm);
+        if (result.success) {
+          showSuccess('Bank information added!');
+        } else {
+          showError('Failed to add bank information');
+          console.error('Error creating bank account:', result.error);
+        }
       } else {
-        await api.put(`/bank-accounts/${bankAccount._id}`, bankForm);
-        setToast({ message: 'Bank information updated!', type: 'success' });
+        const result = await updateMyBankAccount(bankForm);
+        if (result.success) {
+          showSuccess('Bank information updated!');
+        } else {
+          showError('Failed to update bank information');
+          console.error('Error updating bank account:', result.error);
+        }
       }
       setShowBankModal(false);
       fetchPayrollData();
     } catch (error) {
-      setToast({ message: 'Failed to save bank info', type: 'error' });
+      showError('Failed to save bank info');
+      console.error('Error saving bank info:', error);
     } finally {
       setLoading(false);
     }
@@ -221,14 +245,33 @@ const EmployeePayroll = () => {
       <div className="full-screen">
         <DashboardHeader onToggleSidebar={toggleSidebar} />
         <div className="dashboard-container">
-          <div style={{ margin: '32px 0' }}>
-            {[1,2,3].map(i => (
-              <div key={i} style={{ marginBottom: 24 }}>
-                <Skeleton variant="rectangular" width="100%" height={80} style={{ marginBottom: 16 }} />
-                <Skeleton variant="text" width="60%" height={32} />
-                <Skeleton variant="text" width="40%" height={24} />
+          <div className="main-content">
+            <div className="payroll-dashboard">
+              <div className="payroll-header">
+                <Skeleton variant="text" width={200} height={40} style={{ marginBottom: 24 }} />
+              </div>
+              
+              <div className="payroll-tabs">
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} variant="rectangular" width={120} height={40} style={{ marginRight: 12, borderRadius: 6 }} />
+                ))}
+              </div>
+
+              <div className="payroll-content">
+                <div className="stats-grid">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} style={{ padding: 20, border: '1px solid #e1e5e9', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                      <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 12 }} />
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                        <Skeleton variant="circular" width={48} height={48} style={{ marginRight: 16 }} />
+                        <Skeleton variant="text" width={80} height={32} />
+                      </div>
+                      <Skeleton variant="text" width={40} height={16} style={{ marginTop: 12 }} />
               </div>
             ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -240,7 +283,7 @@ const EmployeePayroll = () => {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => setToast({ message: '', type: '' })}
+        onClose={hideToast}
       />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
 
@@ -343,7 +386,7 @@ const EmployeePayroll = () => {
                         <i className="fas fa-university"></i>
                       </div>
                       <div className="stat-content">
-                        <h3>{bankAccount ? '✓' : '✗'}</h3>
+                        <h3>{bankAccount ? 'Yes' : 'No'}</h3>
                         <p>Bank Account</p>
                       </div>
                     </div>

@@ -290,17 +290,27 @@ function AdminDashboard() {
           {loading ? (
             <div className="info-cards">
               {[1,2,3,4].map(i => (
-                <div className="info-card" key={i}>
+                <div className="info-card" key={i} style={{ padding: 20, border: '1px solid #e1e5e9', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
                   <Skeleton variant="text" width={60} height={24} style={{ marginBottom: 12 }} />
-                  <Skeleton variant="rectangular" width={80} height={32} />
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                    <Skeleton variant="circular" width={48} height={48} style={{ marginRight: 16 }} />
+                    <Skeleton variant="text" width={80} height={32} />
+                  </div>
                   <Skeleton variant="text" width={40} height={16} style={{ marginTop: 12 }} />
                 </div>
               ))}
             </div>
           ) : (
             <div className="info-cards">
-              {/* Place your real info cards here, each with className="info-card" */}
-              {/* Example: */}
+              <div className="info-card position-card">
+                  <h2>Position</h2>
+                  <div className="position-content">
+                    <div className="position-header">
+                      <i className="fas fa-user-tie"></i>
+                      <span className="position-value">Admin</span>
+                    </div>
+                  </div>
+              </div>
               <div className="info-card overview-card">
                   <h2>Today's Overview</h2>
                   <div className="overview-content">
@@ -351,10 +361,7 @@ function AdminDashboard() {
                     </button>
                   </div>
                 </div>
-                <div className="info-card position-card">
-                  <h2>Position</h2>
-                  <p>Admin</p>
-                </div>
+                
             </div>
           )}
 
@@ -370,7 +377,23 @@ function AdminDashboard() {
                 </button>
               </div>
               <div className="task-cards-container">
-                {tasks.length > 0 ? (
+                {loading ? (
+                  // Task Cards Skeleton
+                  [1, 2, 3].map((i) => (
+                    <div key={i} className="task-card" style={{ padding: 16, border: '1px solid #e1e5e9', borderRadius: 8, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <Skeleton variant="text" width={150} height={24} />
+                        <Skeleton variant="rectangular" width={80} height={24} style={{ borderRadius: 12 }} />
+                      </div>
+                      <Skeleton variant="text" width="100%" height={16} style={{ marginBottom: 8 }} />
+                      <Skeleton variant="text" width="80%" height={16} style={{ marginBottom: 12 }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Skeleton variant="text" width={120} height={16} />
+                        <Skeleton variant="rectangular" width={100} height={32} style={{ borderRadius: 6 }} />
+                      </div>
+                    </div>
+                  ))
+                ) : tasks.length > 0 ? (
                   tasks.slice(0, 6).map((task) => (
                     <div key={task._id} className="task-card">
                       <div className="task-card-header">
@@ -422,7 +445,17 @@ function AdminDashboard() {
                 </button>
               </div>
               <div className="announcement-box-cards scrollable-announcements">
-                {announcements.length > 0 ? (
+                {loading ? (
+                  // Announcement Cards Skeleton
+                  [1, 2].map((i) => (
+                    <div key={i} className="announcement-card" style={{ padding: 16, border: '1px solid #e1e5e9', borderRadius: 8, marginBottom: 12 }}>
+                      <Skeleton variant="text" width={180} height={24} style={{ marginBottom: 12 }} />
+                      <Skeleton variant="text" width="100%" height={16} style={{ marginBottom: 8 }} />
+                      <Skeleton variant="text" width="90%" height={16} style={{ marginBottom: 8 }} />
+                      <Skeleton variant="text" width={120} height={14} />
+                    </div>
+                  ))
+                ) : announcements.length > 0 ? (
                   announcements.map((ann) => (
                     <div className="announcement-card" key={ann._id}>
                       <h3>{ann.title}</h3>

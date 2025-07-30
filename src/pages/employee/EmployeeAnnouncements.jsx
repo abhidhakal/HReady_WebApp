@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeAnnouncements.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+// Import services
+import { getAnnouncements } from '/src/services/index.js';
 
 const Card = ({ children }) => (
   <div className="announcement-card">{children}</div>
@@ -16,22 +20,23 @@ const EmployeeAnnouncements = () => {
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { getToken, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const fetchAnnouncements = async () => {
     setLoading(true);
-    setError('');
     try {
-      const res = await api.get('/announcements', {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-        },
-      });
-      setAnnouncements(res.data);
+      const result = await getAnnouncements();
+      if (result.success) {
+        setAnnouncements(result.data);
+      } else {
+        showError('Failed to fetch announcements');
+        console.error('Error fetching announcements:', result.error);
+      }
     } catch (err) {
-      setError('Failed to fetch announcements');
+      showError('Failed to fetch announcements');
       console.error('Error fetching announcements:', err);
     }
     setLoading(false);
@@ -40,6 +45,23 @@ const EmployeeAnnouncements = () => {
   useEffect(() => {
     fetchAnnouncements();
   }, []);
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -55,6 +77,11 @@ const EmployeeAnnouncements = () => {
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <nav className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -71,10 +98,7 @@ const EmployeeAnnouncements = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -87,29 +111,24 @@ const EmployeeAnnouncements = () => {
             <h2>Announcements</h2>
           </div>
 
-          {error && (
-            <div className="announcements-error">
-              <i className="fas fa-exclamation-triangle"></i>
-              {error}
-            </div>
-          )}
+
 
           {loading && (
             <div className="announcements-loading-container">
               {[1, 2, 3, 4].map(i => (
                 <Card key={i}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <Skeleton variant="text" width="60%" height={24} />
-                    <Skeleton variant="text" width="30%" height={18} />
-                    <Skeleton variant="text" width="80%" height={18} />
-                    <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                  <div style={{ padding: 16, border: '1px solid #e1e5e9', borderRadius: 8, marginBottom: 12 }}>
+                    <Skeleton variant="text" width={180} height={24} style={{ marginBottom: 12 }} />
+                    <Skeleton variant="text" width="100%" height={16} style={{ marginBottom: 8 }} />
+                    <Skeleton variant="text" width="90%" height={16} style={{ marginBottom: 8 }} />
+                    <Skeleton variant="text" width={120} height={14} />
                   </div>
                 </Card>
               ))}
             </div>
           )}
 
-          {!loading && announcements.length === 0 && !error && (
+          {!loading && announcements.length === 0 && (
             <div className="announcements-empty-state">
               <i className="fas fa-bullhorn"></i>
               <p>No announcements yet!</p>
@@ -148,6 +167,11 @@ const EmployeeAnnouncements = () => {
           )}
         </div>
       </div>
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 };

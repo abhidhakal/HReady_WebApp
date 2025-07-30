@@ -16,6 +16,16 @@ export const getTasks = async (isAdmin = false) => {
   }
 };
 
+// Get my tasks (employee)
+export const getMyTasks = async () => {
+  try {
+    const response = await api.get('/tasks/my');
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
 // Get task by ID
 export const getTaskById = async (taskId) => {
   try {
@@ -69,7 +79,7 @@ export const assignTask = async (taskId, employeeId) => {
 // Update task status (employee only)
 export const updateTaskStatus = async (taskId, status) => {
   try {
-    const response = await api.patch(`/tasks/${taskId}/status`, { status });
+    const response = await api.put(`/tasks/my/${taskId}/status`, { status });
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error };
@@ -120,7 +130,7 @@ export const getCompletedTasks = async (isAdmin = false) => {
 // Get overdue tasks
 export const getOverdueTasks = async (isAdmin = false) => {
   try {
-    const endpoint = isAdmin ? '/tasks/overdue' : '/tasks/my/overdue';
+    const endpoint = '/tasks/overdue';
     const response = await api.get(endpoint);
     return { success: true, data: response.data };
   } catch (error) {
@@ -131,7 +141,7 @@ export const getOverdueTasks = async (isAdmin = false) => {
 // Get task statistics
 export const getTaskStats = async (isAdmin = false) => {
   try {
-    const endpoint = isAdmin ? '/tasks/stats' : '/tasks/my/stats';
+    const endpoint = '/tasks/stats';
     const response = await api.get(endpoint);
     return { success: true, data: response.data };
   } catch (error) {

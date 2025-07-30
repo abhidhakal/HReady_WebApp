@@ -6,7 +6,9 @@ import './styles/PayrollDashboard.css';
 import api from '/src/api/api.js';
 import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+import Skeleton from '@mui/material/Skeleton';
 import PayrollPaymentModal from '/src/components/payroll/PayrollPaymentModal.jsx';
+
 import SalaryManagement from '/src/components/payroll/SalaryManagement.jsx';
 import AuthCheck from '/src/components/auth/AuthCheck.jsx';
 import Modal from '/src/components/Modal.jsx';
@@ -33,7 +35,7 @@ const PayrollDashboard = () => {
   const [payrollGenerating, setPayrollGenerating] = useState(false);
   const [bulkApproving, setBulkApproving] = useState(false);
   const [bulkPaying, setBulkPaying] = useState(false);
-  const [toast, setToast] = useState({ message: '', type: '' });
+  const { toast, showSuccess, showError, hideToast } = useToast();
   const [stats, setStats] = useState({});
   const [payrolls, setPayrolls] = useState([]);
   const [salaries, setSalaries] = useState([]);
@@ -120,7 +122,7 @@ const PayrollDashboard = () => {
         // Check if user is admin
         if (res.data.role !== 'admin') {
           setIsAuthenticated(false);
-          setToast({ message: 'Access denied. Admin privileges required.', type: 'error' });
+          showError('Access denied. Admin privileges required.');
           navigate('/login');
         } else {
           setIsAuthenticated(true);
@@ -129,7 +131,7 @@ const PayrollDashboard = () => {
         console.error('Error fetching admin data:', error);
         setIsAuthenticated(false);
         if (error.response?.status === 403) {
-          setToast({ message: 'Access denied. Please log in as admin.', type: 'error' });
+          showError('Access denied. Please log in as admin.');
           navigate('/login');
         } else {
           setName('Admin');
@@ -156,7 +158,7 @@ const PayrollDashboard = () => {
       // Check if user is authenticated
       const token = getToken();
       if (!token) {
-        setToast({ message: 'Please log in to access payroll data', type: 'error' });
+        showError('Please log in to access payroll data');
         navigate('/login');
         return;
       }
@@ -174,34 +176,38 @@ const PayrollDashboard = () => {
       if (statsResult.success) {
         setStats(statsResult.data);
       } else {
+        showError('Failed to fetch payroll stats');
         console.error('Failed to fetch payroll stats:', statsResult.error);
       }
 
       if (payrollsResult.success) {
         setPayrolls(payrollsResult.data);
       } else {
+        showError('Failed to fetch payrolls');
         console.error('Failed to fetch payrolls:', payrollsResult.error);
       }
 
       if (salariesResult.success) {
         setSalaries(salariesResult.data);
       } else {
+        showError('Failed to fetch salaries');
         console.error('Failed to fetch salaries:', salariesResult.error);
       }
 
       if (employeesResult.success) {
         setEmployees(employeesResult.data);
       } else {
+        showError('Failed to fetch employees');
         console.error('Failed to fetch employees:', employeesResult.error);
       }
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       if (error.response?.status === 403) {
-        setToast({ message: 'Access denied. Please log in as admin.', type: 'error' });
+        showError('Access denied. Please log in as admin.');
         navigate('/login');
       } else {
-        setToast({ message: 'Failed to load dashboard data', type: 'error' });
+        showError('Failed to load dashboard data');
       }
     } finally {
       setDashboardLoading(false);
@@ -250,25 +256,19 @@ const PayrollDashboard = () => {
       const result = await generatePayroll(selectedMonth, selectedYear);
       
       if (result.success) {
-        setToast({ message: 'Payroll generated successfully!', type: 'success' });
+        showSuccess('Payroll generated successfully!');
         fetchDashboardData(); // Refresh data
         if (result.data.skippedEmployees && result.data.skippedEmployees.length > 0) {
           setSkippedEmployees(result.data.skippedEmployees);
           setShowSkippedModal(true);
         }
       } else {
-        setToast({ 
-          message: result.error?.message || 'Failed to generate payroll', 
-          type: 'error' 
-        });
+        showError(result.error?.message || 'Failed to generate payroll');
         console.error('Error generating payroll:', result.error);
       }
     } catch (error) {
       console.error('Error generating payroll:', error);
-      setToast({ 
-        message: error.response?.data?.message || 'Failed to generate payroll', 
-        type: 'error' 
-      });
+      showError(error.response?.data?.message || 'Failed to generate payroll');
     } finally {
       setPayrollGenerating(false);
     }
@@ -277,24 +277,24 @@ const PayrollDashboard = () => {
   const approvePayroll = async (payrollId) => {
     try {
       await api.put(`/payrolls/${payrollId}/approve`);
-      setToast({ message: 'Payroll approved successfully!', type: 'success' });
+      showSuccess('Payroll approved successfully!');
       fetchDashboardData();
     } catch (error) {
       console.error('Error approving payroll:', error);
-      setToast({ message: 'Failed to approve payroll', type: 'error' });
+      showError('Failed to approve payroll');
     }
   };
 
   const markAsPaid = async (paymentData) => {
     try {
       await api.put(`/payrolls/${selectedPayroll._id}/mark-paid`, paymentData);
-      setToast({ message: 'Payroll marked as paid!', type: 'success' });
+      showSuccess('Payroll marked as paid!');
       setShowPaymentModal(false);
       setSelectedPayroll(null);
       fetchDashboardData();
     } catch (error) {
       console.error('Error marking payroll as paid:', error);
-      setToast({ message: 'Failed to mark payroll as paid', type: 'error' });
+      showError('Failed to mark payroll as paid');
     }
   };
 
@@ -338,12 +338,12 @@ const PayrollDashboard = () => {
     try {
       setBankModalLoading(true);
       await api.put(`/bank-accounts/${editingBankAccount._id}`, bankForm);
-      setToast({ message: 'Bank info updated!', type: 'success' });
+      showSuccess('Bank info updated!');
       setShowEditBankModal(false);
       setEditingBankAccount(null);
       openBankModal(bankModalEmployee); // Refresh
     } catch (error) {
-      setToast({ message: 'Failed to update bank info', type: 'error' });
+      showError('Failed to update bank info');
     } finally {
       setBankModalLoading(false);
     }
@@ -368,11 +368,11 @@ const PayrollDashboard = () => {
     try {
       setBankModalLoading(true);
       await api.post('/bank-accounts', { ...addBankForm, employeeId: bankModalEmployee._id });
-      setToast({ message: 'Bank info added!', type: 'success' });
+      showSuccess('Bank info added!');
       setShowAddBankModal(false);
       openBankModal(bankModalEmployee); // Refresh
     } catch (error) {
-      setToast({ message: 'Failed to add bank info', type: 'error' });
+      showError('Failed to add bank info');
     } finally {
       setBankModalLoading(false);
     }
@@ -420,7 +420,7 @@ const PayrollDashboard = () => {
     
     if (drafts.length === 0) {
       const periodText = showAllPayrolls ? 'all periods' : `for ${new Date(payrollYearFilter, payrollMonthFilter - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
-      setToast({ message: `No draft payrolls to approve ${periodText}.`, type: 'info' });
+      showError(`No draft payrolls to approve ${periodText}.`);
       return;
     }
     
@@ -437,10 +437,10 @@ const PayrollDashboard = () => {
       await Promise.all(
         drafts.map(p => api.put(`/payrolls/${p._id}/approve`))
       );
-      setToast({ message: 'All draft payrolls approved!', type: 'success' });
+      showSuccess('All draft payrolls approved!');
       fetchDashboardData();
     } catch (error) {
-      setToast({ message: 'Failed to approve all payrolls', type: 'error' });
+      showError('Failed to approve all payrolls');
     } finally {
       setBulkApproving(false);
     }
@@ -456,7 +456,7 @@ const PayrollDashboard = () => {
     
     if (approved.length === 0) {
       const periodText = showAllPayrolls ? 'all periods' : `for ${new Date(payrollYearFilter, payrollMonthFilter - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
-      setToast({ message: `No approved payrolls to mark as paid ${periodText}.`, type: 'info' });
+      showError(`No approved payrolls to mark as paid ${periodText}.`);
       return;
     }
     
@@ -477,10 +477,10 @@ const PayrollDashboard = () => {
           notes: 'Bulk payment processed'
         }))
       );
-      setToast({ message: 'All approved payrolls marked as paid!', type: 'success' });
+      showSuccess('All approved payrolls marked as paid!');
       fetchDashboardData();
     } catch (error) {
-      setToast({ message: 'Failed to mark payrolls as paid', type: 'error' });
+      showError('Failed to mark payrolls as paid');
     } finally {
       setBulkPaying(false);
     }
@@ -510,11 +510,11 @@ const PayrollDashboard = () => {
     setBudgetLoading(true);
     try {
       await api.put('/payroll-settings/payroll-budget', { budget: Number(budgetInput) });
-      setToast({ message: 'Salary budget updated!', type: 'success' });
+      showSuccess('Salary budget updated!');
       setShowSettingsModal(false);
       fetchSalaryBudget();
     } catch {
-      setToast({ message: 'Failed to update salary budget', type: 'error' });
+      showError('Failed to update salary budget');
     } finally {
       setBudgetLoading(false);
     }
@@ -525,8 +525,13 @@ const PayrollDashboard = () => {
       <div className="full-screen">
         <DashboardHeader onToggleSidebar={toggleSidebar} />
         <div className="dashboard-container">
-          <div className="loading-spinner">
-            {authLoading ? 'Checking authentication...' : 'Loading dashboard...'}
+          <div className="main-content">
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', marginBottom: '16px' }}>Loading...</div>
+                <div style={{ fontSize: '14px', color: '#666' }}>Please wait while we fetch your data</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -557,7 +562,7 @@ const PayrollDashboard = () => {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => setToast({ message: '', type: '' })}
+        onClose={hideToast}
       />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>

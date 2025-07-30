@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '/src/api/api.js';
 import DashboardHeader from '/src/layouts/DashboardHeader.jsx';
 import './styles/EmployeeTasks.css';
 import Skeleton from '@mui/material/Skeleton';
 import { useSidebar } from '../../hooks/useSidebar';
 import { useAuth } from '/src/hooks/useAuth.js';
+import { useToast } from '/src/hooks/useToast.js';
+import Toast from '/src/components/Toast.jsx';
+import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
+// Import services
+import { getMyTasks, updateTaskStatus } from '/src/services/index.js';
 // import logo from '../../assets/primary_icon.webp';
 
 const Card = ({ children }) => (
@@ -74,22 +78,23 @@ const EmployeeTasks = () => {
   const [tasks, setTasks] = useState([]);
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
-  const { getToken } = useAuth();
-
-  const token = getToken();
+  const { getToken, logout } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const fetchTasks = async () => {
     setLoading(true);
-    setError('');
     try {
-      const res = await api.get('/tasks/my', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTasks(res.data);
+      const result = await getMyTasks();
+      if (result.success) {
+        setTasks(result.data);
+      } else {
+        showError('Failed to fetch tasks');
+        console.error('Error fetching tasks:', result.error);
+      }
     } catch (err) {
-      setError('Failed to fetch tasks');
+      showError('Failed to fetch tasks');
       console.error('Error fetching tasks:', err);
     }
     setLoading(false);
@@ -99,23 +104,40 @@ const EmployeeTasks = () => {
     fetchTasks();
   }, []);
 
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout(
+      navigate,
+      () => showSuccess('Logged out successfully'),
+      (error) => showError('Logout completed with warnings')
+    );
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
   const handleStatusChange = async (taskId, newStatus) => {
     try {
-      await api.put(
-        `/tasks/my/${taskId}/status`,
-        { status: newStatus },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setTasks((prevTasks) =>
-        prevTasks.map((t) =>
-          t._id === taskId ? { ...t, status: newStatus } : t
-        )
-      );
+      const result = await updateTaskStatus(taskId, newStatus);
+      if (result.success) {
+        setTasks((prevTasks) =>
+          prevTasks.map((t) =>
+            t._id === taskId ? { ...t, status: newStatus } : t
+          )
+        );
+        showSuccess('Task status updated successfully');
+      } else {
+        showError('Failed to update task status');
+        console.error('Error updating status:', result.error);
+      }
     } catch (err) {
       console.error('Error updating status:', err);
-      alert('Failed to update status');
+      showError('Failed to update status');
     }
   };
 
@@ -130,6 +152,11 @@ const EmployeeTasks = () => {
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="employee" />
 
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -147,10 +174,7 @@ const EmployeeTasks = () => {
             <li>
               <a
                 className="nav-logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
+                onClick={handleLogoutClick}
               >
                 Log Out
               </a>
@@ -163,22 +187,23 @@ const EmployeeTasks = () => {
             <h2>My Tasks</h2>
           </div>
 
-          {error && (
-            <div className="tasks-error">
-              <i className="fas fa-exclamation-triangle"></i>
-              {error}
-            </div>
-          )}
+
 
           {loading && (
             <div className="tasks-loading-container">
               {[1, 2, 3, 4, 5].map(i => (
                 <Card key={i}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <Skeleton variant="text" width="60%" height={24} />
-                    <Skeleton variant="text" width="40%" height={18} />
-                    <Skeleton variant="text" width="80%" height={18} />
-                    <Skeleton variant="rectangular" width="100%" height={40} style={{ margin: '12px 0' }} />
+                  <div style={{ padding: 16, border: '1px solid #e1e5e9', borderRadius: 8, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <Skeleton variant="text" width={150} height={24} />
+                      <Skeleton variant="rectangular" width={80} height={24} style={{ borderRadius: 12 }} />
+                    </div>
+                    <Skeleton variant="text" width="100%" height={16} style={{ marginBottom: 8 }} />
+                    <Skeleton variant="text" width="80%" height={16} style={{ marginBottom: 12 }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Skeleton variant="text" width={120} height={16} />
+                      <Skeleton variant="rectangular" width={100} height={32} style={{ borderRadius: 6 }} />
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -230,6 +255,12 @@ const EmployeeTasks = () => {
           )}
         </div>
       </div>
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </div>
   );
 };
