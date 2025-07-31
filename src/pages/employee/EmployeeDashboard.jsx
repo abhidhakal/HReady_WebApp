@@ -11,7 +11,7 @@ import { useSidebar } from '../../hooks/useSidebar';
 
 import { useToast } from '/src/hooks/useToast.js';
 // Import services
-import { getMyProfile, getMyAttendance, getAnnouncements, getTasks } from '/src/services/index.js';
+import { getMyProfile, getMyAttendance, getAnnouncements, getTasks, getMyLeaves } from '/src/services/index.js';
 
 const EmployeeDashboard = () => {
   const { id } = useParams();
@@ -21,6 +21,7 @@ const EmployeeDashboard = () => {
   const [profilePicture, setProfilePicture] = useState('');
   const [announcements, setAnnouncements] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [leaves, setLeaves] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState('Not Done');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -141,7 +142,22 @@ const EmployeeDashboard = () => {
         showError('Error fetching tasks');
       }
     };
+    const fetchLeaves = async () => {
+      try {
+        const result = await getMyLeaves();
+        if (result.success) {
+          setLeaves(result.data);
+        } else {
+          showError(result.error?.message || 'Failed to fetch leaves');
+        }
+      } catch (err) {
+        console.error('Error fetching leaves:', err);
+        showError('Error fetching leaves');
+      }
+    };
+
     fetchTasks();
+    fetchLeaves();
   }, [getToken, showError]);
 
   const formatDate = (dateString) => {
@@ -151,6 +167,44 @@ const EmployeeDashboard = () => {
       month: '2-digit',
       day: '2-digit'
     });
+  };
+
+  // Calculate remaining leaves for current month (4 leaves per month, resets monthly)
+  const calculateRemainingLeaves = () => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // January is 0
+    
+    // 4 leaves per month
+    const monthlyLeaves = 4;
+    
+    // Calculate leaves taken this month (approved leaves only)
+    let leavesTakenThisMonth = 0;
+    
+    leaves.filter(leave => {
+      const leaveDate = new Date(leave.startDate);
+      const leaveYear = leaveDate.getFullYear();
+      const leaveMonth = leaveDate.getMonth() + 1;
+      return leave.status?.toLowerCase() === 'approved' && 
+             leaveYear === currentYear && 
+             leaveMonth === currentMonth;
+    }).forEach(leave => {
+      const startDate = new Date(leave.startDate);
+      const endDate = new Date(leave.endDate);
+      
+      // Calculate number of days between start and end date (inclusive)
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+      
+      // If it's a half day, count as 0.5 days
+      if (leave.halfDay) {
+        leavesTakenThisMonth += 0.5;
+      } else {
+        leavesTakenThisMonth += daysDiff;
+      }
+    });
+    
+    return Math.max(0, monthlyLeaves - leavesTakenThisMonth);
   };
 
   return (
@@ -280,7 +334,7 @@ const EmployeeDashboard = () => {
                   <div className="leaves-content">
                     <div className="leaves-header">
                       <i className="fas fa-calendar-alt"></i>
-                      <span className="leaves-count">15</span>
+                      <span className="leaves-count">{calculateRemainingLeaves()}</span>
                     </div>
                     <button 
                       className="request-leave-btn"

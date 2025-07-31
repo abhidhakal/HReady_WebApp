@@ -55,40 +55,40 @@ const EmployeeAttendance = () => {
   const { getToken, logout } = useAuth();
   const { toast, showSuccess, showError, hideToast } = useToast();
 
+  const fetchAttendance = async () => {
+    setLoading(true);
+    try {
+      const result = await getMyAttendance();
+      if (result.success) {
+        setMyRecord(result.data);
+        if (result.data.check_in_time && !result.data.check_out_time) {
+          setTodayStatus('Checked In');
+        } else if (result.data.check_in_time && result.data.check_out_time) {
+          setTodayStatus('Checked Out');
+        } else {
+          setTodayStatus('Not Checked In');
+        }
+      } else {
+        if (result.error?.response?.status === 404) {
+          setMyRecord(null); // No record for today
+        } else {
+          showError('Failed to fetch attendance data');
+          console.error('Error fetching attendance:', result.error);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching attendance:', err);
+      showError('Failed to fetch attendance data');
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     const token = getToken();
     if (!token) {
       navigate('/login');
       return;
     }
-
-    const fetchAttendance = async () => {
-      setLoading(true);
-      try {
-        const result = await getMyAttendance();
-        if (result.success) {
-          setMyRecord(result.data);
-          if (result.data.check_in_time && !result.data.check_out_time) {
-            setTodayStatus('Checked In');
-          } else if (result.data.check_in_time && result.data.check_out_time) {
-            setTodayStatus('Checked Out');
-          } else {
-            setTodayStatus('Not Checked In');
-          }
-        } else {
-          if (result.error?.response?.status === 404) {
-            setMyRecord(null); // No record for today
-          } else {
-            showError('Failed to fetch attendance data');
-            console.error('Error fetching attendance:', result.error);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching attendance:', err);
-        showError('Failed to fetch attendance data');
-      }
-      setLoading(false);
-    };
 
     fetchAttendance();
   }, [navigate, getToken, showError]);
@@ -116,8 +116,7 @@ const EmployeeAttendance = () => {
       if (result.success) {
         showSuccess('Check-in successful');
         setTodayStatus('Checked In');
-        // Refresh the page to update the data
-        window.location.reload();
+        fetchAttendance();
       } else {
         showError('Failed to check in');
         console.error('Error during check-in:', result.error);
@@ -134,8 +133,7 @@ const EmployeeAttendance = () => {
       if (result.success) {
         showSuccess('Check-out successful');
         setTodayStatus('Checked Out');
-        // Refresh the page to update the data
-        window.location.reload();
+        fetchAttendance();
       } else {
         showError('Failed to check out');
         console.error('Error during check-out:', result.error);

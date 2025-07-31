@@ -75,6 +75,44 @@ function AdminLeaves() {
   const { getToken, logout } = useAuth();
   const { toast, showSuccess, showError, hideToast } = useToast();
 
+  // Calculate remaining leaves for an employee (4 leaves per month, resets monthly)
+  const calculateEmployeeRemainingLeaves = (employeeLeaves) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // January is 0
+    
+    // 4 leaves per month
+    const monthlyLeaves = 4;
+    
+    // Calculate leaves taken this month (approved leaves only)
+    let leavesTakenThisMonth = 0;
+    
+    employeeLeaves.filter(leave => {
+      const leaveDate = new Date(leave.startDate);
+      const leaveYear = leaveDate.getFullYear();
+      const leaveMonth = leaveDate.getMonth() + 1;
+      return leave.status?.toLowerCase() === 'approved' && 
+             leaveYear === currentYear && 
+             leaveMonth === currentMonth;
+    }).forEach(leave => {
+      const startDate = new Date(leave.startDate);
+      const endDate = new Date(leave.endDate);
+      
+      // Calculate number of days between start and end date (inclusive)
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+      
+      // If it's a half day, count as 0.5 days
+      if (leave.halfDay) {
+        leavesTakenThisMonth += 0.5;
+      } else {
+        leavesTakenThisMonth += daysDiff;
+      }
+    });
+    
+    return Math.max(0, monthlyLeaves - leavesTakenThisMonth);
+  };
+
   const fetchLeaves = async () => {
     setLoading(true);
     setError('');
@@ -379,9 +417,15 @@ function AdminLeaves() {
               {leaves.map((leave) => (
                 <Card key={leave._id}>
                   <div className="leave-card-header">
-                    <span className="leave-employee">
-                      {leave.requestedBy?.name || leave.requestedBy?.email || 'Unknown Employee'}
-                    </span>
+                    <div className="leave-employee-info">
+                      <span className="leave-employee">
+                        {leave.requestedBy?.name || leave.requestedBy?.email || 'Unknown Employee'}
+                      </span>
+                      <span className="leave-remaining">
+                        <i className="fas fa-calendar-alt"></i>
+                        {calculateEmployeeRemainingLeaves(leaves.filter(l => l.requestedBy?._id === leave.requestedBy?._id))} leaves left this month
+                      </span>
+                    </div>
                     <StatusChip status={leave.status} />
                   </div>
                   
