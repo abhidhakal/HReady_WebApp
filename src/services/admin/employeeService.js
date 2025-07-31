@@ -87,20 +87,7 @@ export const getEmployeePayroll = async (employeeId, month, year) => {
   }
 };
 
-// Upload employee profile picture
-export const uploadEmployeeProfilePicture = async (employeeId, file) => {
-  try {
-    const formData = new FormData();
-    formData.append('profilePicture', file);
-    
-    const response = await api.put(`/employees/${employeeId}/profile-picture`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    return { success: true, data: response.data };
-  } catch (error) {
-    return { success: false, error };
-  }
-};
+
 
 // Get employee statistics
 export const getEmployeeStats = async (employeeId) => {

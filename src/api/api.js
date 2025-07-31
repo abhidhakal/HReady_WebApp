@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+// Environment detection for API base URL
+const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
+
+const baseURL = isTest ? process.env.VITE_API_BASE_URL : import.meta.env.VITE_API_BASE_URL;
+console.log('API Base URL:', baseURL);
+console.log('Is Test Environment:', isTest);
+
 const api = axios.create({
-  baseURL: process.env.VITE_API_BASE_URL,
+  baseURL: baseURL,
   timeout: 30000, // 30 second timeout for slow Render responses
 });
 
@@ -36,10 +43,12 @@ api.interceptors.response.use(
                             originalRequest.url.includes('/logout');
       
       // Only logout for auth endpoints or if we get a clear "token invalid" message
-      if (isAuthEndpoint || 
+      // But don't redirect if we're already on the login page (prevents infinite redirects)
+      if ((isAuthEndpoint || 
           error.response.data?.message?.toLowerCase().includes('token') ||
           error.response.data?.message?.toLowerCase().includes('unauthorized') ||
-          error.response.data?.message?.toLowerCase().includes('forbidden')) {
+          error.response.data?.message?.toLowerCase().includes('forbidden')) &&
+          !window.location.pathname.includes('/login')) {
         console.log('Auth error detected, logging out user');
         localStorage.removeItem('token');
         window.location.href = '/login';

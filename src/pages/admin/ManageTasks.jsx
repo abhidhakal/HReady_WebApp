@@ -33,7 +33,7 @@ const statusColor = status => {
 
 const StatusChip = ({ status }) => (
   <span 
-    className="task-status-chip"
+    className="manage-task-status-chip"
     style={{ backgroundColor: statusColor(status) }}
   >
     {status}
@@ -41,13 +41,13 @@ const StatusChip = ({ status }) => (
 );
 
 const Avatar = ({ name }) => (
-  <div className="task-avatar">
+  <div className="manage-task-avatar">
     {name && name.length > 0 ? name[0].toUpperCase() : '?'}
   </div>
 );
 
 const Card = ({ children }) => (
-  <div className="task-card">{children}</div>
+  <div className="manage-task-card">{children}</div>
 );
 
 const TaskDialog = ({ open, onClose, onSubmit, initialValues, editing, loading, employees }) => {
@@ -382,7 +382,7 @@ const ManageTasks = () => {
           {loading ? (
             <div className="tasks-list-container">
               {[1,2,3,4,5].map(i => (
-                <div className="task-card" key={i}>
+                <div className="manage-task-card" key={i}>
                   <div className="task-header">
                     <Skeleton variant="text" width="60%" height={24} />
                     <Skeleton variant="text" width="30%" height={18} />
@@ -408,7 +408,7 @@ const ManageTasks = () => {
                     <Avatar name={task.assignedTo?.name || 'Task'} />
                     <div className="task-info-main">
                       <div className="task-info-details task-title-row">
-                        <span className="task-title"><i className="fas fa-tasks"></i> {task.title}</span>
+                        <span className="task-title"> {task.title}</span>
                         <StatusChip status={task.status} />
                       </div>
                       {task.description && (

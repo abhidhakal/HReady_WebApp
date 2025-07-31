@@ -208,7 +208,7 @@ function AdminDashboard() {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => hideToast()}
+        onClose={hideToast}
       />
       <DashboardHeader onToggleSidebar={toggleSidebar} userRole="admin" />
 
@@ -402,26 +402,18 @@ function AdminDashboard() {
                           {task.status}
                         </span>
                       </div>
-                      {task.description && (
-                        <p className="task-description">
-                          {task.description.length > 80 
-                            ? task.description.slice(0, 80) + '...' 
-                            : task.description
-                          }
-                        </p>
-                      )}
-                      <div className="task-card-footer">
-                        <span className="task-due-date">
-                          <i className="fas fa-calendar-alt"></i>
-                          Due: {formatDate(task.dueDate)}
-                        </span>
-                        <button 
-                          className="task-details-btn"
-                          onClick={() => navigate(`/admin/${id}/tasks`)}
-                        >
-                          View Details
-                        </button>
-                      </div>
+                                                <div className="task-card-footer">
+                            <span className="task-due-date">
+                              <i className="fas fa-calendar-alt"></i>
+                              Due: {formatDate(task.dueDate)}
+                            </span>
+                            <button 
+                              className="task-details-btn"
+                              onClick={() => navigate(`/admin/${id}/tasks`)}
+                            >
+                              View Details
+                            </button>
+                          </div>
                     </div>
                   ))
                 ) : (

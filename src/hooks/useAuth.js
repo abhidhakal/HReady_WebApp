@@ -96,11 +96,14 @@ export function useAuth() {
   // Login function
   const login = useCallback(async (email, password, navigate) => {
     try {
+      console.log('Login attempt with:', { email: email.trim().toLowerCase(), passwordLength: password.length });
+      
       const res = await api.post('/auth/login', {
         email: email.trim().toLowerCase(),
         password: password
       });
 
+      console.log('Login response:', res.data);
       const data = res.data;
 
       // Store authentication data
@@ -117,6 +120,8 @@ export function useAuth() {
 
       return { success: true, data };
     } catch (error) {
+      console.log('Login error in useAuth:', error);
+      console.log('Error response:', error.response?.data);
       return { success: false, error };
     }
   }, []);

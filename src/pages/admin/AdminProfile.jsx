@@ -355,7 +355,7 @@ const AdminProfile = () => {
       <Toast
         message={toast.message}
         type={toast.type}
-        onClose={() => showToast({ message: '', type: '' })}
+        onClose={hideToast}
       />
       <DashboardHeader onToggleSidebar={() => setSidebarOpen(prev => !prev)} userRole="admin" />
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>

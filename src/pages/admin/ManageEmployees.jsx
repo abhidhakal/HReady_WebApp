@@ -116,17 +116,7 @@ const EmployeeDialog = ({ open, onClose, onSubmit, initialValues, editing, loadi
                   </div>
                 )}
                 
-                <div className="employee-form-field">
-                  <label>Profile Picture URL</label>
-                  <input 
-                    type="text" 
-                    name="profilePicture" 
-                    placeholder="Enter profile picture URL" 
-                    value={values.profilePicture} 
-                    onChange={handleChange} 
-                    className="employee-form-input" 
-                  />
-                </div>
+
                 
                 <div className="employee-form-field">
                   <label>Contact Number</label>
@@ -212,7 +202,7 @@ const ManageEmployees = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const { getToken, logout } = useAuth();
-  const { showToast, showSuccess, showError } = useToast();
+  const { toast, showToast, showSuccess, showError, hideToast } = useToast();
 
   const token = getToken();
   const navigate = useNavigate();
@@ -330,6 +320,11 @@ const ManageEmployees = () => {
 
   return (
     <div className="full-screen">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
+      />
       <DashboardHeader onToggleSidebar={toggleSidebar} />
 
       <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -428,7 +423,6 @@ const ManageEmployees = () => {
           name: editingEmployee.name || '',
           email: editingEmployee.email || '',
           password: '',
-          profilePicture: editingEmployee.profilePicture || '',
           contactNo: editingEmployee.contactNo || '',
           department: editingEmployee.department || '',
           position: editingEmployee.position || '',
@@ -437,7 +431,6 @@ const ManageEmployees = () => {
           name: '',
           email: '',
           password: '',
-          profilePicture: '',
           contactNo: '',
           department: '',
           position: '',

@@ -61,6 +61,7 @@ function AdminRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionState, setActionState] = useState({}); // { [requestId]: { mode: 'approve'|'reject'|null, comment: '' } }
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { getToken, logout } = useAuth();
   const { toast, showSuccess, showError, hideToast } = useToast();
@@ -71,6 +72,7 @@ function AdminRequests() {
     try {
       const result = await getRequests(true); // true for admin
       if (result.success) {
+        console.log('Fetched requests:', result.data);
         setRequests(result.data);
       } else {
         setError('Failed to fetch requests');
@@ -106,6 +108,7 @@ function AdminRequests() {
     setError('');
     try {
       const comment = actionState[id]?.comment || '';
+      console.log('Submitting action:', { id, status, comment });
       const result = await updateRequestStatus(id, status, comment);
       
       if (result.success) {
@@ -148,6 +151,19 @@ function AdminRequests() {
     setShowLogoutModal(false);
   };
 
+  // Filter requests based on status
+  const filteredRequests = requests.filter(request => {
+    if (statusFilter === 'all') return true;
+    return (request.status === statusFilter || request.status === statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1));
+  });
+
+  // Get counts for each status
+  const getStatusCount = (status) => {
+    return requests.filter(request => 
+      request.status === status || request.status === status.charAt(0).toUpperCase() + status.slice(1)
+    ).length;
+  };
+
   return (
     <div className="full-screen">
       <Toast
@@ -183,6 +199,18 @@ function AdminRequests() {
         <div className="main-content-requests">
           <div className="requests-header">
             <h2>All Employee Requests</h2>
+            <div className="requests-filter">
+              <select 
+                value={statusFilter} 
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="status-filter-select"
+              >
+                <option value="all">All Requests ({requests.length})</option>
+                <option value="pending">Pending ({getStatusCount('pending')})</option>
+                <option value="approved">Approved ({getStatusCount('approved')})</option>
+                <option value="rejected">Rejected ({getStatusCount('rejected')})</option>
+              </select>
+            </div>
           </div>
 
           {loading ? (
@@ -203,9 +231,14 @@ function AdminRequests() {
               <i className="fas fa-inbox"></i>
               <p>No requests found.</p>
             </div>
+          ) : requests.length === 0 ? (
+            <div className="requests-empty-state">
+              <i className="fas fa-inbox"></i>
+              <p>No requests found.</p>
+            </div>
           ) : (
             <div className="requests-list-container">
-              {requests.map(request => (
+              {filteredRequests.map(request => (
                 <div className="request-card" key={request._id}>
                   <div className="request-card-header">
                     <span className="request-title">{request.title}</span>
@@ -246,7 +279,7 @@ function AdminRequests() {
                     </div>
                   )}
 
-                  {request.status === 'pending' && (
+                  {(request.status === 'pending' || request.status === 'Pending') && (
                     <div className="request-actions">
                       {actionState[request._id]?.mode ? (
                         <div className="request-action-form">

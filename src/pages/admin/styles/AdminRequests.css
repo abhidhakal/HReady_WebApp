@@ -6,6 +6,7 @@
   margin: 75px auto 0 auto;
   padding: 20px;
   max-width: 1000px;
+  color: #333;
 }
 
 .requests-header {
@@ -17,6 +18,39 @@
   font-size: 24px;
   font-weight: 600;
   margin: 0;
+}
+
+.requests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.requests-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-filter-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.status-filter-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.status-filter-select:hover {
+  border-color: #bbb;
 }
 
 /* Loading states */
@@ -267,6 +301,7 @@
   border-radius: 8px;
   font-size: 14px;
   background: #f9f9f9;
+  color: #333;
   transition: border-color 0.2s ease;
 }
 
@@ -336,6 +371,20 @@
     width: 100%;
     padding: 16px;
     margin-top: 60px;
+  }
+  
+  .requests-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .requests-filter {
+    width: 100%;
+  }
+  
+  .status-filter-select {
+    width: 100%;
   }
   
   .request-card {

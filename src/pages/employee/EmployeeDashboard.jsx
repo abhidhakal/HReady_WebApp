@@ -79,7 +79,7 @@ const EmployeeDashboard = () => {
           setPosition(result.data.position || 'Employee');
           setProfilePicture(result.data.profilePicture || '');
         } else {
-          showError(result.error || 'Failed to fetch employee profile');
+          showError(result.error?.message || 'Failed to fetch employee profile');
         }
       } catch (err) {
         console.error('Error fetching employee:', err);
@@ -117,7 +117,7 @@ const EmployeeDashboard = () => {
         if (result.success) {
           setAnnouncements(result.data);
         } else {
-          showError(result.error || 'Failed to fetch announcements');
+          showError(result.error?.message || 'Failed to fetch announcements');
         }
       } catch (err) {
         console.error('Error fetching announcements:', err);
@@ -134,7 +134,7 @@ const EmployeeDashboard = () => {
         if (result.success) {
           setTasks(result.data);
         } else {
-          showError(result.error || 'Failed to fetch tasks');
+          showError(result.error?.message || 'Failed to fetch tasks');
         }
       } catch (err) {
         console.error('Error fetching tasks:', err);
@@ -346,14 +346,6 @@ const EmployeeDashboard = () => {
                               {task.status}
                             </span>
                           </div>
-                          {task.description && (
-                            <p className="task-description">
-                              {task.description.length > 80 
-                                ? task.description.slice(0, 80) + '...' 
-                                : task.description
-                              }
-                            </p>
-                          )}
                           <div className="task-card-footer">
                             <span className="task-due-date">
                               <i className="fas fa-calendar-alt"></i>

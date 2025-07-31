@@ -1,3 +1,6 @@
+// Environment detection
+const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
+
 export function getApiBaseUrl() {
-  return process.env.VITE_API_BASE_URL || '';
+  return isTest ? process.env.VITE_API_BASE_URL : import.meta.env.VITE_API_BASE_URL || '';
 }
