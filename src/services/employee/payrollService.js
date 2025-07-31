@@ -90,7 +90,7 @@ export const downloadPayslip = async (payrollId) => {
 };
 
 // Get payroll by ID
-export const getPayrollById = async (payrollId) => {
+export const getMyPayrollById = async (payrollId) => {
   try {
     const response = await api.get(`/payrolls/${payrollId}`);
     return { success: true, data: response.data };
