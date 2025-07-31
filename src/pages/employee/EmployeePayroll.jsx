@@ -55,7 +55,7 @@ const EmployeePayroll = () => {
   const [isAddBank, setIsAddBank] = useState(false); // distinguish add vs update
   
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { getToken, logout } = useAuth();
   const { toast, showSuccess, showError, hideToast } = useToast();
 
   const handleLogoutClick = () => {
@@ -64,7 +64,7 @@ const EmployeePayroll = () => {
 
   const handleLogoutConfirm = async () => {
     setShowLogoutModal(false);
-    await secureLogout(
+    await logout(
       navigate,
       () => showSuccess('Logged out successfully'),
       (error) => showError('Logout completed with warnings')

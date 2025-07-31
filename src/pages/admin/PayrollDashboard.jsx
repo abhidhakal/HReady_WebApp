@@ -246,11 +246,11 @@ const PayrollDashboard = () => {
     if (missing.length > 0) {
       setShowPrePayrollModal(true);
     } else {
-      generatePayroll();
+      handleGeneratePayroll();
     }
   };
 
-  const generatePayroll = async () => {
+  const handleGeneratePayroll = async () => {
     try {
       setPayrollGenerating(true);
       const result = await generatePayroll(selectedMonth, selectedYear);
@@ -1140,7 +1140,7 @@ const PayrollDashboard = () => {
             </ul>
             <p>Payroll will not be generated for these employees. Please add salary info for them in Salary Management.</p>
             <button className="btn-primary" onClick={() => { setShowPrePayrollModal(false); setActiveTab('salaries'); }}>Go to Salary Management</button>
-            <button className="btn-secondary" onClick={() => { setShowPrePayrollModal(false); generatePayroll(); }}>Proceed Anyway</button>
+            <button className="btn-secondary" onClick={() => { setShowPrePayrollModal(false); handleGeneratePayroll(); }}>Proceed Anyway</button>
           </div>
         </Modal>
       )}
