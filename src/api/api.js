@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 // Environment detection for API base URL
-const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
+const isTest = import.meta.env.MODE === 'test';
 
-const baseURL = isTest ? process.env.VITE_API_BASE_URL : import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
 console.log('API Base URL:', baseURL);
 console.log('Is Test Environment:', isTest);
 
