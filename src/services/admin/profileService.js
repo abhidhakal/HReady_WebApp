@@ -43,7 +43,7 @@ export const uploadAdminProfilePicture = async (file) => {
 // Change admin password
 export const changeAdminPassword = async (currentPassword, newPassword) => {
   try {
-    const response = await api.put('/admins/me/change-password', {
+    const response = await api.put('/admins/change-password', {
       currentPassword,
       newPassword
     });

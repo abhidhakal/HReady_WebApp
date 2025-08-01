@@ -40,7 +40,7 @@ export const uploadProfilePicture = async (formData) => {
 // Change password
 export const changePassword = async (passwordData) => {
   try {
-    const response = await api.put('/employees/me/change-password', passwordData);
+    const response = await api.put('/employees/change-password', passwordData);
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error };
