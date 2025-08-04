@@ -11,7 +11,9 @@ import { useAuth } from '/src/hooks/useAuth.js';
 import { useToast } from '/src/hooks/useToast.js';
 import api from '/src/api/api.js';
 // Import services
-import { getMyPayrollHistory, getMySalary, getMyBankAccount, updateMyBankAccount, createMyBankAccount, downloadPayslip } from '/src/services/index.js';
+import { getMyPayrollHistory, getMySalary, getMyBankAccount, updateMyBankAccount, createMyBankAccount } from '/src/services/index.js';
+import { downloadPayslipPDF } from '/src/utils/payslipGenerator.js';
+import './styles/EmployeePayroll.css';
 
 // Custom currency formatter for Rs.
 const formatCurrency = (amount, currency = 'Rs.') => {
@@ -44,6 +46,8 @@ const EmployeePayroll = () => {
   const [profilePicture, setProfilePicture] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showPayrollDetailsModal, setShowPayrollDetailsModal] = useState(false);
+  const [selectedPayroll, setSelectedPayroll] = useState(null);
   const [bankForm, setBankForm] = useState({
     bankName: '',
     accountNumber: '',
@@ -149,20 +153,26 @@ const EmployeePayroll = () => {
 
   const handleDownloadPayslip = async (payrollId) => {
     try {
-      const result = await downloadPayslip(payrollId);
+      // Find the payroll data from the current payrolls list
+      const payroll = payrolls.find(p => p._id === payrollId);
+      if (!payroll) {
+        showError('Payroll data not found');
+        return;
+      }
+
+      // Get employee info
+      const employeeInfo = {
+        name: name,
+        email: '', // You might want to get this from user data
+        _id: id
+      };
+
+      const result = downloadPayslipPDF(payroll, employeeInfo);
       if (result.success) {
-        const url = window.URL.createObjectURL(new Blob([result.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `payslip-${payrollId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
         showSuccess('Payslip downloaded successfully!');
       } else {
-        showError('Failed to download payslip');
-        console.error('Error downloading payslip:', result.error);
+        showError('Failed to generate payslip');
+        console.error('Error generating payslip:', result.error);
       }
     } catch (error) {
       console.error('Error downloading payslip:', error);
@@ -185,6 +195,7 @@ const EmployeePayroll = () => {
     setIsAddBank(isAdd);
     if (!isAdd && bankAccount) {
       setBankForm({
+        _id: bankAccount._id, // Include the _id for updating
         bankName: bankAccount.bankName || '',
         accountNumber: bankAccount.accountNumber || '',
         accountHolderName: bankAccount.accountHolderName || '',
@@ -238,6 +249,11 @@ const EmployeePayroll = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openPayrollDetailsModal = (payroll) => {
+    setSelectedPayroll(payroll);
+    setShowPayrollDetailsModal(true);
   };
 
   if (loading) {
@@ -481,14 +497,14 @@ const EmployeePayroll = () => {
                           <div className="payroll-actions">
                             <button 
                               className="download-btn"
-                              onClick={() => downloadPayslip(payroll._id)}
+                              onClick={() => handleDownloadPayslip(payroll._id)}
                             >
                               <i className="fas fa-download"></i>
                               Download Payslip
                             </button>
                             <button 
                               className="view-btn"
-                              onClick={() => navigate(`/employee/payroll/${payroll._id}`)}
+                              onClick={() => openPayrollDetailsModal(payroll)}
                             >
                               <i className="fas fa-eye"></i>
                               View Details
@@ -740,6 +756,161 @@ const EmployeePayroll = () => {
           </div>
         </div>
       </div>
+
+      {/* Payroll Details Modal */}
+      {showPayrollDetailsModal && selectedPayroll && (
+        <div className="modal-overlay">
+          <div className="modal-content payroll-details-modal">
+            <div className="modal-header">
+              <h3>Payroll Details - {selectedPayroll.month}/{selectedPayroll.year}</h3>
+              <button className="modal-close" onClick={() => setShowPayrollDetailsModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="payroll-details-section">
+                <div className="detail-section">
+                  <h4>Basic Information</h4>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span className="label">Payroll Period:</span>
+                      <span className="value">{selectedPayroll.month}/{selectedPayroll.year}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Status:</span>
+                      <span 
+                        className="value status-badge"
+                        style={{ backgroundColor: getStatusColor(selectedPayroll.status) }}
+                      >
+                        {selectedPayroll.status}
+                      </span>
+                    </div>
+                    {selectedPayroll.paymentDate && (
+                      <div className="detail-item">
+                        <span className="label">Payment Date:</span>
+                        <span className="value">{new Date(selectedPayroll.paymentDate).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h4>Salary Breakdown</h4>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span className="label">Basic Salary:</span>
+                      <span className="value">{formatCurrency(selectedPayroll.basicSalary, selectedPayroll.currency)}</span>
+                    </div>
+                    {selectedPayroll.allowances && (
+                      <>
+                        {selectedPayroll.allowances.housing > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Housing Allowance:</span>
+                            <span className="value">{formatCurrency(selectedPayroll.allowances.housing, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                        {selectedPayroll.allowances.transport > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Transport Allowance:</span>
+                            <span className="value">{formatCurrency(selectedPayroll.allowances.transport, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                        {selectedPayroll.allowances.meal > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Meal Allowance:</span>
+                            <span className="value">{formatCurrency(selectedPayroll.allowances.meal, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                        {selectedPayroll.allowances.medical > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Medical Allowance:</span>
+                            <span className="value">{formatCurrency(selectedPayroll.allowances.medical, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                        {selectedPayroll.allowances.other > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Other Allowance:</span>
+                            <span className="value">{formatCurrency(selectedPayroll.allowances.other, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    <div className="detail-item total">
+                      <span className="label">Gross Salary:</span>
+                      <span className="value">{formatCurrency(selectedPayroll.grossSalary, selectedPayroll.currency)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h4>Deductions</h4>
+                  <div className="detail-grid">
+                    {selectedPayroll.deductions && (
+                      <>
+                        {selectedPayroll.deductions.tax > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Tax Deduction:</span>
+                            <span className="value deduction">{formatCurrency(selectedPayroll.deductions.tax, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                        {selectedPayroll.deductions.insurance > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Insurance Deduction:</span>
+                            <span className="value deduction">{formatCurrency(selectedPayroll.deductions.insurance, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                        {selectedPayroll.deductions.pension > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Pension Deduction:</span>
+                            <span className="value deduction">{formatCurrency(selectedPayroll.deductions.pension, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                        {selectedPayroll.deductions.other > 0 && (
+                          <div className="detail-item">
+                            <span className="label">Other Deduction:</span>
+                            <span className="value deduction">{formatCurrency(selectedPayroll.deductions.other, selectedPayroll.currency)}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    <div className="detail-item total">
+                      <span className="label">Total Deductions:</span>
+                      <span className="value deduction">{formatCurrency(selectedPayroll.totalDeductions, selectedPayroll.currency)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="detail-section final">
+                  <h4>Final Amount</h4>
+                  <div className="detail-grid">
+                    <div className="detail-item net-salary">
+                      <span className="label">Net Salary:</span>
+                      <span className="value">{formatCurrency(selectedPayroll.netSalary, selectedPayroll.currency)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => setShowPayrollDetailsModal(false)}
+              >
+                Close
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary"
+                onClick={() => handleDownloadPayslip(selectedPayroll._id)}
+              >
+                <i className="fas fa-download"></i>
+                Download Payslip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <LogoutConfirmModal
         isOpen={showLogoutModal}

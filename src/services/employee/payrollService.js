@@ -77,42 +77,10 @@ export const createMyBankAccount = async (bankData) => {
   }
 };
 
-// Download payslip (matches EmployeePayroll.jsx)
-export const downloadPayslip = async (payrollId) => {
-  try {
-    const response = await api.get(`/payrolls/${payrollId}/payslip`, {
-      responseType: 'blob'
-    });
-    return { success: true, data: response.data };
-  } catch (error) {
-    return { success: false, error };
-  }
-};
-
 // Get payroll by ID
 export const getMyPayrollById = async (payrollId) => {
   try {
     const response = await api.get(`/payrolls/${payrollId}`);
-    return { success: true, data: response.data };
-  } catch (error) {
-    return { success: false, error };
-  }
-};
-
-// Get payslip preview
-export const getPayslipPreview = async (payrollId) => {
-  try {
-    const response = await api.get(`/payrolls/${payrollId}/payslip/preview`);
-    return { success: true, data: response.data };
-  } catch (error) {
-    return { success: false, error };
-  }
-};
-
-// Request payslip
-export const requestPayslip = async (payrollId) => {
-  try {
-    const response = await api.post(`/payrolls/${payrollId}/request-payslip`);
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error };

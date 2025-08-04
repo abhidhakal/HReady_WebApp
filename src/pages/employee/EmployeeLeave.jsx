@@ -24,7 +24,7 @@ const LeaveSchema = Yup.object().shape({
     .required('Leave type is required'),
   startDate: Yup.date()
     .required('Start date is required')
-    .min(new Date(), 'Start date cannot be in the past'),
+    .min(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()), 'Start date cannot be in the past'),
   endDate: Yup.date()
     .required('End date is required')
     .min(Yup.ref('startDate'), 'End date must be after start date'),
@@ -111,7 +111,16 @@ const LeaveForm = ({ onSubmit, loading }) => {
                     <DatePicker
                       label="Start Date"
                       value={values.startDate ? new Date(values.startDate) : null}
-                      onChange={date => setFieldValue('startDate', date ? date.toISOString().split('T')[0] : '')}
+                      onChange={date => {
+                        if (date) {
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          setFieldValue('startDate', `${year}-${month}-${day}`);
+                        } else {
+                          setFieldValue('startDate', '');
+                        }
+                      }}
                       renderInput={params => (
                         <TextField {...params} className={`form-input ${errors.startDate && touched.startDate ? 'error' : ''}`} />
                       )}
@@ -126,7 +135,16 @@ const LeaveForm = ({ onSubmit, loading }) => {
                     <DatePicker
                       label="End Date"
                       value={values.endDate ? new Date(values.endDate) : null}
-                      onChange={date => setFieldValue('endDate', date ? date.toISOString().split('T')[0] : '')}
+                      onChange={date => {
+                        if (date) {
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          setFieldValue('endDate', `${year}-${month}-${day}`);
+                        } else {
+                          setFieldValue('endDate', '');
+                        }
+                      }}
                       renderInput={params => (
                         <TextField {...params} className={`form-input ${errors.endDate && touched.endDate ? 'error' : ''}`} />
                       )}

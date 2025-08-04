@@ -11,7 +11,98 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24;
+  margin-bottom: 24px;
+}
+
+/* Filter Section Styles */
+.tasks-filter-section {
+  margin-bottom: 24px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: #f5f5f5;
+  color: #666;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.filter-btn:hover {
+  background: #e8e8e8;
+  color: #333;
+  transform: translateY(-1px);
+}
+
+.filter-btn.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+}
+
+.filter-btn.active:hover {
+  background: #1565c0;
+  transform: translateY(-1px);
+}
+
+.filter-btn i {
+  font-size: 14px;
+}
+
+.filter-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.filter-count {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Responsive filter buttons */
+@media (max-width: 768px) {
+  .filter-buttons {
+    gap: 8px;
+  }
+  
+  .filter-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+  
+  .filter-btn span {
+    display: none;
+  }
+  
+  .filter-btn i {
+    font-size: 16px;
+  }
 }
 
 .manage-task-card {

@@ -8,6 +8,7 @@ import Toast from '/src/components/Toast.jsx';
 import LogoutConfirmModal from '/src/components/LogoutConfirmModal.jsx';
 import Skeleton from '@mui/material/Skeleton';
 import PayrollPaymentModal from '/src/components/payroll/PayrollPaymentModal.jsx';
+import { downloadPayslipPDF } from '/src/utils/payslipGenerator.js';
 
 import SalaryManagement from '/src/components/payroll/SalaryManagement.jsx';
 import AuthCheck from '/src/components/auth/AuthCheck.jsx';
@@ -410,6 +411,28 @@ const PayrollDashboard = () => {
     setShowPayrollModal(true);
   };
 
+  const handleDownloadPayslip = async (payroll) => {
+    try {
+      // Get employee info from the payroll data
+      const employeeInfo = {
+        name: payroll.employee?.name || 'Unknown Employee',
+        email: payroll.employee?.email || '',
+        _id: payroll.employee?._id || payroll.employeeId || 'unknown'
+      };
+
+      const result = downloadPayslipPDF(payroll, employeeInfo);
+      if (result.success) {
+        showSuccess('Payslip downloaded successfully!');
+      } else {
+        showError('Failed to generate payslip');
+        console.error('Error generating payslip:', result.error);
+      }
+    } catch (error) {
+      console.error('Error downloading payslip:', error);
+      showError('Failed to download payslip');
+    }
+  };
+
   // Bulk approve all draft payrolls
   const bulkApprovePayrolls = async () => {
     const drafts = payrolls.filter(p => {
@@ -473,7 +496,7 @@ const PayrollDashboard = () => {
       await Promise.all(
         approved.map(p => api.put(`/payrolls/${p._id}/mark-paid`, {
           paymentMethod: 'bulk_payment',
-          paymentDate: new Date().toISOString(),
+          paymentDate: new Date().toISOString().split('T')[0],
           notes: 'Bulk payment processed'
         }))
       );
@@ -866,6 +889,14 @@ const PayrollDashboard = () => {
                             )}
                             
                             <button 
+                              className="download-btn"
+                              onClick={() => handleDownloadPayslip(payroll)}
+                            >
+                              <i className="fas fa-download"></i>
+                              Download Payslip
+                            </button>
+                            
+                            <button 
                               className="view-btn"
                               onClick={() => openPayrollModal(payroll)}
                             >
@@ -929,9 +960,26 @@ const PayrollDashboard = () => {
                             ))}
                           </div>
                         </div>
+                        <div className="modal-footer">
+                          <button 
+                            type="button" 
+                            className="btn-secondary" 
+                            onClick={() => setShowPayrollModal(false)}
+                          >
+                            Close
+                          </button>
+                          <button 
+                            type="button" 
+                            className="btn-primary"
+                            onClick={() => handleDownloadPayslip(payrollModalData)}
+                          >
+                            <i className="fas fa-download"></i>
+                            Download Payslip
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    )}
+                  )}
                   </div>
               )}
 

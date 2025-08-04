@@ -100,7 +100,14 @@ const TaskDialog = ({ open, onClose, onSubmit, initialValues, editing, loading, 
                     <DatePicker
                       value={values.dueDate ? new Date(values.dueDate) : null}
                       onChange={(date) => {
-                        setFieldValue('dueDate', date ? date.toISOString().split('T')[0] : '');
+                        if (date) {
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          setFieldValue('dueDate', `${year}-${month}-${day}`);
+                        } else {
+                          setFieldValue('dueDate', '');
+                        }
                       }}
                       renderInput={(params) => (
                         <TextField
@@ -191,6 +198,7 @@ const ManageTasks = () => {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all'); // Add filter state
   const { isOpen: sidebarOpen, toggleSidebar, openSidebar, closeSidebar, setIsOpen: setSidebarOpen } = useSidebar(false);
   const { getToken, logout } = useAuth();
   const { toast, showSuccess, showError, hideToast } = useToast();
@@ -282,6 +290,13 @@ const ManageTasks = () => {
   const handleDialogClose = () => {
     setDialogOpen(false);
     setEditingTask(null);
+  };
+
+  const getFilteredTasks = () => {
+    if (statusFilter === 'all') {
+      return tasks;
+    }
+    return tasks.filter(task => task.status.toLowerCase() === statusFilter.toLowerCase());
   };
 
   const handleDialogSubmit = async (values, { resetForm }) => {
@@ -379,6 +394,45 @@ const ManageTasks = () => {
             </button>
           </div>
 
+          {/* Filter Section */}
+          <div className="tasks-filter-section">
+            <div className="filter-buttons">
+              <button 
+                className={`filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
+                <i className="fas fa-list"></i>
+                <span>All Tasks</span>
+              </button>
+              <button 
+                className={`filter-btn ${statusFilter === 'pending' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('pending')}
+              >
+                <i className="fas fa-clock"></i>
+                <span>Pending</span>
+              </button>
+              <button 
+                className={`filter-btn ${statusFilter === 'in progress' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('in progress')}
+              >
+                <i className="fas fa-spinner"></i>
+                <span>In Progress</span>
+              </button>
+              <button 
+                className={`filter-btn ${statusFilter === 'completed' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('completed')}
+              >
+                <i className="fas fa-check-circle"></i>
+                <span>Completed</span>
+              </button>
+            </div>
+            <div className="filter-info">
+              <span className="filter-count">
+                Showing {getFilteredTasks().length} of {tasks.length} tasks
+              </span>
+            </div>
+          </div>
+
           {loading ? (
             <div className="tasks-list-container">
               {[1,2,3,4,5].map(i => (
@@ -392,18 +446,20 @@ const ManageTasks = () => {
                 </div>
               ))}
             </div>
-          ) : tasks.length === 0 ? (
+          ) : getFilteredTasks().length === 0 ? (
             <Card>
               <div className="task-empty-state">
                 <span className="task-empty-icon"><i className="fas fa-tasks"></i></span>
-                No tasks found.
+                {statusFilter === 'all' ? 'No tasks found.' : `No ${statusFilter} tasks found.`}
               </div>
             </Card>
           ) : (
             <Card>
-              <div className="task-list-header">Task List</div>
+              <div className="task-list-header">
+                {statusFilter === 'all' ? 'All Tasks' : `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Tasks`}
+              </div>
               <div className="task-list-container">
-                {tasks.map(task => (
+                {getFilteredTasks().map(task => (
                   <div key={task._id} className="task-list-item">
                     <Avatar name={task.assignedTo?.name || 'Task'} />
                     <div className="task-info-main">
